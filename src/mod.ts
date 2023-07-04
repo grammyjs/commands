@@ -12,9 +12,8 @@ import {
 
 type MaybeArray<T> = T | T[];
 
-class CommandScope<C extends Context> extends Composer<C> {
+export class CommandScope<C extends Context> extends Composer<C> {
   #scope: BotCommandScope = { type: "default" };
-  #languageCode?: string;
   #commands: Command<C>[] = [];
 
   private constructor(scope: BotCommandScope) {
@@ -50,10 +49,6 @@ class CommandScope<C extends Context> extends Composer<C> {
     return new CommandScope({ type: "chat_member", chat_id: chatId, user_id: userId });
   }
 
-  public localize(languageCode: string) {
-    this.#languageCode = languageCode;
-  }
-
   public add(commands: MaybeArray<Command<C>>) {
     const commandArr = Array.isArray(commands) ? commands : [commands];
     this.#commands.push(...commandArr);
@@ -61,25 +56,37 @@ class CommandScope<C extends Context> extends Composer<C> {
     return this;
   }
 
-  public toObject(): { scope: BotCommandScope; language_code?: string; commands: BotCommand[] } {
-    return {
+  private get languages() {
+    return Array.from<string | undefined>(this.#commands.reduce((langs, command) => {
+      langs;
+      Array.from(command.localizedProperties.keys()).forEach((lang) => langs.add(lang));
+      return langs;
+    }, new Set<string>())).concat([undefined]);
+  }
+
+  public toParams(): Array<{ scope: BotCommandScope; language_code?: string; commands: BotCommand[] }> {
+    return this.languages.map((languageCode) => ({
       scope: this.#scope,
-      language_code: this.#languageCode,
-      commands: this.#commands.map((command) => command.toObject(this.#languageCode)),
-    };
+      language_code: languageCode,
+      commands: this.#commands.map((command) => command.toObject(languageCode)),
+    }));
   }
 
   public setFor(bot: Bot<C>) {
-    const scope = this.toObject();
-    return bot.api.setMyCommands(scope.commands, { scope: scope.scope, language_code: scope.language_code });
+    const language = this.toParams();
+    return Promise.all(language.map((args) => bot.api.raw.setMyCommands(args)));
   }
 
   public deleteFor(bot: Bot<C>) {
-    return bot.api.deleteMyCommands({ language_code: this.#languageCode, scope: this.#scope });
+    return Promise.all(
+      this.languages.map((languageCode) =>
+        bot.api.deleteMyCommands({ language_code: languageCode, scope: this.#scope })
+      ),
+    );
   }
 }
 
-class Command<C extends Context> extends Composer<C> {
+export class Command<C extends Context> extends Composer<C> {
   #name: string;
   #description: string;
   localizedProperties: Map<string, { name: string; description: string }> = new Map();
@@ -139,20 +146,3 @@ class Command<C extends Context> extends Composer<C> {
     };
   }
 }
-
-// TODO: Remove example usage
-
-const adminScope = CommandScope.admins();
-
-const startCommand = new Command("start", "Starts the bot")
-  .localize("pt-BR", "inicializar", "Inicializa o bot")
-  .localize("es-ES", "comenzar", "Inicia el bot")
-  .onChatType("private", (ctx) => ctx.reply(`Hello, ${ctx.chat.first_name}!`))
-  .onChatType(["group", "supergroup"], (ctx) => ctx.reply(`Hello, members of ${ctx.chat.title}!`));
-
-adminScope.add(startCommand);
-
-const bot = new Bot("");
-bot.use(adminScope);
-
-await adminScope.setFor(bot);

@@ -1,0 +1,25 @@
+{
+  "name": "@grammyjs/commands",
+  "version": "1.0.0",
+  "description": "grammY Commands Plugin",
+  "main": "out/mod.js",
+  "scripts": {
+    "prepare": "deno task backport"
+  },
+  "keywords": [
+    "grammY",
+    "telegram",
+    "bot",
+    "commands"
+  ],
+  "author": "Roz <roz@rjmunhoz.me>",
+  "license": "MIT",
+  "dependencies": {
+    "grammy": "^1.17.1",
+    "ts-pattern": "^5.0.1"
+  },
+  "devDependencies": {
+    "typescript": "^5.1.6"
+  },
+  "files": ["out"]
+}

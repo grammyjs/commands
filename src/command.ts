@@ -6,10 +6,12 @@ import {
   CommandMiddleware,
   Composer,
   Context,
-  MaybeArray,
+  match,
   Middleware,
-  P, match
+  P,
 } from "./deps.deno.ts";
+
+export type MaybeArray<T> = T | T[];
 
 export class Command<C extends Context = Context> extends Composer<C> {
   #scopes: BotCommandScope[] = [];

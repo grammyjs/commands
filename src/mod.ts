@@ -1,6 +1,5 @@
-import { match } from "https://deno.land/x/fuzzy_octo_guacamole@v5.0.1/match.ts";
 import { Command } from "./command.ts";
-import { Bot, BotCommand, BotCommandScope, Context, Middleware } from "./deps.deno.ts";
+import { Bot, BotCommand, BotCommandScope, Context, match, Middleware } from "./deps.deno.ts";
 
 type SetMyCommandsParams = {
   scope?: BotCommandScope;

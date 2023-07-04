@@ -17,7 +17,9 @@ cmds.command("stats", "Sends group stats")
   .addToScope("all_group_chats")
   .addToScope("all_chat_administrators")
   .addToScope("chat_administrators", "@grammyjs")
-  .addToScope("chat", "@LWJerri");
+  .addToScope("chat", "@LWJerri")
+  .onChatType('private', (ctx) => ctx.reply(`Hello ${ctx.chat.first_name}!`))
+  .onChatType(['group', 'supergroup', 'channel'], (ctx) => ctx.reply(`Hello members of ${ctx.chat.title}!`));
 
 cmds.command("protocol", "Sets the protocol")
   .localize("de-DE", "protokoll", "Legt das Protokoll fest")

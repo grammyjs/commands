@@ -1,4 +1,3 @@
-import { match } from "https://deno.land/x/fuzzy_octo_guacamole@v5.0.1/match.ts";
 import {
   BotCommand,
   BotCommandScope,
@@ -9,7 +8,7 @@ import {
   Context,
   MaybeArray,
   Middleware,
-  P,
+  P, match
 } from "./deps.deno.ts";
 
 export class Command<C extends Context = Context> extends Composer<C> {

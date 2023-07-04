@@ -8,7 +8,7 @@
   },
   "lock": false,
   "tasks": {
-    "backport": "deno run --no-prompt --allow-read=. --allow-write=. https://deno.land/x/deno2node@v1.9.0/src/cli.ts",
+    "backport": "rm -rf out && deno run --no-prompt --allow-read=. --allow-write=. https://deno.land/x/deno2node@v1.9.0/src/cli.ts",
     "dev": "deno lint && deno fmt --check && deno check src/mod.ts"
   }
 }

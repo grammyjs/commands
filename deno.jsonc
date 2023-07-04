@@ -1,0 +1,7 @@
+{
+  "fmt": {
+    "lineWidth": 120,
+    "include": ["src"]
+  },
+  "lock": false
+}

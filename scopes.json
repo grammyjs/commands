@@ -1,0 +1,208 @@
+[
+  {
+    "scope": {
+      "type": "default"
+    },
+    "commands": [
+      {
+        "command": "help",
+        "description": "Sends help"
+      }
+    ]
+  },
+  {
+    "scope": {
+      "type": "default"
+    },
+    "language_code": "de-DE",
+    "commands": [
+      {
+        "command": "hilfe",
+        "description": "Sendet Hilfe"
+      }
+    ]
+  },
+  {
+    "scope": {
+      "type": "all_group_chats"
+    },
+    "commands": [
+      {
+        "command": "help",
+        "description": "Sends help"
+      },
+      {
+        "command": "stats",
+        "description": "Sends group stats"
+      }
+    ]
+  },
+  {
+    "scope": {
+      "type": "all_group_chats"
+    },
+    "language_code": "de-DE",
+    "commands": [
+      {
+        "command": "hilfe",
+        "description": "Sendet Hilfe"
+      },
+      {
+        "command": "stats",
+        "description": "Sends group stats"
+      }
+    ]
+  },
+  {
+    "scope": {
+      "type": "all_private_chats"
+    },
+    "commands": [
+      {
+        "command": "help",
+        "description": "Sends help"
+      }
+    ]
+  },
+  {
+    "scope": {
+      "type": "all_private_chats"
+    },
+    "language_code": "de-DE",
+    "commands": [
+      {
+        "command": "hilfe",
+        "description": "Sendet Hilfe"
+      }
+    ]
+  },
+  {
+    "scope": {
+      "type": "all_chat_administrators"
+    },
+    "commands": [
+      {
+        "command": "help",
+        "description": "Sends help"
+      },
+      {
+        "command": "stats",
+        "description": "Sends group stats"
+      },
+      {
+        "command": "protocol",
+        "description": "Sets the protocol"
+      }
+    ]
+  },
+  {
+    "scope": {
+      "type": "all_chat_administrators"
+    },
+    "language_code": "de-DE",
+    "commands": [
+      {
+        "command": "hilfe",
+        "description": "Sendet Hilfe"
+      },
+      {
+        "command": "stats",
+        "description": "Sends group stats"
+      },
+      {
+        "command": "protokoll",
+        "description": "Legt das Protokoll fest"
+      }
+    ]
+  },
+  {
+    "scope": {
+      "type": "chat_administrators",
+      "chat_id": "@grammyjs"
+    },
+    "commands": [
+      {
+        "command": "help",
+        "description": "Sends help"
+      },
+      {
+        "command": "stats",
+        "description": "Sends group stats"
+      },
+      {
+        "command": "protocol",
+        "description": "Sets the protocol"
+      },
+      {
+        "command": "allstats",
+        "description": "Sends all group stats"
+      }
+    ]
+  },
+  {
+    "scope": {
+      "type": "chat_administrators",
+      "chat_id": "@grammyjs"
+    },
+    "language_code": "de-DE",
+    "commands": [
+      {
+        "command": "hilfe",
+        "description": "Sendet Hilfe"
+      },
+      {
+        "command": "stats",
+        "description": "Sends group stats"
+      },
+      {
+        "command": "protokoll",
+        "description": "Legt das Protokoll fest"
+      },
+      {
+        "command": "allestats",
+        "description": "Sendet alle Gruppenstatistiken"
+      }
+    ]
+  },
+  {
+    "scope": {
+      "type": "chat",
+      "chat_id": "@LWJerri"
+    },
+    "commands": [
+      {
+        "command": "help",
+        "description": "Sends help"
+      },
+      {
+        "command": "stats",
+        "description": "Sends group stats"
+      },
+      {
+        "command": "troll",
+        "description": "Trolls...?"
+      }
+    ]
+  },
+  {
+    "scope": {
+      "type": "chat",
+      "chat_id": "@LWJerri"
+    },
+    "language_code": "de-DE",
+    "commands": [
+      {
+        "command": "hilfe",
+        "description": "Sendet Hilfe"
+      },
+      {
+        "command": "stats",
+        "description": "Sends group stats"
+      },
+      {
+        "command": "troll",
+        "description": "Trolls...?"
+      }
+    ]
+  }
+]

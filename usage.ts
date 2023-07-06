@@ -1,6 +1,10 @@
-import { Command, CommandCollection } from "./src/mod.ts";
+import { commands, CommandsFlavor } from "./src/context.ts";
+import { Bot, Context } from "./src/deps.deno.ts";
+import { Commands } from "./src/mod.ts";
 
-const helpCommand = new Command("help", "Sends help")
+const cmds = new Commands();
+
+cmds.command("help", "Sends help")
   .localize("de-DE", "hilfe", "Sendet Hilfe")
   .addToScope("default")
   .addToScope("all_group_chats")
@@ -9,30 +13,42 @@ const helpCommand = new Command("help", "Sends help")
   .addToScope("chat_administrators", "@grammyjs")
   .addToScope("chat", "@LWJerri");
 
-const statsCommand = new Command("stats", "Sends group stats")
+cmds.command("stats", "Sends group stats")
   .addToScope("all_group_chats")
   .addToScope("all_chat_administrators")
   .addToScope("chat_administrators", "@grammyjs")
   .addToScope("chat", "@LWJerri");
 
-const protocolCommand = new Command("protocol", "Sets the protocol")
+cmds.command("protocol", "Sets the protocol")
   .localize("de-DE", "protokoll", "Legt das Protokoll fest")
   .addToScope("all_chat_administrators")
   .addToScope("chat_administrators", "@grammyjs");
 
-const allStatsCommand = new Command("allstats", "Sends all group stats")
+cmds.command("allstats", "Sends all group stats")
   .localize("de-DE", "allestats", "Sendet alle Gruppenstatistiken")
   .addToScope("chat_administrators", "@grammyjs");
 
-const trollCommand = new Command("troll", "Trolls...?")
+cmds.command("troll", "Trolls...?")
   .addToScope("chat", "@LWJerri");
 
-const commands = new CommandCollection([
-  helpCommand,
-  statsCommand,
-  protocolCommand,
-  allStatsCommand,
-  trollCommand,
-]);
+// Isn't added to any scope because it's missing the chat_id parameter
+cmds.command("wrong_scope", "It's scoped wrongly")
+  // @ts-expect-error
+  .addToScope("chat");
 
-Deno.writeTextFile("./scopes.json", JSON.stringify(commands, null, 2));
+Deno.writeTextFile("./scopes.json", JSON.stringify(cmds, null, 2));
+Deno.writeTextFile(
+  "./chat-scope.json",
+  JSON.stringify(cmds.toSingleScopeArgs({ type: "chat", chat_id: "@grammyjs" }), null, 2),
+);
+
+type MyContext = CommandsFlavor<Context>;
+
+const bot = new Bot<MyContext>("");
+bot.use(commands());
+
+bot.on(":text", async (ctx) => {
+  await ctx.setMyCommands(cmds);
+});
+
+await cmds.setFor(bot);

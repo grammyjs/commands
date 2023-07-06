@@ -1,0 +1,67 @@
+[
+  {
+    "scope": {
+      "type": "chat",
+      "chat_id": "@grammyjs"
+    },
+    "commands": [
+      {
+        "command": "help",
+        "description": "Sends help"
+      },
+      {
+        "command": "stats",
+        "description": "Sends group stats"
+      },
+      {
+        "command": "protocol",
+        "description": "Sets the protocol"
+      },
+      {
+        "command": "allstats",
+        "description": "Sends all group stats"
+      },
+      {
+        "command": "troll",
+        "description": "Trolls...?"
+      },
+      {
+        "command": "wrong_scope",
+        "description": "It's scoped wrongly"
+      }
+    ]
+  },
+  {
+    "scope": {
+      "type": "chat",
+      "chat_id": "@grammyjs"
+    },
+    "language_code": "de-DE",
+    "commands": [
+      {
+        "command": "hilfe",
+        "description": "Sendet Hilfe"
+      },
+      {
+        "command": "stats",
+        "description": "Sends group stats"
+      },
+      {
+        "command": "protokoll",
+        "description": "Legt das Protokoll fest"
+      },
+      {
+        "command": "allestats",
+        "description": "Sendet alle Gruppenstatistiken"
+      },
+      {
+        "command": "troll",
+        "description": "Trolls...?"
+      },
+      {
+        "command": "wrong_scope",
+        "description": "It's scoped wrongly"
+      }
+    ]
+  }
+]

@@ -176,5 +176,3 @@ commands.command("stats", "Sends group stats")
 ```
 
 Feel free to add more commands and customize them according to your bot's needs.
-
-**Note:** This plugin is designed specifically for grammY and is intended to be used with the grammY bot framework.

@@ -5,14 +5,7 @@ setting up commands with scopes and localization.
 
 ## Installation
 
-On NPM, this plugin is available as `@grammyjs/commands`, and on Deno it's available at
-[deno.land/x/grammy_commands](https://deno.land/x/grammy_commands).
-
-You can install it for Node.js with this command:
-
-```sh
-npm i @grammyjs/commands
-```
+This plugin is available at [deno.land/x/grammy_commands](https://deno.land/x/grammy_commands).
 
 ## Core Concepts
 
@@ -176,3 +169,5 @@ commands.command("stats", "Sends group stats")
 ```
 
 Feel free to add more commands and customize them according to your bot's needs.
+
+**Note:** This plugin is designed specifically for grammY and is intended to be used with the grammY bot framework.

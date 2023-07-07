@@ -13,9 +13,13 @@ import {
 
 export type MaybeArray<T> = T | T[];
 
+const isAdmin = (ctx: Context) =>
+  ctx.getAuthor().then((author) => ["administrator", "creator"].includes(author.status));
+
 export class Command<C extends Context = Context> extends Composer<C> {
   #scopes: BotCommandScope[] = [];
   #languages: Map<string, { name: string; description: string }> = new Map();
+  #middleware: Array<Middleware<C>>;
 
   constructor(name: string, description: string, ...middleware: Array<Middleware<C>>) {
     super();
@@ -25,13 +29,17 @@ export class Command<C extends Context = Context> extends Composer<C> {
     }
 
     this.#languages.set("default", { name, description });
+    this.#middleware = middleware;
+  }
 
-    this.command(name, ...middleware);
+  get names() {
+    return Array.from(this.languages.values()).map(({ name }) => name);
   }
 
   get languages() {
     return this.#languages;
   }
+
   get scopes() {
     return this.#scopes;
   }
@@ -52,18 +60,54 @@ export class Command<C extends Context = Context> extends Composer<C> {
     const scope: BotCommandScope | null = match({ type, chatId, userId })
       .with(
         { type: "default" },
+        ({ type }) => {
+          this.command(this.names, ...this.#middleware);
+          return { type };
+        },
+      )
+      .with(
         { type: "all_chat_administrators" },
+        ({ type }) => {
+          this
+            .filter(isAdmin)
+            .command(this.names, ...this.#middleware);
+
+          return { type };
+        },
+      )
+      .with(
         { type: "all_group_chats" },
+        ({ type }) => {
+          this.chatType(["group", "supergroup"]).command(this.names, ...this.#middleware);
+          return { type };
+        },
+      )
+      .with(
         { type: "all_private_chats" },
-        ({ type }) => ({ type }),
+        ({ type }) => {
+          this.chatType("private").command(this.names, ...this.#middleware);
+          return { type };
+        },
       )
       .with(
         { type: P.union("chat", "chat_administrators"), chatId: P.not(P.nullish) },
-        ({ type, chatId }) => ({ type, chat_id: chatId }),
+        ({ type, chatId }) => {
+          this.filter((ctx) => ctx.chat?.id === chatId)
+            .filter(isAdmin)
+            .command(this.names, ...this.#middleware);
+
+          return { type, chat_id: chatId };
+        },
       )
       .with(
         { type: "chat_member", chatId: P.not(P.nullish), userId: P.not(P.nullish) },
-        ({ type, chatId, userId }) => ({ type, chat_id: chatId, user_id: userId }),
+        ({ type, chatId, userId }) => {
+          this.filter((ctx) => ctx.chat?.id === chatId)
+            .filter((ctx) => ctx.from?.id === userId)
+            .command(this.names, ...this.#middleware);
+
+          return { type, chat_id: chatId, user_id: userId };
+        },
       )
       .otherwise(() => null);
 

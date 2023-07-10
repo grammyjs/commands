@@ -4,6 +4,7 @@ export {
   Api,
   Bot,
   type ChatTypeContext,
+  type ChatTypeMiddleware,
   type CommandMiddleware,
   Composer,
   Context,

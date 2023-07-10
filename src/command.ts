@@ -1,21 +1,17 @@
-import {
+import type {
   BotCommand,
   BotCommandScope,
   BotCommandScopeAllChatAdministrators,
   BotCommandScopeAllGroupChats,
   BotCommandScopeAllPrivateChats,
-  Chat,
-  ChatTypeContext,
-  Composer,
+  ChatTypeMiddleware,
   Context,
-  match,
   Middleware,
   MiddlewareObj,
-  P,
 } from "./deps.deno.ts";
+import { Composer, match, P } from "./deps.deno.ts";
 
 export type MaybeArray<T> = T | T[];
-export type ChatTypeMiddleware<C extends Context, T extends Chat["type"]> = Middleware<ChatTypeContext<C, T>>;
 type BotCommandGroupsScope = BotCommandScopeAllGroupChats | BotCommandScopeAllChatAdministrators;
 
 const isAdmin = (ctx: Context) =>

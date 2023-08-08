@@ -1,5 +1,5 @@
 import { Command } from "./command.ts";
-import { Bot, BotCommand, BotCommandScope, Context, match, Middleware } from "./deps.deno.ts";
+import { Api, BotCommand, BotCommandScope, Composer, Context } from "./deps.deno.ts";
 
 type SetMyCommandsParams = {
   scope?: BotCommandScope;
@@ -8,41 +8,55 @@ type SetMyCommandsParams = {
 };
 
 export class Commands<C extends Context> {
-  #languages: Set<string> = new Set();
-  #scopes: Map<string, Array<Command<C>>> = new Map();
-  #commands: Command<C>[] = [];
+  private _languages: Set<string> = new Set();
+  private _scopes: Map<string, Array<Command<C>>> = new Map();
+  private _commands: Command<C>[] = [];
+  private _composer: Composer<C> = new Composer();
 
   constructor(commands: Command<C>[] = []) {
-    commands.forEach((command) => this.#commands.push(command));
+    commands.forEach((command) => this._commands.push(command));
   }
 
-  #addCommandToScope(scope: BotCommandScope, command: Command<C>) {
-    const commands = this.#scopes.get(JSON.stringify(scope)) ?? [];
-    this.#scopes.set(JSON.stringify(scope), commands.concat([command]));
+  private _addCommandToScope(scope: BotCommandScope, command: Command<C>) {
+    const commands = this._scopes.get(JSON.stringify(scope)) ?? [];
+    this._scopes.set(JSON.stringify(scope), commands.concat([command]));
   }
 
-  #populate() {
-    this.#languages = new Set();
-    this.#scopes = new Map();
+  private _populateComposer() {
+    for (const command of this._commands) {
+      for (const args of command.languages.values()) {
+        this._composer.command(args.name, command.middleware());
+      }
+    }
+  }
 
-    this.#commands.forEach((command) => {
-      command.scopes.forEach((scope) => this.#addCommandToScope(scope, command));
-      Array.from(command.languages.keys()).forEach((language) => this.#languages.add(language));
+  private _populateMetadata() {
+    this._languages.clear();
+    this._scopes.clear();
+
+    this._commands.forEach((command) => {
+      for (const scope of command.scopes) {
+        this._addCommandToScope(scope, command);
+      }
+
+      for (const language of command.languages.keys()) {
+        this._languages.add(language);
+      }
     });
   }
 
-  public command(name: string, description: string, ...middleware: Array<Middleware<C>>) {
-    const command = new Command(name, description, ...middleware);
-    this.#commands.push(command);
+  public command(name: string, description: string) {
+    const command = new Command<C>(name, description);
+    this._commands.push(command);
     return command;
   }
 
   public toArgs() {
-    this.#populate();
+    this._populateMetadata();
     const params: SetMyCommandsParams[] = [];
 
-    for (const [scope, commands] of this.#scopes.entries()) {
-      for (const language of this.#languages) {
+    for (const [scope, commands] of this._scopes.entries()) {
+      for (const language of this._languages) {
         params.push({
           scope: JSON.parse(scope),
           language_code: language === "default" ? undefined : language,
@@ -55,14 +69,14 @@ export class Commands<C extends Context> {
   }
 
   public toSingleScopeArgs(scope: BotCommandScope) {
-    this.#populate();
+    this._populateMetadata();
     const params: SetMyCommandsParams[] = [];
 
-    for (const language of this.#languages) {
+    for (const language of this._languages) {
       params.push({
         scope,
-        language_code: match(language).with("default", () => undefined).otherwise((value) => value),
-        commands: this.#commands
+        language_code: language === "default" ? undefined : language,
+        commands: this._commands
           .filter((command) => command.scopes.length)
           .map((command) => command.toObject(language)),
       });
@@ -71,10 +85,8 @@ export class Commands<C extends Context> {
     return params;
   }
 
-  public setFor<C extends Context>(bot: Bot<C>) {
-    const argsArray = this.toArgs();
-    const promises = argsArray.map((args) => bot.api.raw.setMyCommands(args));
-    return Promise.all(promises);
+  public async setCommands({ api }: { api: Api }) {
+    await Promise.all(this.toArgs().map((args) => api.raw.setMyCommands(args)));
   }
 
   public toJSON() {
@@ -83,6 +95,11 @@ export class Commands<C extends Context> {
 
   public toString() {
     return JSON.stringify(this);
+  }
+
+  middleware() {
+    this._populateComposer();
+    return this._composer.middleware();
   }
 
   [Symbol.for("Deno.customInspect")]() {

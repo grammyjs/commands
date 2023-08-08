@@ -1,97 +1,95 @@
-import {
+import type {
   BotCommand,
   BotCommandScope,
-  Chat,
-  ChatTypeContext,
-  CommandMiddleware,
-  Composer,
+  BotCommandScopeAllChatAdministrators,
+  BotCommandScopeAllGroupChats,
+  BotCommandScopeAllPrivateChats,
+  ChatTypeMiddleware,
   Context,
-  match,
   Middleware,
-  P,
+  MiddlewareObj,
 } from "./deps.deno.ts";
+import { Composer, match, P } from "./deps.deno.ts";
 
 export type MaybeArray<T> = T | T[];
+type BotCommandGroupsScope = BotCommandScopeAllGroupChats | BotCommandScopeAllChatAdministrators;
 
-export class Command<C extends Context = Context> extends Composer<C> {
-  #scopes: BotCommandScope[] = [];
-  #languages: Map<string, { name: string; description: string }> = new Map();
+const isAdmin = (ctx: Context) =>
+  ctx.getAuthor().then((author) => ["administrator", "creator"].includes(author.status));
 
-  constructor(name: string, description: string, ...middleware: Array<Middleware<C>>) {
-    super();
+export class Command<C extends Context = Context> implements MiddlewareObj<C> {
+  private _scopes: BotCommandScope[] = [];
+  private _languages: Map<string, { name: string; description: string }> = new Map();
+  private _composer: Composer<C> = new Composer<C>();
 
-    if (!name.match(/[a-z0-9_]{1,32}/)) {
-      throw new Error(`${name} is not a valid command name`);
-    }
+  constructor(name: string, description: string) {
+    this._languages.set("default", { name, description });
+  }
 
-    this.#languages.set("default", { name, description });
-
-    this.command(name, ...middleware);
+  get scopes() {
+    return this._scopes;
   }
 
   get languages() {
-    return this.#languages;
+    return this._languages;
   }
-  get scopes() {
-    return this.#scopes;
+
+  get names() {
+    return Array.from(this._languages.values()).map(({ name }) => name);
   }
 
   get name() {
-    return this.#languages.get("default")!.name;
+    return this._languages.get("default")!.name;
   }
 
   get description() {
-    return this.#languages.get("default")!.description;
+    return this._languages.get("default")!.description;
   }
 
-  public addToScope(type: "default" | "all_private_chats" | "all_group_chats" | "all_chat_administrators"): this;
-  public addToScope(type: "chat", chatId: string | number): this;
-  public addToScope(type: "chat_member", chatId: string | number, userId: number): this;
-  public addToScope(type: "chat_administrators", chatId: string | number): this;
-  public addToScope(type: BotCommandScope["type"], chatId?: string | number, userId?: number): this {
-    const scope: BotCommandScope | null = match({ type, chatId, userId })
+  public addToScope(scope: BotCommandGroupsScope, ...middleware: ChatTypeMiddleware<C, "group" | "supergroup">[]): this;
+  public addToScope(scope: BotCommandScopeAllPrivateChats, ...middleware: ChatTypeMiddleware<C, "private">[]): this;
+  public addToScope(scope: BotCommandScope, ...middleware: Array<Middleware<C>>): this;
+  public addToScope(scope: BotCommandScope, ...middleware: Array<Middleware<C>>): this {
+    match(scope)
+      .with({ type: "default" }, () => this._composer.command(this.names, ...middleware))
       .with(
-        { type: "default" },
         { type: "all_chat_administrators" },
+        () => this._composer.filter(isAdmin).command(this.names, ...middleware),
+      )
+      .with({ type: "all_private_chats" }, () => this._composer.chatType("private").command(this.names, ...middleware))
+      .with(
         { type: "all_group_chats" },
-        { type: "all_private_chats" },
-        ({ type }) => ({ type }),
+        () => this._composer.chatType(["group", "supergroup"]).command(this.names, ...middleware),
       )
       .with(
-        { type: P.union("chat", "chat_administrators"), chatId: P.not(P.nullish) },
-        ({ type, chatId }) => ({ type, chat_id: chatId }),
+        { type: P.union("chat", "chat_administrators"), chat_id: P.not(P.nullish).select() },
+        (chatId) =>
+          this._composer.filter((ctx) => ctx.chat?.id === chatId).filter(isAdmin).command(this.names, ...middleware),
       )
       .with(
-        { type: "chat_member", chatId: P.not(P.nullish), userId: P.not(P.nullish) },
-        ({ type, chatId, userId }) => ({ type, chat_id: chatId, user_id: userId }),
-      )
-      .otherwise(() => null);
+        { type: "chat_member", chat_id: P.not(P.nullish).select("chatId"), user_id: P.not(P.nullish).select("userId") },
+        ({ chatId, userId }) =>
+          this._composer.filter((ctx) => ctx.chat?.id === chatId)
+            .filter((ctx) => ctx.from?.id === userId)
+            .command(this.names, ...middleware),
+      );
 
-    if (scope) this.#scopes.push(scope);
+    this._scopes.push(scope);
 
     return this;
   }
 
   public localize(languageCode: string, name: string, description: string) {
-    this.#languages.set(languageCode, { name, description });
+    this._languages.set(languageCode, { name, description });
     return this;
   }
 
   public getLocalizedName(languageCode: string) {
-    return this.#languages.get(languageCode)?.name ?? this.name;
+    return this._languages.get(languageCode)?.name ?? this.name;
   }
 
   public getLocalizedDescription(languageCode: string) {
-    return this.#languages.get(languageCode)?.description ?? this.description;
-  }
-
-  public onChatType<T extends Chat["type"]>(
-    chatType: MaybeArray<T>,
-    ...middleware: Array<CommandMiddleware<ChatTypeContext<C, T>>>
-  ) {
-    const names = Array.from(this.#languages.values()).map(({ name }) => name);
-    this.chatType(chatType).command(names, ...middleware);
-    return this;
+    return this._languages.get(languageCode)?.description ?? this.description;
   }
 
   public toObject(languageCode = "default"): BotCommand {
@@ -99,5 +97,9 @@ export class Command<C extends Context = Context> extends Composer<C> {
       command: this.getLocalizedName(languageCode),
       description: this.getLocalizedDescription(languageCode),
     };
+  }
+
+  middleware() {
+    return this._composer.middleware();
   }
 }

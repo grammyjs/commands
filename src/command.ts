@@ -1,15 +1,17 @@
-import type {
-  BotCommand,
-  BotCommandScope,
-  BotCommandScopeAllChatAdministrators,
-  BotCommandScopeAllGroupChats,
-  BotCommandScopeAllPrivateChats,
-  ChatTypeMiddleware,
-  Context,
-  Middleware,
-  MiddlewareObj,
+import {
+  type BotCommand,
+  type BotCommandScope,
+  type BotCommandScopeAllChatAdministrators,
+  type BotCommandScopeAllGroupChats,
+  type BotCommandScopeAllPrivateChats,
+  type ChatTypeMiddleware,
+  Composer,
+  type Context,
+  match,
+  type Middleware,
+  type MiddlewareObj,
+  P,
 } from "./deps.deno.ts";
-import { Composer, match, P } from "./deps.deno.ts";
 
 export type MaybeArray<T> = T | T[];
 type BotCommandGroupsScope = BotCommandScopeAllGroupChats | BotCommandScopeAllChatAdministrators;

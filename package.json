@@ -1,6 +1,6 @@
 {
   "name": "@grammyjs/commands",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "grammY Commands Plugin",
   "main": "out/mod.js",
   "scripts": {

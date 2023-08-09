@@ -4,14 +4,10 @@ This plugin provides a convenient way to define and manage commands for your gra
 
 ## Installation
 
-On NPM, this plugin is available as `@grammyjs/commands`, and on Deno it's available at [deno.land/x/grammy_commands](https://deno.land/x/grammy_commands).
-
-You can install it for Node.js with this command:
 
 ```sh
 npm i @grammyjs/commands
 ```
-
 
 ## Usage
 
@@ -19,8 +15,8 @@ The main functionality of this plugin is to define your commands, localize them,
 
 
 ```typescript
-import { Bot } from "https://deno.land/x/grammy/mod.ts";
-import { Commands } from "https://deno.land/x/grammy_commands/mod.ts";
+import { Bot } from "grammy";
+import { Commands } from "@grammyjs/commands";
 
 const bot = new Bot("<telegram token>");
 
@@ -49,8 +45,8 @@ This plugin provides a shortcut for setting the commands for the current chat.
 To use it, you need to install the commands flavor and the plugin itself, like so:
 
 ```typescript
-import { Bot, Context } from "https://deno.land/x/grammy/mod.ts";
-import { Commands, CommandsFlavor, commands } from "https://deno.land/x/grammy_commands/mod.ts";
+import { Bot, Context } from "grammy";
+import { Commands, CommandsFlavor, commands } from "@grammyjs/commands";
 
 type BotContext = CommandsFlavor;
 

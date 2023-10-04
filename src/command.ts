@@ -21,11 +21,11 @@ const isAdmin = (ctx: Context) =>
 
 export class Command<C extends Context = Context> implements MiddlewareObj<C> {
   private _scopes: BotCommandScope[] = [];
-  private _languages: Map<string, { name: string; description: string }> = new Map();
+  private _languages: Map<string, { name: string | RegExp; description: string }> = new Map();
   private _composer: Composer<C> = new Composer<C>();
 
-  constructor(name: string, description: string) {
-    this._languages.set("default", { name, description });
+  constructor(name: string | RegExp, description: string) {
+    this._languages.set("default", { name: name, description });
   }
 
   get scopes() {
@@ -53,27 +53,34 @@ export class Command<C extends Context = Context> implements MiddlewareObj<C> {
   public addToScope(scope: BotCommandScope, ...middleware: Array<Middleware<C>>): this;
   public addToScope(scope: BotCommandScope, ...middleware: Array<Middleware<C>>): this {
     match(scope)
-      .with({ type: "default" }, () => this._composer.command(this.names, ...middleware))
+      .with({ type: "default" }, () => this.getCommandComposer(this.names).use(...middleware))
       .with(
         { type: "all_chat_administrators" },
-        () => this._composer.filter(isAdmin).command(this.names, ...middleware),
+        () => this.getCommandComposer(this.names).filter(isAdmin).use(...middleware),
       )
-      .with({ type: "all_private_chats" }, () => this._composer.chatType("private").command(this.names, ...middleware))
+      .with(
+        { type: "all_private_chats" },
+        () => this.getCommandComposer(this.names).chatType("private").use(...middleware),
+      )
       .with(
         { type: "all_group_chats" },
-        () => this._composer.chatType(["group", "supergroup"]).command(this.names, ...middleware),
+        () => this.getCommandComposer(this.names).chatType(["group", "supergroup"]).use(...middleware),
       )
       .with(
         { type: P.union("chat", "chat_administrators"), chat_id: P.not(P.nullish).select() },
         (chatId) =>
-          this._composer.filter((ctx) => ctx.chat?.id === chatId).filter(isAdmin).command(this.names, ...middleware),
+          this.getCommandComposer(this.names)
+            .filter((ctx) => ctx.chat?.id === chatId)
+            .filter(isAdmin)
+            .use(...middleware),
       )
       .with(
         { type: "chat_member", chat_id: P.not(P.nullish).select("chatId"), user_id: P.not(P.nullish).select("userId") },
         ({ chatId, userId }) =>
-          this._composer.filter((ctx) => ctx.chat?.id === chatId)
+          this.getCommandComposer(this.names)
+            .filter((ctx) => ctx.chat?.id === chatId)
             .filter((ctx) => ctx.from?.id === userId)
-            .command(this.names, ...middleware),
+            .use(...middleware),
       );
 
     this._scopes.push(scope);
@@ -81,8 +88,19 @@ export class Command<C extends Context = Context> implements MiddlewareObj<C> {
     return this;
   }
 
-  public localize(languageCode: string, name: string, description: string) {
-    this._languages.set(languageCode, { name, description });
+  private getCommandComposer(commandNames: Array<string | RegExp>) {
+    return this._composer.on("message:entities:bot_command")
+      .filter((ctx) => {
+        const finalRegexs = commandNames
+          .map((name) => new RegExp(name))
+          .map((name) => new RegExp(`^\/${name.source}(?:@${ctx.me.username})?`, name.flags));
+
+        return ctx.entities("bot_command").some(({ text }) => finalRegexs.some((regex) => regex.test(text)));
+      });
+  }
+
+  public localize(languageCode: string, name: string | RegExp, description: string) {
+    this._languages.set(languageCode, { name: new RegExp(name), description });
     return this;
   }
 
@@ -95,8 +113,9 @@ export class Command<C extends Context = Context> implements MiddlewareObj<C> {
   }
 
   public toObject(languageCode = "default"): BotCommand {
+    const localizedName = this.getLocalizedName(languageCode);
     return {
-      command: this.getLocalizedName(languageCode),
+      command: localizedName instanceof RegExp ? "" : localizedName,
       description: this.getLocalizedDescription(languageCode),
     };
   }

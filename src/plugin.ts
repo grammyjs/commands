@@ -24,9 +24,7 @@ export class Commands<C extends Context> {
 
   private _populateComposer() {
     for (const command of this._commands) {
-      for (const args of command.languages.values()) {
-        this._composer.command(args.name, command.middleware());
-      }
+      this._composer.use(command.middleware());
     }
   }
 
@@ -45,7 +43,7 @@ export class Commands<C extends Context> {
     });
   }
 
-  public command(name: string, description: string) {
+  public command(name: string | RegExp, description: string) {
     const command = new Command<C>(name, description);
     this._commands.push(command);
     return command;
@@ -60,7 +58,8 @@ export class Commands<C extends Context> {
         params.push({
           scope: JSON.parse(scope),
           language_code: language === "default" ? undefined : language,
-          commands: commands.map((command) => command.toObject(language)),
+          commands: commands.map((command) => command.toObject(language))
+            .filter((args) => args.command.length > 0),
         });
       }
     }

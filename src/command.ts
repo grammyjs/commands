@@ -14,7 +14,28 @@ import {
 } from "./deps.deno.ts";
 
 export type MaybeArray<T> = T | T[];
+
+export type CommandOptions = {
+  /**
+   * The prefix used to identify a command.
+   * Defaults to `/`.
+   */
+  prefix: string;
+  /**
+   * Whether the command should only be matched at the start of the message.
+   * Defaults to `true`.
+   */
+  matchOnlyAtStart: boolean;
+  /**
+   * Whether to ignore or only care about commands ending with the bot's username.
+   * Defaults to `optional`.
+   */
+  targetedCommands: "ignored" | "optional" | "required";
+};
+
 type BotCommandGroupsScope = BotCommandScopeAllGroupChats | BotCommandScopeAllChatAdministrators;
+
+const ensureArray = <T>(value: MaybeArray<T>): T[] => Array.isArray(value) ? value : [value];
 
 const isAdmin = (ctx: Context) =>
   ctx.getAuthor().then((author) => ["administrator", "creator"].includes(author.status));
@@ -23,8 +44,15 @@ export class Command<C extends Context = Context> implements MiddlewareObj<C> {
   private _scopes: BotCommandScope[] = [];
   private _languages: Map<string, { name: string | RegExp; description: string }> = new Map();
   private _composer: Composer<C> = new Composer<C>();
+  private _options: CommandOptions = {
+    prefix: "/",
+    matchOnlyAtStart: true,
+    targetedCommands: "optional",
+  };
 
-  constructor(name: string | RegExp, description: string) {
+  constructor(name: string | RegExp, description: string, options: Partial<CommandOptions> = {}) {
+    this._options = { ...this._options, ...options };
+    if (this._options.prefix === "") this._options.prefix = "/";
     this._languages.set("default", { name: name, description });
   }
 
@@ -48,39 +76,80 @@ export class Command<C extends Context = Context> implements MiddlewareObj<C> {
     return this._languages.get("default")!.description;
   }
 
-  public addToScope(scope: BotCommandGroupsScope, ...middleware: ChatTypeMiddleware<C, "group" | "supergroup">[]): this;
-  public addToScope(scope: BotCommandScopeAllPrivateChats, ...middleware: ChatTypeMiddleware<C, "private">[]): this;
-  public addToScope(scope: BotCommandScope, ...middleware: Array<Middleware<C>>): this;
-  public addToScope(scope: BotCommandScope, ...middleware: Array<Middleware<C>>): this {
+  public addToScope(
+    scope: BotCommandGroupsScope,
+    middleware: MaybeArray<ChatTypeMiddleware<C, "group" | "supergroup">>,
+    options?: Partial<CommandOptions>,
+  ): this;
+  public addToScope(
+    scope: BotCommandScopeAllPrivateChats,
+    middleware: MaybeArray<ChatTypeMiddleware<C, "private">>,
+    options?: Partial<CommandOptions>,
+  ): this;
+  public addToScope(
+    scope: BotCommandScope,
+    middleware: MaybeArray<Middleware<C>>,
+    options?: Partial<CommandOptions>,
+  ): this;
+  public addToScope(
+    scope: BotCommandScope,
+    middleware: MaybeArray<Middleware<C>>,
+    options: Partial<CommandOptions> = this._options,
+  ): this {
+    const middlewareArray = ensureArray(middleware);
+    const optionsObject = { ...this._options, ...options };
     match(scope)
-      .with({ type: "default" }, () => this.getCommandComposer(this.names).use(...middleware))
+      .with(
+        { type: "default" },
+        () =>
+          this._composer
+            .filter(Command.hasCommand(this.names, optionsObject))
+            .use(...middlewareArray),
+      )
       .with(
         { type: "all_chat_administrators" },
-        () => this.getCommandComposer(this.names).filter(isAdmin).use(...middleware),
+        () =>
+          this._composer
+            .filter(Command.hasCommand(this.names, optionsObject))
+            .filter(isAdmin)
+            .use(...middlewareArray),
       )
       .with(
         { type: "all_private_chats" },
-        () => this.getCommandComposer(this.names).chatType("private").use(...middleware),
+        () =>
+          this._composer
+            .filter(Command.hasCommand(this.names, optionsObject))
+            .chatType("private")
+            .use(
+              ...middlewareArray,
+            ),
       )
       .with(
         { type: "all_group_chats" },
-        () => this.getCommandComposer(this.names).chatType(["group", "supergroup"]).use(...middleware),
+        () =>
+          this._composer
+            .filter(Command.hasCommand(this.names, optionsObject))
+            .chatType(["group", "supergroup"])
+            .use(
+              ...middlewareArray,
+            ),
       )
       .with(
         { type: P.union("chat", "chat_administrators"), chat_id: P.not(P.nullish).select() },
         (chatId) =>
-          this.getCommandComposer(this.names)
+          this._composer.filter(Command.hasCommand(this.names, optionsObject))
             .filter((ctx) => ctx.chat?.id === chatId)
             .filter(isAdmin)
-            .use(...middleware),
+            .use(...middlewareArray),
       )
       .with(
         { type: "chat_member", chat_id: P.not(P.nullish).select("chatId"), user_id: P.not(P.nullish).select("userId") },
         ({ chatId, userId }) =>
-          this.getCommandComposer(this.names)
+          this._composer
+            .filter(Command.hasCommand(this.names, optionsObject))
             .filter((ctx) => ctx.chat?.id === chatId)
             .filter((ctx) => ctx.from?.id === userId)
-            .use(...middleware),
+            .use(...middlewareArray),
       );
 
     this._scopes.push(scope);
@@ -88,15 +157,26 @@ export class Command<C extends Context = Context> implements MiddlewareObj<C> {
     return this;
   }
 
-  private getCommandComposer(commandNames: Array<string | RegExp>) {
-    return this._composer.on("message:entities:bot_command")
-      .filter((ctx) => {
-        const finalRegexs = commandNames
-          .map((name) => new RegExp(name))
-          .map((name) => new RegExp(`^\/${name.source}(?:@${ctx.me.username})?`, name.flags));
+  public static hasCommand(command: MaybeArray<string | RegExp>, options: CommandOptions) {
+    return (ctx: Context) => {
+      if (!ctx.has(":text")) return false;
+      if (options.matchOnlyAtStart && !ctx.msg.text.startsWith(options.prefix)) return false;
 
-        return ctx.entities("bot_command").some(({ text }) => finalRegexs.some((regex) => regex.test(text)));
-      });
+      const commandNames = ensureArray(command).map((name) => new RegExp(name));
+      const commands = options.prefix === "/"
+        ? ctx.entities("bot_command")
+        : ctx.msg.text.split(options.prefix).map((text) => ({ text }));
+
+      for (const { text } of commands) {
+        const [command, username] = text.split("@");
+        if (options.targetedCommands === "ignored" && username) continue;
+        if (options.targetedCommands === "required" && !username) continue;
+        if (username && username !== ctx.me.username) continue;
+        if (commandNames.some((regex) => regex.test(command))) return true;
+      }
+
+      return false;
+    };
   }
 
   public localize(languageCode: string, name: string | RegExp, description: string) {

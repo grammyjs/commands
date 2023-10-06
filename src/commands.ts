@@ -1,4 +1,4 @@
-import { Command } from "./command.ts";
+import { Command, CommandOptions } from "./command.ts";
 import { Api, BotCommand, BotCommandScope, Composer, Context } from "./deps.deno.ts";
 
 type SetMyCommandsParams = {
@@ -12,9 +12,10 @@ export class Commands<C extends Context> {
   private _scopes: Map<string, Array<Command<C>>> = new Map();
   private _commands: Command<C>[] = [];
   private _composer: Composer<C> = new Composer();
+  private _commandOptions: Partial<CommandOptions> = {};
 
-  constructor(commands: Command<C>[] = []) {
-    commands.forEach((command) => this._commands.push(command));
+  constructor(options: Partial<CommandOptions> = {}) {
+    this._commandOptions = options;
   }
 
   private _addCommandToScope(scope: BotCommandScope, command: Command<C>) {
@@ -43,8 +44,8 @@ export class Commands<C extends Context> {
     });
   }
 
-  public command(name: string | RegExp, description: string) {
-    const command = new Command<C>(name, description);
+  public command(name: string | RegExp, description: string, options: Partial<CommandOptions> = this._commandOptions) {
+    const command = new Command<C>(name, description, options);
     this._commands.push(command);
     return command;
   }

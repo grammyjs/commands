@@ -21,11 +21,12 @@ jobs:
             - name: Setup repo
               uses: actions/checkout@v3
 
-            - name: Install dependencies
-              run: npm install --ignore-scripts
+            - uses: denoland/setup-deno@main
+              with:
+                  deno-version: v1.x
 
             - name: Run backporting
-              run: npm run backport
+              run: deno task backport
 
     format-and-lint:
         runs-on: ubuntu-latest

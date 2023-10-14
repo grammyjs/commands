@@ -6,13 +6,13 @@
   "configurations": [
     {
       "request": "launch",
-      "name": "Debug test",
+      "name": "Launch Program",
       "type": "node",
-      "program": "${file}",
+      "program": "${workspaceFolder}/main.ts",
       "cwd": "${workspaceFolder}",
       "runtimeExecutable": "/home/roziscoding/.asdf/shims/deno",
       "runtimeArgs": [
-        "test",
+        "run",
         "--unstable",
         "--config",
         "./deno.jsonc",

@@ -44,6 +44,9 @@ const ensureArray = <T>(value: MaybeArray<T>): T[] => Array.isArray(value) ? val
 const isAdmin = (ctx: Context) =>
   ctx.getAuthor().then((author) => ["administrator", "creator"].includes(author.status));
 
+export const matchesPattern = (value: string, pattern: string | RegExp) =>
+  typeof pattern === "string" ? value === pattern : pattern.test(value);
+
 export class Command<C extends Context = Context> implements MiddlewareObj<C> {
   private _scopes: BotCommandScope[] = [];
   private _languages: Map<string, { name: string | RegExp; description: string }> = new Map();
@@ -162,21 +165,23 @@ export class Command<C extends Context = Context> implements MiddlewareObj<C> {
   }
 
   public static hasCommand(command: MaybeArray<string | RegExp>, options: CommandOptions) {
+    const { matchOnlyAtStart, prefix, targetedCommands } = options;
+
     return (ctx: Context) => {
       if (!ctx.has(":text")) return false;
-      if (options.matchOnlyAtStart && !ctx.msg.text.startsWith(options.prefix)) return false;
+      if (matchOnlyAtStart && !ctx.msg.text.startsWith(prefix)) return false;
 
-      const commandNames = ensureArray(command).map((name) => new RegExp(name));
-      const commands = options.prefix === "/"
+      const commandNames = ensureArray(command);
+      const commands = prefix === "/"
         ? ctx.entities("bot_command")
-        : ctx.msg.text.split(options.prefix).map((text) => ({ text }));
+        : ctx.msg.text.split(prefix).map((text) => ({ text }));
 
       for (const { text } of commands) {
         const [command, username] = text.split("@");
-        if (options.targetedCommands === "ignored" && username) continue;
-        if (options.targetedCommands === "required" && !username) continue;
+        if (targetedCommands === "ignored" && username) continue;
+        if (targetedCommands === "required" && !username) continue;
         if (username && username !== ctx.me.username) continue;
-        if (commandNames.some((regex) => regex.test(command))) return true;
+        if (commandNames.some((name) => matchesPattern(command.replace(prefix, ""), name))) return true;
       }
 
       return false;

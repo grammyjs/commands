@@ -8,11 +8,11 @@
       "request": "launch",
       "name": "Launch Program",
       "type": "node",
-      "program": "${workspaceFolder}/main.ts",
+      "program": "${file}",
       "cwd": "${workspaceFolder}",
       "runtimeExecutable": "/home/roziscoding/.asdf/shims/deno",
       "runtimeArgs": [
-        "run",
+        "test",
         "--unstable",
         "--config",
         "./deno.jsonc",

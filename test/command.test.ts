@@ -1,4 +1,4 @@
-import { Command, CommandOptions } from "../src/command.ts";
+import { Command, CommandOptions, matchesPattern } from "../src/command.ts";
 import {
   Api,
   assert,
@@ -105,6 +105,13 @@ describe("Command", () => {
         m.entities = [{ type: "bot_command", offset: 0, length: 6 }];
         const ctx = new Context(update, api, me);
         assertFalse(Command.hasCommand("other", options)(ctx));
+      });
+
+      it("should not match a partial string command", () => {
+        m.text = "/start_bla";
+        m.entities = [{ type: "bot_command", offset: 0, length: 10 }];
+        const ctx = new Context(update, api, me);
+        assertFalse(Command.hasCommand("start", options)(ctx));
       });
     });
 
@@ -224,6 +231,24 @@ describe("Command", () => {
           );
         });
       });
+    });
+  });
+
+  describe("matchesPattern", () => {
+    it("matches a string pattern", () => {
+      assert(matchesPattern("start", "start"));
+    });
+
+    it("matches a regex pattern", () => {
+      assert(matchesPattern("start", /start/));
+    });
+
+    it("does not match an incorrect string pattern", () => {
+      assertFalse(matchesPattern("start", "other"));
+    });
+
+    it("does not match an incorrect regex pattern", () => {
+      assertFalse(matchesPattern("start", /other/));
     });
   });
 });

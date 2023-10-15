@@ -28,7 +28,7 @@ export type CommandOptions = {
   matchOnlyAtStart: boolean;
   /**
    * Whether to ignore or only care about commands ending with the bot's username.
-   * Defaults to `optional`.
+   * Defaults to `"optional"`.
    *
    * - `"ignored"`: only non-targeted commands are matched
    * - `"optional"`: both targeted and non-targeted commands are matched

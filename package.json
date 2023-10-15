@@ -4,6 +4,7 @@
   "description": "grammY Commands Plugin",
   "main": "out/mod.js",
   "scripts": {
+    "backport": "deno task backport",
     "prepare": "deno task backport"
   },
   "keywords": [

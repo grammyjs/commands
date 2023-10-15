@@ -1,2 +1,2 @@
+export * from "./commands.ts";
 export * from "./context.ts";
-export * from "./plugin.ts";

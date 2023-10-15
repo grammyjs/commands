@@ -1,0 +1,29 @@
+name: Release
+
+on:
+    push:
+        tags:
+            - "v1.*"
+
+jobs:
+    release:
+        if: github.event.base_ref == 'refs/heads/main'
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v3
+              with:
+                  fetch-depth: 0
+
+            - run: npm install
+
+            - name: Publish to npm
+              run: |
+                  npm config set //registry.npmjs.org/:_authToken '${NPM_TOKEN}'
+                  npm publish --ignore-scripts
+              env:
+                  NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+            - name: Create Release
+              uses: softprops/action-gh-release@v1
+              with:
+                  generate_release_notes: true

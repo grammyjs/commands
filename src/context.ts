@@ -1,5 +1,5 @@
+import { Commands } from "./commands.ts";
 import { Context, NextFunction } from "./deps.deno.ts";
-import { Commands } from "./plugin.ts";
 
 export type CommandsFlavor<C extends Context = Context> = C & {
   /**

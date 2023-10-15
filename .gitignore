@@ -1,3 +1,6 @@
 node_modules
 out
 usage.ts
+test/cov_profile
+coverage.lcov
+.vscode/launch.json

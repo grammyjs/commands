@@ -1,7 +1,8 @@
 {
   "fmt": {
-    "lineWidth": 120,
-    "exclude": ["node_modules"]
+    "indentWidth": 4,
+    "exclude": ["node_modules"],
+    "proseWrap": "preserve"
   },
   "lint": {
     "include": ["src"]

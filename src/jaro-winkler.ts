@@ -1,7 +1,7 @@
 import { Commands } from "./commands.ts";
 import { Context } from "./deps.deno.ts";
 
-function distance(s1: string, s2: string) {
+export function distance(s1: string, s2: string) {
     if (s1.length === 0 || s2.length === 0) {
         return 0;
     }
@@ -85,7 +85,7 @@ type CommandSimilarity = {
 // s2 is the second string to compare
 // dj is the Jaro Distance (if you've already computed it), leave blank and the method handles it
 // ignoreCase: if true strings are first converted to lower case before comparison
-function JaroWinklerDistance(
+export function JaroWinklerDistance(
     s1: string,
     s2: string,
     options: Partial<JaroWinklerOptions>,

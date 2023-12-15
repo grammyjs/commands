@@ -54,4 +54,12 @@ describe("the commands function", () => {
 
         assert(context.setMyCommands);
     });
+    it("should install the getNearestCommand method on the context", () => {
+        const context = new Context(update, api, me) as CommandsFlavor<Context>;
+
+        const middleware = commands();
+        middleware(context, async () => {});
+
+        assert(context.getNearestCommand);
+    });
 });

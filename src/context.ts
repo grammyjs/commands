@@ -2,7 +2,7 @@ import { Commands } from "./commands.ts";
 import { Context, NextFunction } from "./deps.deno.ts";
 import { fuzzyMatch, JaroWinklerOptions } from "./jaro-winkler.ts";
 
-export type CommandsFlavor<C extends Context = Context> = C & {
+export interface CommandsFlavor<C extends Context = Context> extends Context {
     /**
      * Sets the provided commands for the current chat.
      * Cannot be called on updates that don't have a `chat` property.

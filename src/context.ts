@@ -10,7 +10,8 @@ export interface CommandsFlavor<C extends Context = Context> extends Context {
      * @param commands List of available commands
      * @returns Promise with the result of the operations
      */
-    setMyCommands: (commands: Commands<C>) => Promise<true[]>;
+    setMyCommands: (commands: Commands<C>) => Promise<void>;
+    /**
     getNearestCommand: (
         commands: Commands<C>,
         options?: Partial<JaroWinklerOptions>,

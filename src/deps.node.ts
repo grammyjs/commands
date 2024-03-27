@@ -1,4 +1,3 @@
-// TODO: Replace with official deno module, once it arrives (https://github.com/gvergnaud/ts-pattern/pull/108)
 export {
     Api,
     Bot,
@@ -19,4 +18,3 @@ export type {
     BotCommandScopeAllPrivateChats,
     Chat,
 } from "grammy/types";
-export { match, P } from "ts-pattern";

@@ -7,11 +7,10 @@ import {
     type ChatTypeMiddleware,
     Composer,
     type Context,
-    match,
     type Middleware,
     type MiddlewareObj,
-    P,
 } from "./deps.deno.ts";
+import { InvalidScopeError } from "./errors.ts";
 
 export type MaybeArray<T> = T | T[];
 
@@ -117,68 +116,53 @@ export class Command<C extends Context = Context> implements MiddlewareObj<C> {
     ): this {
         const middlewareArray = ensureArray(middleware);
         const optionsObject = { ...this._options, ...options };
-        match(scope)
-            .with(
-                { type: "default" },
-                () =>
+
+        switch (scope.type) {
+            case "default":
+                this._composer
+                    .filter(Command.hasCommand(this.names, optionsObject))
+                    .use(...middlewareArray);
+                break;
+            case "all_chat_administrators":
+                this._composer
+                    .filter(Command.hasCommand(this.names, optionsObject))
+                    .filter(isAdmin)
+                    .use(...middlewareArray);
+                break;
+            case "all_private_chats":
+                this._composer
+                    .filter(Command.hasCommand(this.names, optionsObject))
+                    .chatType("private")
+                    .use(...middlewareArray);
+                break;
+            case "all_group_chats":
+                this._composer
+                    .filter(Command.hasCommand(this.names, optionsObject))
+                    .chatType(["group", "supergroup"])
+                    .use(...middlewareArray);
+                break;
+            case "chat":
+            case "chat_administrators":
+                if (scope.chat_id) {
                     this._composer
                         .filter(Command.hasCommand(this.names, optionsObject))
-                        .use(...middlewareArray),
-            )
-            .with(
-                { type: "all_chat_administrators" },
-                () =>
-                    this._composer
-                        .filter(Command.hasCommand(this.names, optionsObject))
+                        .filter((ctx) => ctx.chat?.id === scope.chat_id)
                         .filter(isAdmin)
-                        .use(...middlewareArray),
-            )
-            .with(
-                { type: "all_private_chats" },
-                () =>
+                        .use(...middlewareArray);
+                }
+                break;
+            case "chat_member":
+                if (scope.chat_id && scope.user_id) {
                     this._composer
                         .filter(Command.hasCommand(this.names, optionsObject))
-                        .chatType("private")
-                        .use(
-                            ...middlewareArray,
-                        ),
-            )
-            .with(
-                { type: "all_group_chats" },
-                () =>
-                    this._composer
-                        .filter(Command.hasCommand(this.names, optionsObject))
-                        .chatType(["group", "supergroup"])
-                        .use(
-                            ...middlewareArray,
-                        ),
-            )
-            .with(
-                {
-                    type: P.union("chat", "chat_administrators"),
-                    chat_id: P.not(P.nullish).select(),
-                },
-                (chatId) =>
-                    this._composer.filter(
-                        Command.hasCommand(this.names, optionsObject),
-                    )
-                        .filter((ctx) => ctx.chat?.id === chatId)
-                        .filter(isAdmin)
-                        .use(...middlewareArray),
-            )
-            .with(
-                {
-                    type: "chat_member",
-                    chat_id: P.not(P.nullish).select("chatId"),
-                    user_id: P.not(P.nullish).select("userId"),
-                },
-                ({ chatId, userId }) =>
-                    this._composer
-                        .filter(Command.hasCommand(this.names, optionsObject))
-                        .filter((ctx) => ctx.chat?.id === chatId)
-                        .filter((ctx) => ctx.from?.id === userId)
-                        .use(...middlewareArray),
-            );
+                        .filter((ctx) => ctx.chat?.id === scope.chat_id)
+                        .filter((ctx) => ctx.from?.id === scope.user_id)
+                        .use(...middlewareArray);
+                }
+                break;
+            default:
+                throw new InvalidScopeError(scope);
+        }
 
         this._scopes.push(scope);
 

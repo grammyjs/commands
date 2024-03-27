@@ -12,6 +12,13 @@ export interface CommandsFlavor<C extends Context = Context> extends Context {
      */
     setMyCommands: (commands: Commands<C>) => Promise<void>;
     /**
+     * Returns the nearest command to the user input.
+     * If no command is found, returns `null`.
+     *
+     * @param commands List of available commands
+     * @param options Options for the Jaro-Winkler algorithm
+     * @returns The nearest command or `null`
+     */
     getNearestCommand: (
         commands: Commands<C>,
         options?: Partial<JaroWinklerOptions>,

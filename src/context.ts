@@ -23,8 +23,11 @@ export interface CommandsFlavor<C extends Context = Context> extends Context {
         commands: Commands<C>,
         options?: Partial<JaroWinklerOptions>,
     ) => string | null;
-};
+}
 
+/**
+ * Installs the commands flavor into the context.
+ */
 export function commands<C extends Context>() {
     return (ctx: CommandsFlavor<C>, next: NextFunction) => {
         ctx.setMyCommands = (commands) => {

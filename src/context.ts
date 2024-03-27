@@ -30,14 +30,14 @@ export interface CommandsFlavor<C extends Context = Context> extends Context {
  */
 export function commands<C extends Context>() {
     return (ctx: CommandsFlavor<C>, next: NextFunction) => {
-        ctx.setMyCommands = (commands) => {
+        ctx.setMyCommands = async (commands) => {
             if (!ctx.chat) {
                 throw new Error(
                     "cannot call `ctx.setMyCommands` on an update with no `chat` property",
                 );
             }
 
-            return Promise.all(
+            await Promise.all(
                 commands
                     .toSingleScopeArgs({ type: "chat", chat_id: ctx.chat.id })
                     .map((args) => ctx.api.raw.setMyCommands(args)),

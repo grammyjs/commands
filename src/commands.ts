@@ -97,7 +97,7 @@ export class Commands<C extends Context> {
     public command(
         name: string | RegExp,
         description: string,
-        handler: MaybeArray<Middleware<C>>,
+        handler: MaybeArray<Middleware<CommandContext<C>>>,
         options?: Partial<CommandOptions>,
     ): Command<C>;
     /**

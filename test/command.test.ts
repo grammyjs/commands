@@ -1,4 +1,5 @@
-import { Command, CommandOptions, matchesPattern } from "../src/command.ts";
+import { Command, matchesPattern } from "../src/command.ts";
+import { CommandOptions } from "../src/types.ts";
 import {
     Api,
     assert,

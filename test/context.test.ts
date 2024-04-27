@@ -12,7 +12,7 @@ import {
     UserFromGetMe,
 } from "./deps.test.ts";
 
-describe("the commands function", () => {
+describe("commands", () => {
     const u = { id: 42, first_name: "bot", is_bot: true } as User;
     const c = { id: 100, type: "private" } as Chat;
     const m = { text: "a", from: u, chat: c, sender_chat: c } as Message;

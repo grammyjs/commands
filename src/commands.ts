@@ -1,10 +1,11 @@
-import { Command } from "./command.ts";
+import { Command, MaybeArray } from "./command.ts";
 import {
     Api,
     BotCommand,
     BotCommandScope,
     Composer,
     Context,
+    Middleware,
 } from "./deps.deno.ts";
 import { CommandOptions } from "./types.ts";
 
@@ -15,6 +16,23 @@ type SetMyCommandsParams = {
     scope?: BotCommandScope;
     language_code?: string;
     commands: BotCommand[];
+};
+
+const isMiddleware = <C extends Context>(
+    obj: unknown,
+): obj is MaybeArray<Middleware<C>> => {
+    if (!obj) return false;
+    if (Array.isArray(obj)) return obj.every(isMiddleware);
+    const objType = typeof obj;
+
+    switch (objType) {
+        case "function":
+            return true;
+        case "object":
+            return Object.keys(obj).includes("middleware");
+    }
+
+    return false;
 };
 
 /**
@@ -68,8 +86,22 @@ export class Commands<C extends Context> {
     }
 
     /**
-     * Registers a new command and returns it.
-     * @param name Command name
+     * Registers a new command with a default handler.
+     * @param name Default command name
+     * @param description Default command description
+     * @param handler Default command handler
+     * @param options Extra options that should apply only to this command
+     * @returns An instance of the `Command` class
+     */
+    public command(
+        name: string | RegExp,
+        description: string,
+        handler: MaybeArray<Middleware<C>>,
+        options?: Partial<CommandOptions>,
+    ): Command<C>;
+    /**
+     * Registers a new command with no handlers.
+     * @param name Default command name
      * @param description Default command description
      * @param options Extra options that should apply only to this command
      * @returns An instance of the `Command` class
@@ -77,9 +109,25 @@ export class Commands<C extends Context> {
     public command(
         name: string | RegExp,
         description: string,
-        options: Partial<CommandOptions> = this._commandOptions,
+        options?: Partial<CommandOptions>,
+    ): Command<C>;
+    public command(
+        name: string | RegExp,
+        description: string,
+        handlerOrOptions?: MaybeArray<Middleware<C>> | Partial<CommandOptions>,
+        _options?: Partial<CommandOptions>,
     ) {
+        const handler = isMiddleware(handlerOrOptions)
+            ? handlerOrOptions
+            : undefined;
+        const options = handler
+            ? _options ?? this._commandOptions
+            : handlerOrOptions as Partial<CommandOptions> ??
+                this._commandOptions;
+
         const command = new Command<C>(name, description, options);
+        if (handler) command.addToScope({ type: "default" }, handler);
+
         this._commands.push(command);
         return command;
     }

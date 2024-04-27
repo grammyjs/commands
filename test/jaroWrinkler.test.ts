@@ -1,9 +1,12 @@
-import { distance } from "../src/jaro-winkler.ts";
-import { fuzzyMatch, JaroWinklerDistance } from "../src/jaro-winkler.ts";
-import { assertEquals, Context, describe, it } from "./deps.test.ts";
+import {
+    distance,
+    fuzzyMatch,
+    JaroWinklerDistance,
+} from "../src/jaro-winkler.ts";
 import { Commands } from "../src/mod.ts";
+import { assertEquals, Context, describe, it } from "./deps.test.ts";
 
-describe("The Jaro-Wrinkler Algorithm", () => {
+describe("Jaro-Wrinkler Algorithm", () => {
     it("should return value 0, because the empty string was given", () => {
         assertEquals(distance("", ""), 0);
     });

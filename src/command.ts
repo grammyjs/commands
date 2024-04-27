@@ -52,7 +52,7 @@ export class Command<C extends Context = Context> implements MiddlewareObj<C> {
      *
      * @param name Default command name
      * @param description Default command description
-     * @param options Options object that shuold apply to this command only
+     * @param options Options object that should apply to this command only
      * @access package
      */
     constructor(

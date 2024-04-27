@@ -3,6 +3,7 @@ import {
     Api,
     BotCommand,
     BotCommandScope,
+    CommandContext,
     Composer,
     Context,
     Middleware,
@@ -96,7 +97,7 @@ export class Commands<C extends Context> {
     public command(
         name: string | RegExp,
         description: string,
-        handler: MaybeArray<Middleware<C>>,
+        handler: MaybeArray<Middleware<CommandContext<C>>>,
         options?: Partial<CommandOptions>,
     ): Command<C>;
     /**
@@ -114,7 +115,7 @@ export class Commands<C extends Context> {
     public command(
         name: string | RegExp,
         description: string,
-        handlerOrOptions?: MaybeArray<Middleware<C>> | Partial<CommandOptions>,
+        handlerOrOptions?: MaybeArray<Middleware<CommandContext<C>>> | Partial<CommandOptions>,
         _options?: Partial<CommandOptions>,
     ) {
         const handler = isMiddleware(handlerOrOptions)

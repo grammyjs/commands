@@ -1,4 +1,4 @@
-import { Command, CommandOptions } from "./command.ts";
+import { Command } from "./command.ts";
 import {
     Api,
     BotCommand,
@@ -6,6 +6,7 @@ import {
     Composer,
     Context,
 } from "./deps.deno.ts";
+import { CommandOptions } from "./types.ts";
 
 type SetMyCommandsParams = {
     scope?: BotCommandScope;

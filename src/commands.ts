@@ -1,3 +1,4 @@
+import { CommandContext } from "https://deno.land/x/grammy@v1.22.4/mod.ts";
 import { Command, MaybeArray } from "./command.ts";
 import {
     Api,
@@ -20,7 +21,7 @@ type SetMyCommandsParams = {
 
 const isMiddleware = <C extends Context>(
     obj: unknown,
-): obj is MaybeArray<Middleware<C>> => {
+): obj is MaybeArray<Middleware<CommandContext<C>>> => {
     if (!obj) return false;
     if (Array.isArray(obj)) return obj.every(isMiddleware);
     const objType = typeof obj;
@@ -114,7 +115,7 @@ export class Commands<C extends Context> {
     public command(
         name: string | RegExp,
         description: string,
-        handlerOrOptions?: MaybeArray<Middleware<C>> | Partial<CommandOptions>,
+        handlerOrOptions?: MaybeArray<Middleware<CommandContext<C>>> | Partial<CommandOptions>,
         _options?: Partial<CommandOptions>,
     ) {
         const handler = isMiddleware(handlerOrOptions)

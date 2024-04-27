@@ -23,13 +23,16 @@ const ensureArray = <T>(value: MaybeArray<T>): T[] =>
     Array.isArray(value) ? value : [value];
 
 const isAdmin = (ctx: Context) =>
-    ctx.getAuthor().then((author) =>
-        ["administrator", "creator"].includes(author.status)
-    );
+    ctx
+        .getAuthor()
+        .then((author) => ["administrator", "creator"].includes(author.status));
 
 export const matchesPattern = (value: string, pattern: string | RegExp) =>
     typeof pattern === "string" ? value === pattern : pattern.test(value);
 
+/**
+ * Class that represents a single command and allows you to configure it.
+ */
 export class Command<C extends Context = Context> implements MiddlewareObj<C> {
     private _scopes: BotCommandScope[] = [];
     private _languages: Map<
@@ -43,6 +46,15 @@ export class Command<C extends Context = Context> implements MiddlewareObj<C> {
         targetedCommands: "optional",
     };
 
+    /**
+     * Constructor for the `Command` class.
+     * Do not call this directly. Instead, use the `command` method from the `Commands` class
+     *
+     * @param name Default command name
+     * @param description Default command description
+     * @param options Options object that shuold apply to this command only
+     * @access package
+     */
     constructor(
         name: string | RegExp,
         description: string,
@@ -53,26 +65,63 @@ export class Command<C extends Context = Context> implements MiddlewareObj<C> {
         this._languages.set("default", { name: name, description });
     }
 
+    /**
+     * Get registered scopes for this command
+     */
     get scopes() {
         return this._scopes;
     }
 
+    /**
+     * Get registered languages for this command
+     */
     get languages() {
         return this._languages;
     }
 
+    /**
+     * Get registered names for this command
+     */
     get names() {
         return Array.from(this._languages.values()).map(({ name }) => name);
     }
 
+    /**
+     * Get the default name for this command
+     */
     get name() {
         return this._languages.get("default")!.name;
     }
 
+    /**
+     * Get the default description for this command
+     */
     get description() {
         return this._languages.get("default")!.description;
     }
 
+    /**
+     * Registers the command to a scope to allow it to be handled and used with `setMyCommands`.
+     * This will automatically apply filtering middlewares for you, so the handler only runs on the specified scope.
+     *
+     * @example
+     * ```ts
+     * const myCommands = new Commands();
+     * myCommands.command("start", "Initializes bot configuration")
+     *     .addToScope(
+     *         { type: "all_private_chats" },
+     *         (ctx) => ctx.reply(`Hello, ${ctx.chat.first_name}!`),
+     *     )
+     *     .addToScope(
+     *         { type: "all_group_chats" },
+     *         (ctx) => ctx.reply(`Hello, members of ${ctx.chat.title}!`),
+     *     );
+     * ```
+     *
+     * @param scope Which scope this command should be available on
+     * @param middleware The handler for this command on the specified scope
+     * @param options Additional options that should apply only to this scope
+     */
     public addToScope(
         scope: BotCommandGroupsScope,
         middleware: MaybeArray<ChatTypeMiddleware<C, "group" | "supergroup">>,
@@ -148,6 +197,22 @@ export class Command<C extends Context = Context> implements MiddlewareObj<C> {
         return this;
     }
 
+    /**
+     * Creates a matcher for the given command that can be used in filtering operations
+     *
+     * @example
+     * ```ts
+     * bot
+     *  .filter(
+     *    Command.hasCommand(/\/delete_(.*)/),
+     *    (ctx) => ctx.reply(`Deleting ${ctx.message?.text?.split("_")[1]}`)
+     *  )
+     * ```
+     *
+     * @param command Command name or RegEx
+     * @param options Options that should apply to the matching algorithm
+     * @returns A predicate that matches the given command
+     */
     public static hasCommand(
         command: MaybeArray<string | RegExp>,
         options: CommandOptions,
@@ -174,13 +239,29 @@ export class Command<C extends Context = Context> implements MiddlewareObj<C> {
                     commandNames.some((name) =>
                         matchesPattern(command.replace(prefix, ""), name)
                     )
-                ) return true;
+                ) {
+                    return true;
+                }
             }
 
             return false;
         };
     }
 
+    /**
+     * Adds a new translation for the command
+     *
+     * @example
+     * ```ts
+     * myCommands
+     *  .command("start", "Starts the bot configuration")
+     *  .localize("pt", "iniciar", "Inicia a configuração do bot")
+     * ```
+     *
+     * @param languageCode Language this translation applies to
+     * @param name Localized command name
+     * @param description Localized command description
+     */
     public localize(
         languageCode: string,
         name: string | RegExp,
@@ -193,15 +274,32 @@ export class Command<C extends Context = Context> implements MiddlewareObj<C> {
         return this;
     }
 
+    /**
+     * Gets the localized command name of an existing translation
+     * @param languageCode Language to get the name for
+     * @returns Localized command name
+     */
     public getLocalizedName(languageCode: string) {
         return this._languages.get(languageCode)?.name ?? this.name;
     }
 
+    /**
+     * Gets the localized command name of an existing translation
+     * @param languageCode Language to get the name for
+     * @returns Localized command name
+     */
     public getLocalizedDescription(languageCode: string) {
         return this._languages.get(languageCode)?.description ??
             this.description;
     }
 
+    /**
+     * Converts command to an object representation.
+     * Useful for JSON serialization.
+     *
+     * @param languageCode If specified, uses localized versions of the command name and description
+     * @returns Object representation of this command
+     */
     public toObject(languageCode = "default"): BotCommand {
         const localizedName = this.getLocalizedName(languageCode);
         return {

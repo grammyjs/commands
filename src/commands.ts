@@ -9,11 +9,27 @@ import {
 import { CommandOptions } from "./types.ts";
 
 type SetMyCommandsParams = {
+    /**
+     * Scope
+     */
     scope?: BotCommandScope;
     language_code?: string;
     commands: BotCommand[];
 };
 
+/**
+ * Central class that manages all registered commands.
+ * This is the starting point for the plugin, and this is what you should pass to `bot.use` so your commands get properly registered.
+ *
+ * @example
+ * ```typescript
+ * const myCommands = new Commands()
+ * commands.command("start", "start the bot configuration", (ctx) => ctx.reply("Hello there!"))
+ *
+ * // Registers the commands with the bot instance.
+ * bot.use(myCommands)
+ * ```
+ */
 export class Commands<C extends Context> {
     private _languages: Set<string> = new Set();
     private _scopes: Map<string, Array<Command<C>>> = new Map();
@@ -51,6 +67,13 @@ export class Commands<C extends Context> {
         });
     }
 
+    /**
+     * Registers a new command and returns it.
+     * @param name Command name
+     * @param description Default command description
+     * @param options Extra options that should apply only to this command
+     * @returns An instance of the `Command` class
+     */
     public command(
         name: string | RegExp,
         description: string,
@@ -61,6 +84,11 @@ export class Commands<C extends Context> {
         return command;
     }
 
+    /**
+     * Serializes the commands into multiple objects that can each be passed to a `setMyCommands` call.
+     *
+     * @returns One item for each combination of command + scope + language
+     */
     public toArgs() {
         this._populateMetadata();
         const params: SetMyCommandsParams[] = [];
@@ -83,6 +111,12 @@ export class Commands<C extends Context> {
         return params.filter((params) => params.commands.length > 0);
     }
 
+    /**
+     * Serializes the commands of a single scope into objects that can each be passed to a `setMyCommands` call.
+     *
+     * @param scope Selected scope to be serialized
+     * @returns One item per command per language
+     */
     public toSingleScopeArgs(scope: BotCommandScope) {
         this._populateMetadata();
         const params: SetMyCommandsParams[] = [];
@@ -100,16 +134,28 @@ export class Commands<C extends Context> {
         return params;
     }
 
+    /**
+     * Registers all commands to be displayed by clients according to their scopes and languages
+     * Calls `setMyCommands` for each language of each scope of each command.
+     *
+     * @param Instance of `bot` or { api: bot.api }
+     */
     public async setCommands({ api }: { api: Api }) {
         await Promise.all(
             this.toArgs().map((args) => api.raw.setMyCommands(args)),
         );
     }
 
+    /**
+     * Alias for {@link toArgs}
+     */
     public toJSON() {
         return this.toArgs();
     }
 
+    /**
+     * @returns A JSON serialized version of all the currently registered commands
+     */
     public toString() {
         return JSON.stringify(this);
     }
@@ -119,10 +165,20 @@ export class Commands<C extends Context> {
         return this._composer.middleware();
     }
 
+    /**
+     * Replaces the `toString` method on node.js
+     *
+     * @see toString
+     */
     [Symbol.for("Deno.customInspect")]() {
         return this.toString();
     }
 
+    /**
+     * Replaces the `toString` method on Deno
+     *
+     * @see toString
+     */
     [Symbol.for("nodejs.util.inspect.custom")]() {
         return this.toString();
     }

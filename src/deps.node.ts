@@ -3,6 +3,7 @@ export {
     Bot,
     type ChatTypeContext,
     type ChatTypeMiddleware,
+    type CommandContext,
     type CommandMiddleware,
     Composer,
     Context,

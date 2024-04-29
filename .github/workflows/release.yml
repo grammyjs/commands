@@ -13,6 +13,7 @@ jobs:
               with:
                   fetch-depth: 0
 
+            - uses: denoland/setup-deno@v1
             - run: npm install
 
             - name: Publish to npm

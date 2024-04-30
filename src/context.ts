@@ -43,7 +43,7 @@ export function commands<C extends Context>() {
                 );
             }
 
-            const commandsMixin = [commands].concat(moreCommands).values();
+            const commandsMixin = [commands].concat(moreCommands);
             for (const commands of commandsMixin) {
                 await Promise.all(
                     commands

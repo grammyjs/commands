@@ -12,7 +12,7 @@ export interface CommandsFlavor<C extends Context = Context> extends Context {
      */
     setMyCommands: (
         commands: Commands<C>,
-        ...rest: Commands<C>[]
+        ...moreCommands: Commands<C>[]
     ) => Promise<void>;
     /**
      * Returns the nearest command to the user input.

@@ -37,7 +37,7 @@ export class Command<C extends Context = Context> implements MiddlewareObj<C> {
     private _scopes: BotCommandScope[] = [];
     private _languages: Map<
         string,
-        { name: string | RegExp; description: string }
+        { name: string ; description: string }
     > = new Map();
     private _composer: Composer<C> = new Composer<C>();
     private _options: CommandOptions = {
@@ -56,7 +56,7 @@ export class Command<C extends Context = Context> implements MiddlewareObj<C> {
      * @access package
      */
     constructor(
-        name: string | RegExp,
+        name: string,
         description: string,
         options: Partial<CommandOptions> = {},
     ) {
@@ -264,11 +264,11 @@ export class Command<C extends Context = Context> implements MiddlewareObj<C> {
      */
     public localize(
         languageCode: string,
-        name: string | RegExp,
+        name: string,
         description: string,
     ) {
         this._languages.set(languageCode, {
-            name: new RegExp(name),
+            name: name,
             description,
         });
         return this;
@@ -301,9 +301,8 @@ export class Command<C extends Context = Context> implements MiddlewareObj<C> {
      * @returns Object representation of this command
      */
     public toObject(languageCode = "default"): BotCommand {
-        const localizedName = this.getLocalizedName(languageCode);
         return {
-            command: localizedName instanceof RegExp ? "" : localizedName,
+            command: this.getLocalizedName(languageCode),
             description: this.getLocalizedDescription(languageCode),
         };
     }

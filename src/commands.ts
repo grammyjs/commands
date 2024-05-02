@@ -113,7 +113,7 @@ export class Commands<C extends Context> {
         options?: Partial<CommandOptions>,
     ): Command<C>;
     public command(
-        name: string | RegExp,
+        name: string,
         description: string,
         handlerOrOptions?:
             | MaybeArray<Middleware<CommandContext<C>>>
@@ -171,7 +171,6 @@ export class Commands<C extends Context> {
     public toSingleScopeArgs(scope: BotCommandScope) {
         this._populateMetadata();
         const params: SetMyCommandsParams[] = [];
-
         for (const language of this._languages) {
             params.push({
                 scope,
@@ -181,7 +180,6 @@ export class Commands<C extends Context> {
                     .map((command) => command.toObject(language)),
             });
         }
-
         return params;
     }
 

@@ -1,6 +1,7 @@
 import { Commands } from "./commands.ts";
 import { Context, NextFunction } from "./deps.deno.ts";
 import { fuzzyMatch, JaroWinklerOptions } from "./jaro-winkler.ts";
+import { SetMyCommandsParams } from "./mod.ts";
 
 export interface CommandsFlavor<C extends Context = Context> extends Context {
     /**
@@ -42,18 +43,19 @@ export function commands<C extends Context>() {
                     "cannot call `ctx.setMyCommands` on an update with no `chat` property",
                 );
             }
+            const commandsParams = [commands].concat(moreCommands).map((
+                commands,
+            ) => commands.toSingleScopeArgs({
+                type: "chat",
+                chat_id: ctx.chat!.id,
+            }));
 
-            const commandsMixin = [commands].concat(moreCommands);
-            for (const commands of commandsMixin) {
-                await Promise.all(
-                    commands
-                        .toSingleScopeArgs({
-                            type: "chat",
-                            chat_id: ctx.chat.id,
-                        })
-                        .map((args) => ctx.api.raw.setMyCommands(args)),
-                );
-            }
+            const mergedCommands = mergeMyCommandsParams(commandsParams);
+
+            await Promise.all(
+                mergedCommands
+                    .map((args) => ctx.api.raw.setMyCommands(args)),
+            );
         };
 
         ctx.getNearestCommand = (commands, options) => {
@@ -66,4 +68,36 @@ export function commands<C extends Context>() {
 
         return next();
     };
+}
+
+/**
+ * Iterates over an array of commands params, merging commands when two commandsParams
+ * are from the same language.
+ *
+ * @param commandParams an array of commands params coming from multiple Commands instances
+ * @returns an array containing all commands to be set on ctx
+ */
+
+function mergeMyCommandsParams(
+    commandParams: SetMyCommandsParams[][],
+): SetMyCommandsParams[] {
+    if (!commandParams.flat().length) { return [] }
+    return commandParams
+        .flat()
+        .sort((a, b) => {
+            if (!a.language_code) return -1;
+            if (!b.language_code) return 1;
+            return a.language_code.localeCompare(b.language_code);
+        })
+        .reduce((result, current, i, arr) => {
+            if (i === 0 || current.language_code !== arr[i - 1].language_code) {
+                result.push(current);
+                return result;
+            } else {
+                result[result.length - 1].commands = result[result.length - 1]
+                    .commands
+                    .concat(current.commands);
+                return result;
+            }
+        }, [] as SetMyCommandsParams[]);
 }

@@ -10,9 +10,10 @@ import {
 } from "./deps.deno.ts";
 import { CommandOptions } from "./types.ts";
 
-type SetMyCommandsParams = {
+export type SetMyCommandsParams = {
     /**
      * Scope
+     * @param language_code two letter abbreviation in ISO_639 standard: https://en.wikipedia.org/wiki/List_of_ISO_639_language_codes
      */
     scope?: BotCommandScope;
     language_code?: string;
@@ -113,7 +114,7 @@ export class Commands<C extends Context> {
         options?: Partial<CommandOptions>,
     ): Command<C>;
     public command(
-        name: string | RegExp,
+        name: string,
         description: string,
         handlerOrOptions?:
             | MaybeArray<Middleware<CommandContext<C>>>
@@ -171,7 +172,6 @@ export class Commands<C extends Context> {
     public toSingleScopeArgs(scope: BotCommandScope) {
         this._populateMetadata();
         const params: SetMyCommandsParams[] = [];
-
         for (const language of this._languages) {
             params.push({
                 scope,
@@ -181,7 +181,6 @@ export class Commands<C extends Context> {
                     .map((command) => command.toObject(language)),
             });
         }
-
         return params;
     }
 

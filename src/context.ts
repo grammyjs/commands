@@ -81,7 +81,7 @@ export function commands<C extends Context>() {
 function mergeMyCommandsParams(
     commandParams: SetMyCommandsParams[][],
 ): SetMyCommandsParams[] {
-    if (!commandParams.flat().length) { return [] }
+    if (!commandParams.flat().length) return [];
     return commandParams
         .flat()
         .sort((a, b) => {

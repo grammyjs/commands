@@ -27,25 +27,12 @@ export interface CommandsFlavor<C extends Context = Context> extends Context {
         commands: Commands<C>,
         options?: Partial<JaroWinklerOptions>,
     ) => string | null;
-
-    /** */
-
-    setMyCommandsToDefault: () => void;
-
-    /** */
-
-    cleanMyCommands: () => void;
 }
 
 /**
  * Installs the commands flavor into the context.
  */
-export function commands<C extends Context>(defaultCommands?: Commands<C>) {
-    const emptyCommands = new Commands<C>();
-    if (!defaultCommands) {
-        defaultCommands = emptyCommands;
-    }
-
+export function commands<C extends Context>() {
     return (ctx: CommandsFlavor<C>, next: NextFunction) => {
         ctx.setMyCommands = async (
             commands,
@@ -56,28 +43,18 @@ export function commands<C extends Context>(defaultCommands?: Commands<C>) {
                     "cannot call `ctx.setMyCommands` on an update with no `chat` property",
                 );
             }
-            console.log(commands.toSingleScopeArgs({
+            const commandsParams = [commands].concat(moreCommands).map((
+                commands,
+            ) => commands.toSingleScopeArgs({
                 type: "chat",
                 chat_id: ctx.chat!.id,
-            }))
+            }));
 
-            // const commandsParams = [commands].concat(moreCommands).map((
-            //     commands,
-            // ) => commands.toSingleScopeArgs({
-            //     type: "chat",
-            //     chat_id: ctx.chat!.id,
-            // })).flat();
-
-            // console.log(commandsParams)
-            // mergeMyCommandsParams(commandsParams)
+            const mergedCommands = mergeMyCommandsParams(commandsParams);
 
             await Promise.all(
-                commands
-                .toSingleScopeArgs({
-                    type: "chat",
-                    chat_id: ctx.chat!.id,
-                })
-                .map((args) => ctx.api.raw.setMyCommands(args)),
+                mergedCommands
+                    .map((args) => ctx.api.raw.setMyCommands(args)),
             );
         };
 
@@ -89,26 +66,38 @@ export function commands<C extends Context>(defaultCommands?: Commands<C>) {
             return null;
         };
 
-        // ctx.setMyCommandsToDefault = async () => {
-        //     await ctx.setMyCommands(defaultCommands);
-        // };
-
-        // ctx.cleanMyCommands = async () => {
-        //     await ctx.setMyCommands(emptyCommands);
-        // };
-
         return next();
     };
 }
 
-function mergeMyCommandsParams(params : SetMyCommandsParams[]) : SetMyCommandsParams[]{
-    return params.reduce((acc, next, i)=>{
-        if(i === 0) return acc;
-        const v = acc.find(({scope,language_code})=>{
-           language_code === next.language_code 
+/**
+ * Iterates over an array of commands params, merging commands when two commandsParams
+ * are from the same language.
+ *
+ * @param commandParams an array of commands params coming from multiple Commands instances
+ * @returns an array containing all commands to be set on ctx
+ */
+
+function mergeMyCommandsParams(
+    commandParams: SetMyCommandsParams[][],
+): SetMyCommandsParams[] {
+    if (!commandParams.flat().length) { return [] }
+    return commandParams
+        .flat()
+        .sort((a, b) => {
+            if (!a.language_code) return -1;
+            if (!b.language_code) return 1;
+            return a.language_code.localeCompare(b.language_code);
         })
-        console.log(v)
-        // acc.commands = acc.commands.concat(next.commands)
-        return acc
-    },[params[0]])
+        .reduce((result, current, i, arr) => {
+            if (i === 0 || current.language_code !== arr[i - 1].language_code) {
+                result.push(current);
+                return result;
+            } else {
+                result[result.length - 1].commands = result[result.length - 1]
+                    .commands
+                    .concat(current.commands);
+                return result;
+            }
+        }, [] as SetMyCommandsParams[]);
 }

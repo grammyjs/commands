@@ -37,7 +37,7 @@ export class Command<C extends Context = Context> implements MiddlewareObj<C> {
     private _scopes: BotCommandScope[] = [];
     private _languages: Map<
         string,
-        { name: string ; description: string }
+        { name: string; description: string }
     > = new Map();
     private _composer: Composer<C> = new Composer<C>();
     private _options: CommandOptions = {

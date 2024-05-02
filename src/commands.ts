@@ -10,7 +10,7 @@ import {
 } from "./deps.deno.ts";
 import { CommandOptions } from "./types.ts";
 
-type SetMyCommandsParams = {
+export type SetMyCommandsParams = {
     /**
      * Scope
      */

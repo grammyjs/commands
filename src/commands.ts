@@ -134,10 +134,8 @@ export class Commands<C extends Context> {
         this._commands.push(command);
         return command;
     }
-
     /**
      * Serializes the commands into multiple objects that can each be passed to a `setMyCommands` call.
-     *
      * @returns One item for each combination of command + scope + language
      */
     public toArgs() {
@@ -151,9 +149,8 @@ export class Commands<C extends Context> {
                     language_code: language === "default"
                         ? undefined
                         : language,
-                    commands: commands.map((command) =>
-                        command.toObject(language)
-                    )
+                    commands: commands
+                        .map((command) => command.toObject(language))
                         .filter((args) => args.command.length > 0),
                 });
             }
@@ -171,17 +168,16 @@ export class Commands<C extends Context> {
     public toSingleScopeArgs(scope: BotCommandScope) {
         this._populateMetadata();
         const params: SetMyCommandsParams[] = [];
-
         for (const language of this._languages) {
             params.push({
                 scope,
                 language_code: language === "default" ? undefined : language,
                 commands: this._commands
                     .filter((command) => command.scopes.length)
+                    .filter((command) => typeof command.name === "string")
                     .map((command) => command.toObject(language)),
             });
         }
-
         return params;
     }
 

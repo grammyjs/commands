@@ -204,7 +204,7 @@ export class Command<C extends Context = Context> implements MiddlewareObj<C> {
      * ```ts
      * bot
      *  .filter(
-     *    Command.hasCommand(/\/delete_(.*)/),
+     *    Command.hasCommand(/delete_(.*)/),
      *    (ctx) => ctx.reply(`Deleting ${ctx.message?.text?.split("_")[1]}`)
      *  )
      * ```
@@ -268,7 +268,7 @@ export class Command<C extends Context = Context> implements MiddlewareObj<C> {
         description: string,
     ) {
         this._languages.set(languageCode, {
-            name: new RegExp(name),
+            name: name,
             description,
         });
         return this;
@@ -303,7 +303,9 @@ export class Command<C extends Context = Context> implements MiddlewareObj<C> {
     public toObject(languageCode = "default"): BotCommand {
         const localizedName = this.getLocalizedName(languageCode);
         return {
-            command: localizedName instanceof RegExp ? "" : localizedName,
+            command: localizedName instanceof RegExp
+                ? localizedName.source
+                : localizedName,
             description: this.getLocalizedDescription(languageCode),
         };
     }

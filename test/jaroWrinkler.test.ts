@@ -54,5 +54,30 @@ describe("Jaro-Wrinkler Algorithm", () => {
 
             assertEquals(fuzzyMatch("xyz", cmds, {}), null);
         });
+
+        it("should work for simple regex commands", () => {
+            const cmds = new Commands<Context>();
+            cmds.command(
+                /magical_\d/,
+                "Magical Command",
+            ).addToScope(
+                { type: "all_private_chats" },
+                (ctx) => ctx.reply(`Hello, ${ctx.chat.first_name}!`),
+            );
+            assertEquals(fuzzyMatch("magcal", cmds, {}), "magical_\\d");
+        });
+        it("should work for localized regex", () => {
+            const cmds = new Commands<Context>();
+            cmds.command(
+                /magical_(a|b)/,
+                "Magical Command",
+            ).addToScope(
+                { type: "all_private_chats" },
+                (ctx) => ctx.reply(`Hello, ${ctx.chat.first_name}!`),
+            ).localize("es", /magico_(c|d)/, "Comando Mágico");
+
+            assertEquals(fuzzyMatch("magici_c", cmds, {}), "magico_(c|d)");
+            assertEquals(fuzzyMatch("magici_a", cmds, {}), "magical_(a|b)");
+        });
     });
 });

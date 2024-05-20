@@ -10,7 +10,7 @@ import {
 } from "./deps.deno.ts";
 import { CommandOptions } from "./types.ts";
 
-type SetMyCommandsParams = {
+export type SetMyCommandsParams = {
     /**
      * Scope
      */
@@ -149,8 +149,9 @@ export class Commands<C extends Context> {
                     language_code: language === "default"
                         ? undefined
                         : language,
-                    commands: commands
-                        .map((command) => command.toObject(language))
+                    commands: commands.map((command) =>
+                        command.toObject(language)
+                    )
                         .filter((args) => args.command.length > 0),
                 });
             }

@@ -13,6 +13,7 @@ import { CommandOptions } from "./types.ts";
 export type SetMyCommandsParams = {
     /**
      * Scope
+     * @param language_code two letter abbreviation in ISO_639 standard: https://en.wikipedia.org/wiki/List_of_ISO_639_language_codes
      */
     scope?: BotCommandScope;
     language_code?: string;

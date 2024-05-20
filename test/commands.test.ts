@@ -1,4 +1,5 @@
 import { Commands } from "../src/commands.ts";
+import { _mergeMyCommandsParams } from "../src/mod.ts";
 import { assertEquals, describe, it } from "./deps.test.ts";
 
 describe("Commands", () => {
@@ -125,6 +126,109 @@ describe("Commands", () => {
                         language_code: undefined,
                         commands: [
                             { command: "test", description: "handler" },
+                        ],
+                    },
+                ]);
+            });
+        });
+        describe("_mergeMyCommandsParams", () => {
+            it("should merge command's from different Commands instances", () => {
+                const a = new Commands();
+                a.command("a", "test a", (_) => _);
+                const b = new Commands();
+                b.command("b", "test b", (_) => _);
+                const c = new Commands();
+                c.command("c", "test c", (_) => _);
+
+                const allParams = [a, b, c].map((
+                    commands,
+                ) => commands.toSingleScopeArgs({
+                    type: "chat",
+                    chat_id: 10,
+                }));
+
+                const mergedCommands = _mergeMyCommandsParams(allParams);
+
+                assertEquals(mergedCommands, [
+                    {
+                        scope: { type: "chat", chat_id: 10 },
+                        language_code: undefined,
+                        commands: [
+                            { command: "c", description: "test c" },
+                            { command: "b", description: "test b" },
+                            { command: "a", description: "test a" },
+                        ],
+                    },
+                ]);
+            });
+            it("should merge for localized scopes", () => {
+                const a = new Commands();
+                a.command("a", "test a", (_) => _);
+                a.command("a1", "test a1", (_) => _).localize(
+                    "es",
+                    "localA1",
+                    "prueba a1 localizada",
+                );
+                a.command("a2", "test a2", (_) => _).localize(
+                    "fr",
+                    "localiseA2",
+                    "test a2 localisé",
+                );
+
+                const b = new Commands();
+                b.command("b", "test b", (_) => _)
+                    .localize("es", "localB", "prueba b localizada")
+                    .localize("fr", "localiseB", "prueba b localisé");
+
+                const allParams = [a, b].map((
+                    commands,
+                ) => commands.toSingleScopeArgs({
+                    type: "chat",
+                    chat_id: 10,
+                }));
+
+                const mergedCommands = _mergeMyCommandsParams(allParams);
+                assertEquals(mergedCommands, [
+                    {
+                        scope: { type: "chat", chat_id: 10 },
+                        language_code: undefined,
+                        commands: [
+                            { command: "b", description: "test b" },
+                            { command: "a", description: "test a" },
+                            { command: "a1", description: "test a1" },
+                            { command: "a2", description: "test a2" },
+                        ],
+                    },
+                    {
+                        scope: { type: "chat", chat_id: 10 },
+                        language_code: "es",
+                        commands: [
+                            { command: "a", description: "test a" },
+                            {
+                                command: "localA1",
+                                description: "prueba a1 localizada",
+                            },
+                            { command: "a2", description: "test a2" },
+                            {
+                                command: "localB",
+                                description: "prueba b localizada",
+                            },
+                        ],
+                    },
+                    {
+                        scope: { type: "chat", chat_id: 10 },
+                        language_code: "fr",
+                        commands: [
+                            { command: "a", description: "test a" },
+                            { command: "a1", description: "test a1" },
+                            {
+                                command: "localiseA2",
+                                description: "test a2 localisé",
+                            },
+                            {
+                                command: "localiseB",
+                                description: "prueba b localisé",
+                            },
                         ],
                     },
                 ]);

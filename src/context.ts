@@ -50,7 +50,7 @@ export function commands<C extends Context>() {
                 chat_id: ctx.chat!.id,
             }));
 
-            const mergedCommands = mergeMyCommandsParams(commandsParams);
+            const mergedCommands = _mergeMyCommandsParams(commandsParams);
 
             await Promise.all(
                 mergedCommands
@@ -78,7 +78,7 @@ export function commands<C extends Context>() {
  * @returns an array containing all commands to be set on ctx
  */
 
-function mergeMyCommandsParams(
+export function _mergeMyCommandsParams(
     commandParams: SetMyCommandsParams[][],
 ): SetMyCommandsParams[] {
     if (!commandParams.flat().length) return [];

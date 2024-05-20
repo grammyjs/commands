@@ -258,7 +258,7 @@ export class Command<C extends Context = Context> implements MiddlewareObj<C> {
      *  .localize("pt", "iniciar", "Inicia a configuração do bot")
      * ```
      *
-     * @param languageCode Language this translation applies to
+     * @param languageCode Language this translation applies to. @see https://en.wikipedia.org/wiki/List_of_ISO_639_language_codes
      * @param name Localized command name
      * @param description Localized command description
      */

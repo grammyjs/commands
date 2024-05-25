@@ -1,5 +1,5 @@
 import { Commands } from "./commands.ts";
-import { Context } from "./deps.deno.ts";
+import { BotCommandScope, Context } from "./deps.deno.ts";
 
 export function distance(s1: string, s2: string) {
     if (s1.length === 0 || s2.length === 0) {
@@ -72,12 +72,18 @@ export function distance(s1: string, s2: string) {
 export type JaroWinklerOptions = {
     ignoreCase?: boolean;
     similarityThreshold?: number;
+    language?: string;
 };
 
 type CommandSimilarity = {
-    command: string | null;
+    command: CommandNameAndPrefix | null;
     similarity: number;
 };
+
+export interface CommandNameAndPrefix {
+    name: string;
+    prefix: string;
+}
 
 // Computes the Winkler distance between two string -- intrepreted from:
 // http://en.wikipedia.org/wiki/Jaro%E2%80%93Winkler_distance
@@ -114,20 +120,17 @@ export function fuzzyMatch<C extends Context>(
     userInput: string,
     commands: Commands<C>,
     options: Partial<JaroWinklerOptions>,
-): string | null {
+): CommandNameAndPrefix | null {
     const defaultSimilarityThreshold = 0.85;
     const similarityThreshold = options.similarityThreshold ||
         defaultSimilarityThreshold;
 
-    const commandsSet = new Set(
-        commands
-            .toJSON()
-            .flatMap((item) => item.commands.map((command) => command.command)),
-    );
+    const cmds = commands
+        .toNameAndPrefix(options.language);
 
-    const bestMatch = Array.from(commandsSet).reduce(
+    const bestMatch = cmds.reduce(
         (best: CommandSimilarity, command) => {
-            const similarity = JaroWinklerDistance(userInput, command, {
+            const similarity = JaroWinklerDistance(userInput, command.name, {
                 ...options,
             });
             return similarity > best.similarity

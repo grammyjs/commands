@@ -8,6 +8,7 @@ import {
     Context,
     Middleware,
 } from "./deps.deno.ts";
+import { JaroWinklerOptions } from "./jaro-winkler.ts";
 import { CommandOptions } from "./types.ts";
 import { type MaybeArray } from "./utils.ts";
 
@@ -202,10 +203,33 @@ export class Commands<C extends Context> {
     }
 
     /**
-     * Alias for {@link toArgs}
+     * Serialize for {@link FuzzyMatch}
      */
-    public toJSON() {
-        return this.toArgs();
+    public toNameAndPrefix(
+        language: JaroWinklerOptions["language"] = "default",
+    ) {
+        this._populateMetadata();
+        const commands = Array.from(this._scopes.values())
+            .flat()
+            .map((command) => {
+                let lang = command.languages.get(language);
+                lang ??= command.languages.get("default");
+                if (!lang) {
+                    throw "never: If a command exist, 'default' should exist in _languages";
+                }
+                return {
+                    name: lang.name instanceof RegExp
+                        ? lang.name.source
+                        : lang.name,
+                    prefix: command.prefix,
+                };
+            });
+        const visited: Record<string, boolean> = {};
+        return commands.filter((command) => {
+            if (visited[command.name]) return false;
+            visited[command.name] = true;
+            return true;
+        });
     }
 
     /**

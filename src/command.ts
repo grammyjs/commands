@@ -97,6 +97,13 @@ export class Command<C extends Context = Context> implements MiddlewareObj<C> {
     }
 
     /**
+     * Get the prefix for this command
+     */
+    get prefix() {
+        return this._options.prefix;
+    }
+
+    /**
      * Registers the command to a scope to allow it to be handled and used with `setMyCommands`.
      * This will automatically apply filtering middlewares for you, so the handler only runs on the specified scope.
      *

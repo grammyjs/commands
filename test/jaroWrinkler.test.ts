@@ -38,7 +38,7 @@ describe("Jaro-Wrinkler Algorithm", () => {
                 (ctx) => ctx.reply(`Hello, ${ctx.chat.first_name}!`),
             );
 
-            assertEquals(fuzzyMatch("strt", cmds, {}), "start");
+            assertEquals(fuzzyMatch("strt", cmds, {})?.name, "start");
         });
 
         it("should return null because command doesn't exist", () => {
@@ -64,7 +64,7 @@ describe("Jaro-Wrinkler Algorithm", () => {
                 { type: "all_private_chats" },
                 (ctx) => ctx.reply(`Hello, ${ctx.chat.first_name}!`),
             );
-            assertEquals(fuzzyMatch("magcal", cmds, {}), "magical_\\d");
+            assertEquals(fuzzyMatch("magcal", cmds, {})?.name, "magical_\\d");
         });
         it("should work for localized regex", () => {
             const cmds = new Commands<Context>();
@@ -76,8 +76,35 @@ describe("Jaro-Wrinkler Algorithm", () => {
                 (ctx) => ctx.reply(`Hello, ${ctx.chat.first_name}!`),
             ).localize("es", /magico_(c|d)/, "Comando Mágico");
 
-            assertEquals(fuzzyMatch("magici_c", cmds, {}), "magico_(c|d)");
-            assertEquals(fuzzyMatch("magici_a", cmds, {}), "magical_(a|b)");
+            assertEquals(
+                fuzzyMatch("magici_c", cmds, {language: 'es'})?.name,
+                "magico_(c|d)",
+            );
+            assertEquals(
+                fuzzyMatch("magici_a", cmds, {})?.name,
+                "magical_(a|b)",
+            );
+        });
+    });
+    describe("Serialize commands for FuzzyMatch", () => {
+        describe("toNameAndPrefix", () => {
+            it("the resulting Array must contain the localized or default version depending on the input", () => {
+                const cmds = new Commands<Context>();
+                cmds.command("butcher", "green beret", () => {});
+                cmds.command("duke", "sniper", () => {}).localize(
+                    "es",
+                    "duque",
+                    "francotirador",
+                );
+                cmds.command("fins", "marine", () => {}).addToScope({
+                    type: "all_private_chats",
+                }, () => {});
+
+                let json = cmds.toNameAndPrefix();
+                assertEquals(json[1].name, "duke");
+                json = cmds.toNameAndPrefix("es");
+                assertEquals(json[1].name, "duque");
+            });
         });
     });
 });

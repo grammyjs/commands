@@ -106,5 +106,43 @@ describe("Jaro-Wrinkler Algorithm", () => {
                 assertEquals(json[1].name, "duque");
             });
         });
+        describe('Should return the command localization related to the user lang', () => {
+            const cmds = new Commands<Context>();
+            cmds.command('duke', 'sniper', () => { })
+                .localize('es', 'duque', '_')
+                .localize('fr', 'duc', '_')
+                .localize('it', 'duca', '_')
+                .localize('pt', 'duque', '_')
+                .localize('de', 'herzog', '_')
+                .localize('sv', 'hertig', '_')
+                .localize('da', 'hertug', '_')
+                .localize('fi', 'herttua', '_')
+                .localize('hu', 'herceg', '_')
+
+            it("sv", () => {
+                assertEquals(fuzzyMatch('hertog', cmds, {}), "hertig");
+            });
+            it("da", () => {
+                assertEquals(fuzzyMatch('hertog', cmds, {}), "hertug");
+            });
+            it("default", () => {
+                assertEquals(fuzzyMatch('duk', cmds, {}), "duke");
+                assertEquals(fuzzyMatch('duka', cmds, {}), "duke");
+                assertEquals(fuzzyMatch('duqa', cmds, {}), "duke");
+                assertEquals(fuzzyMatch('duqe', cmds, {}), "duke");
+            });
+            it("es", () => {
+                assertEquals(fuzzyMatch('duk', cmds, {}), "duque");
+                assertEquals(fuzzyMatch('duke', cmds, {}), "duque");
+                assertEquals(fuzzyMatch('dukue', cmds, {}), "duque");
+                assertEquals(fuzzyMatch('duqe', cmds, {}), "duque");
+            });
+            it("fr", () => {
+                assertEquals(fuzzyMatch('duk', cmds, {}), "duc");
+                assertEquals(fuzzyMatch('duco', cmds, {}), "duc");
+                assertEquals(fuzzyMatch('duca', cmds, {}), "duc");
+                assertEquals(fuzzyMatch('ducce', cmds, {}), "duc");
+            });
+        })
     });
 });

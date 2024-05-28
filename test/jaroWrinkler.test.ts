@@ -1,10 +1,23 @@
+import { assertArrayIncludes } from "https://deno.land/std@0.203.0/assert/assert_array_includes.ts";
 import {
     distance,
     fuzzyMatch,
     JaroWinklerDistance,
 } from "../src/jaro-winkler.ts";
-import { Commands } from "../src/mod.ts";
-import { assertEquals, Context, describe, it } from "./deps.test.ts";
+import { Commands, commands, CommandsFlavor } from "../src/mod.ts";
+import {
+    Api,
+    assertEquals,
+    assertObjectMatch,
+    Chat,
+    Context,
+    describe,
+    it,
+    Message,
+    Update,
+    User,
+    UserFromGetMe,
+} from "./deps.test.ts";
 
 describe("Jaro-Wrinkler Algorithm", () => {
     it("should return value 0, because the empty string was given", () => {
@@ -33,11 +46,8 @@ describe("Jaro-Wrinkler Algorithm", () => {
             cmds.command(
                 "start",
                 "Starting",
-            ).addToScope(
-                { type: "all_private_chats" },
-                (ctx) => ctx.reply(`Hello, ${ctx.chat.first_name}!`),
+                () => {},
             );
-
             assertEquals(
                 fuzzyMatch("strt", cmds, { language: "fr" })?.name,
                 "start",
@@ -50,6 +60,7 @@ describe("Jaro-Wrinkler Algorithm", () => {
             cmds.command(
                 "start",
                 "Starting",
+                () => {},
             ).addToScope(
                 { type: "all_private_chats" },
                 (ctx) => ctx.reply(`Hello, ${ctx.chat.first_name}!`),
@@ -94,22 +105,25 @@ describe("Jaro-Wrinkler Algorithm", () => {
     });
     describe("Serialize commands for FuzzyMatch", () => {
         describe("toNameAndPrefix", () => {
-            it("the resulting Array must contain the localized or default version depending on the input", () => {
-                const cmds = new Commands<Context>();
-                cmds.command("butcher", "green beret", () => {});
-                cmds.command("duke", "sniper", () => {}).localize(
-                    "es",
-                    "duque",
-                    "francotirador",
-                );
-                cmds.command("fins", "marine", () => {}).addToScope({
-                    type: "all_private_chats",
-                }, () => {});
+            const cmds = new Commands<Context>();
+            cmds.command("butcher", "_", () => {}, { prefix: "?" })
+                .localize("es", "carnicero", "_")
+                .localize("it", "macellaio", "_");
 
-                let json = cmds.toNameAndPrefix();
-                assertEquals(json[1].name, "duke");
-                json = cmds.toNameAndPrefix("es");
-                assertEquals(json[1].name, "duque");
+            cmds.command("duke", "_", () => {})
+                .localize("es", "duque", "_")
+                .localize("fr", "duc", "_");
+
+            it("must output all commands names, language and prefix", () => {
+                const json = cmds.toNameAndPrefix();
+                assertArrayIncludes(json, [
+                    { name: "butcher", language: "default", prefix: "?" },
+                    { name: "carnicero", language: "es", prefix: "?" },
+                    { name: "macellaio", language: "it", prefix: "?" },
+                    { name: "duke", language: "default", prefix: "/" },
+                    { name: "duque", language: "es", prefix: "/" },
+                    { name: "duc", language: "fr", prefix: "/" },
+                ]);
             });
         });
         describe("Should return the command localization related to the user lang", () => {
@@ -238,4 +252,100 @@ describe("Jaro-Wrinkler Algorithm", () => {
             });
         });
     });
+    describe("Usage inside ctx", () => {
+        const cmds = new Commands<Context>();
+        cmds.command("butcher", "_", () => {}, { prefix: "+" })
+            .localize("es", "carnicero", "_")
+            .localize("it", "macellaio", "_");
+
+        cmds.command("duke", "_", () => {})
+            .localize("es", "duque", "_")
+            .localize("fr", "duc", "_");
+
+        cmds.command("daddy", "me", () => {}, { prefix: "?" })
+            .localize("es", "papito", "yeyo");
+
+        describe("Should ignore localization when set to, and search trough all commands", () => {
+            it("ignore even if the language is set", () => { // should this console.warn? or maybe use an overload?
+                let ctx = dummyCtx("duci", "es");
+                assertEquals(
+                    ctx.getNearestCommand(cmds, {
+                        ignoreLocalization: true,
+                        language: ctx.from?.language_code,
+                    }),
+                    "/duc",
+                );
+                ctx = dummyCtx("duki", "es");
+                assertEquals(
+                    ctx.getNearestCommand(cmds, {
+                        ignoreLocalization: true,
+                        language: ctx.from?.language_code,
+                    }),
+                    "/duke",
+                );
+            });
+            it("ignore when the language is not set", () => {
+                let ctx = dummyCtx("duki", "es");
+                assertEquals(
+                    ctx.getNearestCommand(cmds, { ignoreLocalization: true }),
+                    "/duke",
+                );
+                ctx = dummyCtx("macellaoo", "es");
+                assertEquals(
+                    ctx.getNearestCommand(cmds, { ignoreLocalization: true }),
+                    "+macellaio",
+                );
+                ctx = dummyCtx("dadd", "es");
+                assertEquals(
+                    ctx.getNearestCommand(cmds, { ignoreLocalization: true }),
+                    "?daddy",
+                );
+            });
+            it("should not restrict itself to default", () => {
+                let ctx = dummyCtx("duqu", "es");
+                assertEquals(
+                    ctx.getNearestCommand(cmds, { ignoreLocalization: true }),
+                    "/duque",
+                );
+            });
+            it("language not know, but ignore localization still matches the best similarity", () => {
+                let ctx = dummyCtx("duqu", "en-papacito");
+                assertEquals(
+                    ctx.getNearestCommand(cmds, { ignoreLocalization: true }),
+                    "/duque",
+                );
+            });
+        });
+        describe("should not fail even if the language it's not know", () => {
+            it("should fallback to default", () => {
+                let ctx = dummyCtx("duko", "en-papacito");
+                assertEquals(ctx.getNearestCommand(cmds), "/duke");
+                ctx = dummyCtx("butxher", "no-language");
+                assertEquals(ctx.getNearestCommand(cmds), "+butcher");
+            });
+            it("should not fallback to a locale even if its the same name", () => {
+                let ctx = dummyCtx("duque", "narnian");
+                assertEquals(ctx.getNearestCommand(cmds), "/duke");
+            });
+        });
+    });
 });
+
+function dummyCtx(userCommandInput: string, language?: string) {
+    const u = { id: 42, first_name: "yo", language_code: language } as User;
+    const c = { id: 100, type: "private" } as Chat;
+    const m = {
+        text: "/" + userCommandInput,
+        from: u,
+        chat: c,
+    } as Message;
+    const update = {
+        message: m,
+    } as Update;
+    const api = new Api("dummy-token");
+    const me = { id: 42, username: "bot" } as UserFromGetMe;
+    const ctx = new Context(update, api, me) as CommandsFlavor<Context>;
+    const middleware = commands();
+    middleware(ctx, async () => {});
+    return ctx;
+}

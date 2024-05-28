@@ -63,11 +63,15 @@ export function commands<C extends Context>() {
         };
 
         ctx.getNearestCommand = (commands, options) => {
-            if (ctx.msg?.text && ctx.from?.language_code) {
+            if (ctx.msg?.text) {
                 const userInput = ctx.msg.text.substring(1);
                 const result = fuzzyMatch(userInput, commands, {
                     ...options,
-                    language: ctx.from.language_code,
+                    language: options?.ignoreLocalization
+                        ? undefined
+                        : ctx.from?.language_code
+                        ? ctx.from.language_code
+                        : undefined,
                 });
                 if (!result) return result;
 

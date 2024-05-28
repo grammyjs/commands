@@ -8,7 +8,6 @@ import {
     Context,
     Middleware,
 } from "./deps.deno.ts";
-import { JaroWinklerOptions } from "./jaro-winkler.ts";
 import { CommandOptions } from "./types.ts";
 import { type MaybeArray } from "./utils.ts";
 
@@ -204,24 +203,44 @@ export class Commands<C extends Context> {
 
     /**
      * Serialize for {@link FuzzyMatch}
+     * Since ctx.from.language_code it's in IETF (for most users would be iso639 anyway),
+     * Here it's needed to check if the language_code it's in iso639,
+     * if not, check if its possible to convert,
+     * if not fallback to "default"
      */
-    public toNameAndPrefix(
-        language: JaroWinklerOptions["language"] = "default",
-    ) {
+
+    public toNameAndPrefix(language?: string) {
         this._populateMetadata();
+        if (!language) {
+            const commands = [];
+            for (const [scope, _commands] of this._scopes.entries()) {
+                for (const language of this._languages) {
+                    commands.push(
+                        ..._commands.map((command) => ({
+                            name: command.toObject(language).command,
+                            language,
+                            prefix: command.prefix,
+                        })).filter((command) => command.name.length > 0),
+                    );
+                }
+            }
+
+            return commands;
+        }
         const commands = Array.from(this._scopes.values())
             .flat()
             .map((command) => {
-                let lang = command.languages.get(language);
-                lang ??= command.languages.get("default");
-                if (!lang) {
+                let local = command.languages.get(language);
+                local ??= command.languages.get("default");
+                if (!local) {
                     throw "never: If a command exist, 'default' should exist in _languages";
                 }
                 return {
-                    name: lang.name instanceof RegExp
-                        ? lang.name.source
-                        : lang.name,
+                    name: local.name instanceof RegExp
+                        ? local.name.source
+                        : local.name,
                     prefix: command.prefix,
+                    language: language,
                 };
             });
         const visited: Record<string, boolean> = {};

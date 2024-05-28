@@ -1,3 +1,4 @@
+import { SetMyCommandsParams } from "./commands.ts";
 import { Commands } from "./commands.ts";
 import { BotCommandScope, Context } from "./deps.deno.ts";
 
@@ -73,6 +74,7 @@ export type JaroWinklerOptions = {
     ignoreCase?: boolean;
     similarityThreshold?: number;
     language?: string;
+    ignoreLocalization?: boolean;
 };
 
 type CommandSimilarity = {
@@ -83,6 +85,7 @@ type CommandSimilarity = {
 export interface CommandNameAndPrefix {
     name: string;
     prefix: string;
+    language: string;
 }
 
 // Computes the Winkler distance between two string -- intrepreted from:
@@ -125,8 +128,11 @@ export function fuzzyMatch<C extends Context>(
     const similarityThreshold = options.similarityThreshold ||
         defaultSimilarityThreshold;
 
-    const cmds = commands
-        .toNameAndPrefix(options.language);
+    options.language ??= "default";
+
+    const cmds = options.ignoreLocalization
+        ? commands.toNameAndPrefix()
+        : commands.toNameAndPrefix(options.language);
 
     const bestMatch = cmds.reduce(
         (best: CommandSimilarity, command) => {

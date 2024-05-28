@@ -121,7 +121,7 @@ export function fuzzyMatch<C extends Context>(
     commands: Commands<C>,
     options: Partial<JaroWinklerOptions>,
 ): CommandNameAndPrefix | null {
-    const defaultSimilarityThreshold = 0.85;
+    const defaultSimilarityThreshold = 0.82;
     const similarityThreshold = options.similarityThreshold ||
         defaultSimilarityThreshold;
 

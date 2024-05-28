@@ -1,10 +1,7 @@
 import { ensureArray } from "./utils.ts";
 import { Commands } from "./commands.ts";
 import { BotCommandScopeChat, Context, NextFunction } from "./deps.deno.ts";
-import {
-    fuzzyMatch,
-    JaroWinklerOptions,
-} from "./jaro-winkler.ts";
+import { fuzzyMatch, JaroWinklerOptions } from "./jaro-winkler.ts";
 import { SetMyCommandsParams } from "./mod.ts";
 
 export interface CommandsFlavor<C extends Context = Context> extends Context {
@@ -68,10 +65,13 @@ export function commands<C extends Context>() {
         ctx.getNearestCommand = (commands, options) => {
             if (ctx.msg?.text && ctx.from?.language_code) {
                 const userInput = ctx.msg.text.substring(1);
-                const result = fuzzyMatch(userInput, commands, { ...options, language: ctx.from.language_code });
-                if(!result) return result;
+                const result = fuzzyMatch(userInput, commands, {
+                    ...options,
+                    language: ctx.from.language_code,
+                });
+                if (!result) return result;
 
-                return result.prefix + result.name
+                return result.prefix + result.name;
             }
             return null;
         };

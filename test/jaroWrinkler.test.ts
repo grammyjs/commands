@@ -265,6 +265,10 @@ describe("Jaro-Wrinkler Algorithm", () => {
         cmds.command("daddy", "me", () => { }, { prefix: "?" })
             .localize("es", "papito", "yeyo");
 
+        cmds.command('ender','_', () => {})
+        cmds.command('endanger','_', () => {})
+        cmds.command('entitle','_', () => {})
+
         describe("Should ignore localization when set to, and search trough all commands", () => {
             it("ignore even if the language is set", () => { // should this console.warn? or maybe use an overload?
                 let ctx = dummyCtx("duci", "es");
@@ -341,6 +345,20 @@ describe("Jaro-Wrinkler Algorithm", () => {
             it("should not fallback to a locale even if its the same name", () => {
                 let ctx = dummyCtx("duque", "narnian");
                 assertEquals(ctx.getNearestCommand(cmds), "/duke");
+            });
+        });
+        describe("should work for commands with no localization, even when the language is set", () => {
+            it("ender", () => {
+                let ctx = dummyCtx("endr", 'es');
+                assertEquals(ctx.getNearestCommand(cmds), "/ender");
+            });
+            it("endanger", () => {
+                let ctx = dummyCtx("enanger", "en");
+                assertEquals(ctx.getNearestCommand(cmds), "/endanger");
+            });
+            it("entitle", () => {
+                let ctx = dummyCtx("entities", "pt");
+                assertEquals(ctx.getNearestCommand(cmds), "/entitle");
             });
         });
     });

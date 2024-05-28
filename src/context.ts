@@ -36,7 +36,7 @@ export interface CommandsFlavor<C extends Context = Context> extends Context {
      */
     getNearestCommand: (
         commands: Commands<C>,
-        options?: Partial<JaroWinklerOptions>,
+        options?: Omit<Partial<JaroWinklerOptions>, "language">,
     ) => string | null;
 }
 

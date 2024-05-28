@@ -38,7 +38,10 @@ describe("Jaro-Wrinkler Algorithm", () => {
                 (ctx) => ctx.reply(`Hello, ${ctx.chat.first_name}!`),
             );
 
-            assertEquals(fuzzyMatch("strt", cmds, {})?.name, "start");
+            assertEquals(
+                fuzzyMatch("strt", cmds, { language: "fr" })?.name,
+                "start",
+            );
         });
 
         it("should return null because command doesn't exist", () => {
@@ -64,7 +67,10 @@ describe("Jaro-Wrinkler Algorithm", () => {
                 { type: "all_private_chats" },
                 (ctx) => ctx.reply(`Hello, ${ctx.chat.first_name}!`),
             );
-            assertEquals(fuzzyMatch("magcal", cmds, {})?.name, "magical_\\d");
+            assertEquals(
+                fuzzyMatch("magcal", cmds, { language: "fr" })?.name,
+                "magical_\\d",
+            );
         });
         it("should work for localized regex", () => {
             const cmds = new Commands<Context>();
@@ -77,11 +83,11 @@ describe("Jaro-Wrinkler Algorithm", () => {
             ).localize("es", /magico_(c|d)/, "Comando Mágico");
 
             assertEquals(
-                fuzzyMatch("magici_c", cmds, {language: 'es'})?.name,
+                fuzzyMatch("magici_c", cmds, { language: "es" })?.name,
                 "magico_(c|d)",
             );
             assertEquals(
-                fuzzyMatch("magici_a", cmds, {})?.name,
+                fuzzyMatch("magici_a", cmds, { language: "fr" })?.name,
                 "magical_(a|b)",
             );
         });
@@ -120,67 +126,115 @@ describe("Jaro-Wrinkler Algorithm", () => {
                 .localize("hu", "herceg", "_");
 
             it("sv", () => {
-                assertEquals(fuzzyMatch("hertog", cmds, {}), "hertig");
+                assertEquals(
+                    fuzzyMatch("hertog", cmds, { language: "sv" })?.name,
+                    "hertig",
+                );
             });
             it("da", () => {
-                assertEquals(fuzzyMatch("hertog", cmds, {}), "hertug");
+                assertEquals(
+                    fuzzyMatch("hertog", cmds, { language: "da" })?.name,
+                    "hertug",
+                );
             });
             describe("default", () => {
                 it("duke", () =>
-                    assertEquals(fuzzyMatch("duk", cmds, {}), "duke"));
+                    assertEquals(fuzzyMatch("duk", cmds, {})?.name, "duke"));
                 it("duke", () =>
-                    assertEquals(fuzzyMatch("due", cmds, {}), "duke"));
+                    assertEquals(fuzzyMatch("due", cmds, {})?.name, "duke"));
                 it("duke", () =>
-                    assertEquals(fuzzyMatch("dule", cmds, {}), "duke"));
+                    assertEquals(fuzzyMatch("dule", cmds, {})?.name, "duke"));
                 it("duke", () =>
-                    assertEquals(fuzzyMatch("duje", cmds, {}), "duke"));
+                    assertEquals(fuzzyMatch("duje", cmds, {})?.name, "duke"));
             });
             describe("es", () => {
                 it("duque", () =>
-                    assertEquals(fuzzyMatch("duquw", cmds, {}), "duque"));
+                    assertEquals(
+                        fuzzyMatch("duquw", cmds, { language: "es" })?.name,
+                        "duque",
+                    ));
                 it("duque", () =>
-                    assertEquals(fuzzyMatch("duqe", cmds, {}), "duque"));
+                    assertEquals(
+                        fuzzyMatch("duqe", cmds, { language: "es" })?.name,
+                        "duque",
+                    ));
                 it("duque", () =>
-                    assertEquals(fuzzyMatch("duwue", cmds, {}), "duque"));
+                    assertEquals(
+                        fuzzyMatch("duwue", cmds, { language: "es" })?.name,
+                        "duque",
+                    ));
             });
             describe("fr", () => {
                 it("duc", () =>
-                    assertEquals(fuzzyMatch("duk", cmds, {}), "duc"));
+                    assertEquals(
+                        fuzzyMatch("duk", cmds, { language: "fr" })?.name,
+                        "duc",
+                    ));
                 it("duc", () =>
-                    assertEquals(fuzzyMatch("duce", cmds, {}), "duc"));
+                    assertEquals(
+                        fuzzyMatch("duce", cmds, { language: "fr" })?.name,
+                        "duc",
+                    ));
                 it("duc", () =>
-                    assertEquals(fuzzyMatch("ducñ", cmds, {}), "duc"));
+                    assertEquals(
+                        fuzzyMatch("ducñ", cmds, { language: "fr" })?.name,
+                        "duc",
+                    ));
             });
         });
         describe("Should return the command localization related to the user lang for similar command names from different command classes", () => {
             const cmds = new Commands<Context>();
             cmds.command("push", "push", () => {})
-                .localize("fr", "pousser", "_")
-                .localize("pt", "empurrar", "_");
+                .localize("fr", "pousser", "a")
+                .localize("pt", "empurrar", "b");
 
-            cmds.command("rest", "rest")
-                .localize("fr", "reposer", "_")
-                .localize("pt", "poussar", "_");
+            cmds.command("rest", "rest", () => {})
+                .localize("fr", "reposer", "c")
+                .localize("pt", "poussar", "d");
 
             describe("pt rest", () => {
                 it("poussar", () =>
-                    assertEquals(fuzzyMatch("pousssr", cmds, {}), "poussar"));
+                    assertEquals(
+                        fuzzyMatch("pousssr", cmds, { language: "pt" })?.name,
+                        "poussar",
+                    ));
                 it("poussar", () =>
-                    assertEquals(fuzzyMatch("pousar", cmds, {}), "poussar"));
+                    assertEquals(
+                        fuzzyMatch("pousar", cmds, { language: "pt" })?.name,
+                        "poussar",
+                    ));
                 it("poussar", () =>
-                    assertEquals(fuzzyMatch("poussqr", cmds, {}), "poussar"));
+                    assertEquals(
+                        fuzzyMatch("poussqr", cmds, { language: "pt" })?.name,
+                        "poussar",
+                    ));
                 it("poussar", () =>
-                    assertEquals(fuzzyMatch("poussrr", cmds, {}), "poussar"));
+                    assertEquals(
+                        fuzzyMatch("poussrr", cmds, { language: "pt" })?.name,
+                        "poussar",
+                    ));
             });
             describe("fr push", () => {
-                it("poussar", () =>
-                    assertEquals(fuzzyMatch("pousssr", cmds, {}), "pousser"));
-                it("poussar", () =>
-                    assertEquals(fuzzyMatch("pouser", cmds, {}), "pousser"));
-                it("poussar", () =>
-                    assertEquals(fuzzyMatch("pousrr", cmds, {}), "pousser"));
-                it("poussar", () =>
-                    assertEquals(fuzzyMatch("poussrr", cmds, {}), "pousser"));
+                it("pousser", () =>
+                    assertEquals(
+                        fuzzyMatch("pousssr", cmds, { language: "fr" })?.name,
+                        "pousser",
+                    ));
+                it("pousser", () =>
+                    assertEquals(
+                        fuzzyMatch("pouser", cmds, { language: "fr" })?.name,
+                        "pousser",
+                    ));
+                it("pousser", () =>
+                    assertEquals(
+                        fuzzyMatch("pousrr", cmds, { language: "fr" })?.name,
+                        "pousser",
+                    ));
+                it("pousser", () =>
+                    assertEquals(
+                        fuzzyMatch("poussrr", cmds, { language: "fr" })?.name,
+                        "pousser",
+                    ));
             });
         });
     });

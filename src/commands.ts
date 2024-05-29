@@ -9,7 +9,7 @@ import {
     Middleware,
 } from "./deps.deno.ts";
 import { CommandOptions } from "./types.ts";
-import { MaybeArray } from "./utils.ts";
+import { type MaybeArray } from "./utils.ts";
 
 export type SetMyCommandsParams = {
     /**

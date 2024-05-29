@@ -1,3 +1,4 @@
+import { ensureArray } from "./utils.ts";
 import { Commands } from "./commands.ts";
 import { Context, NextFunction } from "./deps.deno.ts";
 import { fuzzyMatch, JaroWinklerOptions } from "./jaro-winkler.ts";
@@ -12,7 +13,7 @@ export interface CommandsFlavor<C extends Context = Context> extends Context {
      * @returns Promise with the result of the operations
      */
     setMyCommands: (
-        commands: Commands<C>,
+        commands: Commands<C> | Commands<C>[],
         ...moreCommands: Commands<C>[]
     ) => Promise<void>;
     /**
@@ -43,7 +44,8 @@ export function commands<C extends Context>() {
                     "cannot call `ctx.setMyCommands` on an update with no `chat` property",
                 );
             }
-            const commandsParams = [commands].concat(moreCommands).map((
+            commands = ensureArray(commands)
+            const commandsParams = commands.concat(moreCommands).map((
                 commands,
             ) => commands.toSingleScopeArgs({
                 type: "chat",

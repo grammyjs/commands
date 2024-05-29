@@ -204,9 +204,9 @@ export class Commands<C extends Context> {
 
     /**
      * Serialize all register commands into an array of {@link CommandElementals},
-     * each registered command would be summarize into it's name, prefix and language
+     * each registered command will be summarized into it's name, prefix and language
      *
-     * @param filterLanguage if given and valid, it would filter all command localizations
+     * @param filterLanguage If given and valid, filters out all command localizations
      * that not match the filterLanguage,
      * if a command does not have the given language, it would fallback to "default"
      *

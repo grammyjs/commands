@@ -14,11 +14,9 @@ import { InvalidScopeError } from "./errors.ts";
 import { CommandOptions } from "./types.ts";
 import { ensureArray, type MaybeArray } from "./utils.ts";
 
-
 type BotCommandGroupsScope =
     | BotCommandScopeAllGroupChats
     | BotCommandScopeAllChatAdministrators;
-
 
 const isAdmin = (ctx: Context) =>
     ctx

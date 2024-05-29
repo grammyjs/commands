@@ -1,8 +1,8 @@
-import { ensureArray } from "./utils.ts";
 import { Commands } from "./commands.ts";
 import { BotCommandScopeChat, Context, NextFunction } from "./deps.deno.ts";
 import { fuzzyMatch, JaroWinklerOptions } from "./jaro-winkler.ts";
 import { SetMyCommandsParams } from "./mod.ts";
+import { ensureArray } from "./utils.ts";
 
 export interface CommandsFlavor<C extends Context = Context> extends Context {
     /**
@@ -35,7 +35,7 @@ export interface CommandsFlavor<C extends Context = Context> extends Context {
      * @returns The nearest command or `null`
      */
     getNearestCommand: (
-        commands: Commands<C>,
+        commands: Commands<C> | Commands<C>[],
         options?: Omit<Partial<JaroWinklerOptions>, "language">,
     ) => string | null;
 }
@@ -64,18 +64,23 @@ export function commands<C extends Context>() {
 
         ctx.getNearestCommand = (commands, options) => {
             if (ctx.msg?.text) {
-                const userInput = ctx.msg.text.substring(1);
-                const result = fuzzyMatch(userInput, commands, {
-                    ...options,
-                    language: options?.ignoreLocalization
-                        ? undefined
-                        : ctx.from?.language_code
-                        ? ctx.from.language_code
-                        : undefined,
-                });
-                if (!result) return result;
+                commands = ensureArray(commands);
+                const results = commands.map((commands) => {
+                    const userInput = ctx.msg!.text!.substring(1);
+                    const result = fuzzyMatch(userInput, commands, {
+                        ...options,
+                        language: options?.ignoreLocalization
+                            ? undefined
+                            : ctx.from?.language_code
+                            ? ctx.from.language_code
+                            : undefined,
+                    });
+                    return result;
+                }).sort((a, b) => (b?.similarity ?? 0) - (a?.similarity ?? 0));
+                const result = results[0];
+                if (!result || !result.command) return null;
 
-                return result.prefix + result.name;
+                return result.command.prefix + result.command.name;
             }
             return null;
         };

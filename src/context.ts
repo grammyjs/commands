@@ -69,10 +69,8 @@ export function commands<C extends Context>() {
                     const userInput = ctx.msg!.text!.substring(1);
                     const result = fuzzyMatch(userInput, commands, {
                         ...options,
-                        language: options?.ignoreLocalization
-                            ? undefined
-                            : ctx.from?.language_code
-                            ? ctx.from.language_code
+                        language: !options?.ignoreLocalization
+                            ? ctx.from?.language_code
                             : undefined,
                     });
                     return result;

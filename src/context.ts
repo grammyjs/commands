@@ -9,6 +9,16 @@ export interface CommandsFlavor<C extends Context = Context> extends Context {
      * Sets the provided commands for the current chat.
      * Cannot be called on updates that don't have a `chat` property.
      *
+     * @example
+     * ```typescript
+     *  bot.hears("sudo", (ctx) =>
+     *      ctx.setMyCommands(userCommands, adminCommands));
+     *  bot.hears("logout", (ctx) =>
+     *      ctx.setMyCommands(userCommands));
+     *  bot.hears("example", (ctx) =>
+     *      ctx.setMyCommands([aCommands, bCommands, cCommands]));
+     * ```
+     *
      * @param commands List of available commands
      * @returns Promise with the result of the operations
      */
@@ -44,7 +54,7 @@ export function commands<C extends Context>() {
                     "cannot call `ctx.setMyCommands` on an update with no `chat` property",
                 );
             }
-            commands = ensureArray(commands)
+            commands = ensureArray(commands);
             const commandsParams = commands.concat(moreCommands).map((
                 commands,
             ) => commands.toSingleScopeArgs({

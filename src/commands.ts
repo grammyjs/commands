@@ -1,4 +1,4 @@
-import { Command, MaybeArray } from "./command.ts";
+import { Command } from "./command.ts";
 import {
     Api,
     BotCommand,
@@ -9,6 +9,7 @@ import {
     Middleware,
 } from "./deps.deno.ts";
 import { CommandOptions } from "./types.ts";
+import { MaybeArray } from "./utils.ts";
 
 export type SetMyCommandsParams = {
     /**

@@ -12,15 +12,13 @@ import {
 } from "./deps.deno.ts";
 import { InvalidScopeError } from "./errors.ts";
 import { CommandOptions } from "./types.ts";
+import { ensureArray, type MaybeArray } from "./utils.ts";
 
-export type MaybeArray<T> = T | T[];
 
 type BotCommandGroupsScope =
     | BotCommandScopeAllGroupChats
     | BotCommandScopeAllChatAdministrators;
 
-const ensureArray = <T>(value: MaybeArray<T>): T[] =>
-    Array.isArray(value) ? value : [value];
 
 const isAdmin = (ctx: Context) =>
     ctx

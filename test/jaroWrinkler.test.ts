@@ -46,10 +46,10 @@ describe("Jaro-Wrinkler Algorithm", () => {
             cmds.command(
                 "start",
                 "Starting",
-                () => { },
+                () => {},
             );
             assertEquals(
-                fuzzyMatch("strt", cmds, { language: "fr" })?.name,
+                fuzzyMatch("strt", cmds, { language: "fr" })?.command?.name,
                 "start",
             );
         });
@@ -60,7 +60,7 @@ describe("Jaro-Wrinkler Algorithm", () => {
             cmds.command(
                 "start",
                 "Starting",
-                () => { },
+                () => {},
             ).addToScope(
                 { type: "all_private_chats" },
                 (ctx) => ctx.reply(`Hello, ${ctx.chat.first_name}!`),
@@ -79,7 +79,7 @@ describe("Jaro-Wrinkler Algorithm", () => {
                 (ctx) => ctx.reply(`Hello, ${ctx.chat.first_name}!`),
             );
             assertEquals(
-                fuzzyMatch("magcal", cmds, { language: "fr" })?.name,
+                fuzzyMatch("magcal", cmds, { language: "fr" })?.command?.name,
                 "magical_\\d",
             );
         });
@@ -94,11 +94,11 @@ describe("Jaro-Wrinkler Algorithm", () => {
             ).localize("es", /magico_(c|d)/, "Comando Mágico");
 
             assertEquals(
-                fuzzyMatch("magici_c", cmds, { language: "es" })?.name,
+                fuzzyMatch("magici_c", cmds, { language: "es" })?.command?.name,
                 "magico_(c|d)",
             );
             assertEquals(
-                fuzzyMatch("magici_a", cmds, { language: "fr" })?.name,
+                fuzzyMatch("magici_a", cmds, { language: "fr" })?.command?.name,
                 "magical_(a|b)",
             );
         });
@@ -106,16 +106,16 @@ describe("Jaro-Wrinkler Algorithm", () => {
     describe("Serialize commands for FuzzyMatch", () => {
         describe("toNameAndPrefix", () => {
             const cmds = new Commands<Context>();
-            cmds.command("butcher", "_", () => { }, { prefix: "?" })
+            cmds.command("butcher", "_", () => {}, { prefix: "?" })
                 .localize("es", "carnicero", "_")
                 .localize("it", "macellaio", "_");
 
-            cmds.command("duke", "_", () => { })
+            cmds.command("duke", "_", () => {})
                 .localize("es", "duque", "_")
                 .localize("fr", "duc", "_");
 
             it("must output all commands names, language and prefix", () => {
-                const json = cmds.toNameAndPrefix();
+                const json = cmds.toElementals();
                 assertArrayIncludes(json, [
                     { name: "butcher", language: "default", prefix: "?" },
                     { name: "carnicero", language: "es", prefix: "?" },
@@ -128,7 +128,7 @@ describe("Jaro-Wrinkler Algorithm", () => {
         });
         describe("Should return the command localization related to the user lang", () => {
             const cmds = new Commands<Context>();
-            cmds.command("duke", "sniper", () => { })
+            cmds.command("duke", "sniper", () => {})
                 .localize("es", "duque", "_")
                 .localize("fr", "duc", "_")
                 .localize("it", "duca", "_")
@@ -141,112 +141,140 @@ describe("Jaro-Wrinkler Algorithm", () => {
 
             it("sv", () => {
                 assertEquals(
-                    fuzzyMatch("hertog", cmds, { language: "sv" })?.name,
+                    fuzzyMatch("hertog", cmds, { language: "sv" })?.command
+                        ?.name,
                     "hertig",
                 );
             });
             it("da", () => {
                 assertEquals(
-                    fuzzyMatch("hertog", cmds, { language: "da" })?.name,
+                    fuzzyMatch("hertog", cmds, { language: "da" })?.command
+                        ?.name,
                     "hertug",
                 );
             });
             describe("default", () => {
                 it("duke", () =>
-                    assertEquals(fuzzyMatch("duk", cmds, {})?.name, "duke"));
+                    assertEquals(
+                        fuzzyMatch("duk", cmds, {})?.command?.name,
+                        "duke",
+                    ));
                 it("duke", () =>
-                    assertEquals(fuzzyMatch("due", cmds, {})?.name, "duke"));
+                    assertEquals(
+                        fuzzyMatch("due", cmds, {})?.command?.name,
+                        "duke",
+                    ));
                 it("duke", () =>
-                    assertEquals(fuzzyMatch("dule", cmds, {})?.name, "duke"));
+                    assertEquals(
+                        fuzzyMatch("dule", cmds, {})?.command?.name,
+                        "duke",
+                    ));
                 it("duke", () =>
-                    assertEquals(fuzzyMatch("duje", cmds, {})?.name, "duke"));
+                    assertEquals(
+                        fuzzyMatch("duje", cmds, {})?.command?.name,
+                        "duke",
+                    ));
             });
             describe("es", () => {
                 it("duque", () =>
                     assertEquals(
-                        fuzzyMatch("duquw", cmds, { language: "es" })?.name,
+                        fuzzyMatch("duquw", cmds, { language: "es" })?.command
+                            ?.name,
                         "duque",
                     ));
                 it("duque", () =>
                     assertEquals(
-                        fuzzyMatch("duqe", cmds, { language: "es" })?.name,
+                        fuzzyMatch("duqe", cmds, { language: "es" })?.command
+                            ?.name,
                         "duque",
                     ));
                 it("duque", () =>
                     assertEquals(
-                        fuzzyMatch("duwue", cmds, { language: "es" })?.name,
+                        fuzzyMatch("duwue", cmds, { language: "es" })?.command
+                            ?.name,
                         "duque",
                     ));
             });
             describe("fr", () => {
                 it("duc", () =>
                     assertEquals(
-                        fuzzyMatch("duk", cmds, { language: "fr" })?.name,
+                        fuzzyMatch("duk", cmds, { language: "fr" })?.command
+                            ?.name,
                         "duc",
                     ));
                 it("duc", () =>
                     assertEquals(
-                        fuzzyMatch("duce", cmds, { language: "fr" })?.name,
+                        fuzzyMatch("duce", cmds, { language: "fr" })?.command
+                            ?.name,
                         "duc",
                     ));
                 it("duc", () =>
                     assertEquals(
-                        fuzzyMatch("ducñ", cmds, { language: "fr" })?.name,
+                        fuzzyMatch("ducñ", cmds, { language: "fr" })?.command
+                            ?.name,
                         "duc",
                     ));
             });
         });
         describe("Should return the command localization related to the user lang for similar command names from different command classes", () => {
             const cmds = new Commands<Context>();
-            cmds.command("push", "push", () => { })
+            cmds.command("push", "push", () => {})
                 .localize("fr", "pousser", "a")
                 .localize("pt", "empurrar", "b");
 
-            cmds.command("rest", "rest", () => { })
+            cmds.command("rest", "rest", () => {})
                 .localize("fr", "reposer", "c")
                 .localize("pt", "poussar", "d");
 
             describe("pt rest", () => {
                 it("poussar", () =>
                     assertEquals(
-                        fuzzyMatch("pousssr", cmds, { language: "pt" })?.name,
+                        fuzzyMatch("pousssr", cmds, { language: "pt" })?.command
+                            ?.name,
                         "poussar",
                     ));
                 it("poussar", () =>
                     assertEquals(
-                        fuzzyMatch("pousar", cmds, { language: "pt" })?.name,
+                        fuzzyMatch("pousar", cmds, { language: "pt" })?.command
+                            ?.name,
                         "poussar",
                     ));
                 it("poussar", () =>
                     assertEquals(
-                        fuzzyMatch("poussqr", cmds, { language: "pt" })?.name,
+                        fuzzyMatch("poussqr", cmds, { language: "pt" })?.command
+                            ?.name,
                         "poussar",
                     ));
                 it("poussar", () =>
                     assertEquals(
-                        fuzzyMatch("poussrr", cmds, { language: "pt" })?.name,
+                        fuzzyMatch("poussrr", cmds, { language: "pt" })?.command
+                            ?.name,
                         "poussar",
                     ));
             });
             describe("fr push", () => {
                 it("pousser", () =>
                     assertEquals(
-                        fuzzyMatch("pousssr", cmds, { language: "fr" })?.name,
+                        fuzzyMatch("pousssr", cmds, { language: "fr" })?.command
+                            ?.name,
                         "pousser",
                     ));
                 it("pousser", () =>
                     assertEquals(
-                        fuzzyMatch("pouser", cmds, { language: "fr" })?.name,
+                        fuzzyMatch("pouser", cmds, { language: "fr" })?.command
+                            ?.name,
                         "pousser",
                     ));
                 it("pousser", () =>
                     assertEquals(
-                        fuzzyMatch("pousrr", cmds, { language: "fr" })?.name,
+                        fuzzyMatch("pousrr", cmds, { language: "fr" })?.command
+                            ?.name,
                         "pousser",
                     ));
                 it("pousser", () =>
                     assertEquals(
-                        fuzzyMatch("poussrr", cmds, { language: "fr" })?.name,
+                        fuzzyMatch("poussrr", cmds, { language: "fr" })?.command
+                            ?.name,
                         "pousser",
                     ));
             });
@@ -254,20 +282,20 @@ describe("Jaro-Wrinkler Algorithm", () => {
     });
     describe("Usage inside ctx", () => {
         const cmds = new Commands<Context>();
-        cmds.command("butcher", "_", () => { }, { prefix: "+" })
+        cmds.command("butcher", "_", () => {}, { prefix: "+" })
             .localize("es", "carnicero", "_")
             .localize("it", "macellaio", "_");
 
-        cmds.command("duke", "_", () => { })
+        cmds.command("duke", "_", () => {})
             .localize("es", "duque", "_")
             .localize("fr", "duc", "_");
 
-        cmds.command("daddy", "me", () => { }, { prefix: "?" })
+        cmds.command("daddy", "me", () => {}, { prefix: "?" })
             .localize("es", "papito", "yeyo");
 
-        cmds.command('ender','_', () => {})
-        cmds.command('endanger','_', () => {})
-        cmds.command('entitle','_', () => {})
+        cmds.command("ender", "_", () => {});
+        cmds.command("endanger", "_", () => {});
+        cmds.command("entitle", "_", () => {});
 
         describe("Should ignore localization when set to, and search trough all commands", () => {
             it("ignore even if the language is set", () => { // should this console.warn? or maybe use an overload?
@@ -349,7 +377,7 @@ describe("Jaro-Wrinkler Algorithm", () => {
         });
         describe("should work for commands with no localization, even when the language is set", () => {
             it("ender", () => {
-                let ctx = dummyCtx("endr", 'es');
+                let ctx = dummyCtx("endr", "es");
                 assertEquals(ctx.getNearestCommand(cmds), "/ender");
             });
             it("endanger", () => {
@@ -360,6 +388,41 @@ describe("Jaro-Wrinkler Algorithm", () => {
                 let ctx = dummyCtx("entities", "pt");
                 assertEquals(ctx.getNearestCommand(cmds), "/entitle");
             });
+        });
+    });
+    describe("Test multiple commands instances", () => {
+        const cmds = new Commands<Context>();
+        cmds.command("bread", "_", () => {})
+            .localize("es", "pan", "_")
+            .localize("fr", "pain", "_");
+
+        const cmds2 = new Commands<Context>();
+
+        cmds.command("dad", "_", () => {})
+            .localize("es", "papa", "_")
+            .localize("fr", "pere", "_");
+
+        it("Should get the nearest between multiple command classes", () => {
+            let ctx = dummyCtx("papi", "es");
+            assertEquals(ctx.getNearestCommand([cmds, cmds2]), "/papa");
+            ctx = dummyCtx("pai", "fr");
+            assertEquals(ctx.getNearestCommand([cmds, cmds2]), "/pain");
+        });
+        it("Without localization it should get the best between multiple command classes", () => {
+            let ctx = dummyCtx("pana", "???");
+            assertEquals(
+                ctx.getNearestCommand([cmds, cmds2], {
+                    ignoreLocalization: true,
+                }),
+                "/pan",
+            );
+            ctx = dummyCtx("para", "???");
+            assertEquals(
+                ctx.getNearestCommand([cmds, cmds2], {
+                    ignoreLocalization: true,
+                }),
+                "/papa",
+            );
         });
     });
 });
@@ -379,6 +442,6 @@ function dummyCtx(userCommandInput: string, language?: string) {
     const me = { id: 42, username: "bot" } as UserFromGetMe;
     const ctx = new Context(update, api, me) as CommandsFlavor<Context>;
     const middleware = commands();
-    middleware(ctx, async () => { });
+    middleware(ctx, async () => {});
     return ctx;
 }

@@ -8,6 +8,7 @@ import {
     Context,
     Middleware,
 } from "./deps.deno.ts";
+import { type CommandElementals } from "./jaro-winkler.ts";
 import { CommandOptions } from "./types.ts";
 import { type MaybeArray } from "./utils.ts";
 
@@ -202,18 +203,21 @@ export class Commands<C extends Context> {
     }
 
     /**
-     * Serialize for {@link FuzzyMatch}
-     * Since ctx.from.language_code it's in IETF (for most users would be iso639 anyway),
-     * Here it's needed to check if the language_code it's in iso639,
-     * if not, check if its possible to convert,
-     * if not fallback to "default"
+     * Serialize all register commands into an array of {@link CommandElementals},
+     * each registered command would be summarize into it's name, prefix and language
+     *
+     * @param filterLanguage if given and valid, it would filter all command localizations
+     * that not match the filterLanguage,
+     * if a command does not have the given language, it would fallback to "default"
+     *
+     * Note: mainly used to serialize for {@link FuzzyMatch}
      */
 
-    public toNameAndPrefix(language?: string) {
+    public toElementals(filterLanguage?: string): CommandElementals[] {
         this._populateMetadata();
-        if (!language) {
+        if (!filterLanguage) {
             const commands = [];
-            for (const [scope, _commands] of this._scopes.entries()) {
+            for (const [_scope, _commands] of this._scopes.entries()) {
                 for (const language of this._languages) {
                     commands.push(
                         ..._commands.map((command) => ({
@@ -224,13 +228,13 @@ export class Commands<C extends Context> {
                     );
                 }
             }
-
             return commands;
         }
+
         const commands = Array.from(this._scopes.values())
             .flat()
             .map((command) => {
-                let local = command.languages.get(language);
+                let local = command.languages.get(filterLanguage);
                 local ??= command.languages.get("default");
                 if (!local) {
                     throw "never: If a command exist, 'default' should exist in _languages";
@@ -240,7 +244,7 @@ export class Commands<C extends Context> {
                         ? local.name.source
                         : local.name,
                     prefix: command.prefix,
-                    language: language,
+                    language: filterLanguage,
                 };
             });
         const visited: Record<string, boolean> = {};

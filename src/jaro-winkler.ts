@@ -1,6 +1,5 @@
-import { SetMyCommandsParams } from "./commands.ts";
 import { Commands } from "./commands.ts";
-import { BotCommandScope, Context } from "./deps.deno.ts";
+import { Context } from "./deps.deno.ts";
 
 export function distance(s1: string, s2: string) {
     if (s1.length === 0 || s2.length === 0) {
@@ -78,11 +77,11 @@ export type JaroWinklerOptions = {
 };
 
 type CommandSimilarity = {
-    command: CommandNameAndPrefix | null;
+    command: CommandElementals | null;
     similarity: number;
 };
 
-export interface CommandNameAndPrefix {
+export interface CommandElementals {
     name: string;
     prefix: string;
     language: string;
@@ -123,7 +122,7 @@ export function fuzzyMatch<C extends Context>(
     userInput: string,
     commands: Commands<C>,
     options: Partial<JaroWinklerOptions>,
-): CommandNameAndPrefix | null {
+): CommandSimilarity | null {
     const defaultSimilarityThreshold = 0.82;
     const similarityThreshold = options.similarityThreshold ||
         defaultSimilarityThreshold;
@@ -131,8 +130,8 @@ export function fuzzyMatch<C extends Context>(
     options.language ??= "default";
 
     const cmds = options.ignoreLocalization
-        ? commands.toNameAndPrefix()
-        : commands.toNameAndPrefix(options.language);
+        ? commands.toElementals()
+        : commands.toElementals(options.language);
 
     const bestMatch = cmds.reduce(
         (best: CommandSimilarity, command) => {
@@ -146,7 +145,5 @@ export function fuzzyMatch<C extends Context>(
         { command: null, similarity: 0 },
     );
 
-    return bestMatch.similarity > similarityThreshold
-        ? bestMatch.command
-        : null;
+    return bestMatch.similarity > similarityThreshold ? bestMatch : null;
 }

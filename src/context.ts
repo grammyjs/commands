@@ -54,18 +54,16 @@ export function commands<C extends Context>() {
                     "cannot call `ctx.setMyCommands` on an update with no `chat` property",
                 );
             }
-            commands = ensureArray(commands);
-            const commandsParams = commands.concat(moreCommands).map((
+            commands = ensureArray(commands).concat(moreCommands);
+            const commandsParams = commands.map((
                 commands,
             ) => commands.toSingleScopeArgs({
                 type: "chat",
                 chat_id: ctx.chat!.id,
             }));
 
-            const mergedCommands = _mergeMyCommandsParams(commandsParams);
-
             await Promise.all(
-                mergedCommands
+                MyCommandParams.mergeFrom(commandsParams)
                     .map((args) => ctx.api.raw.setMyCommands(args)),
             );
         };
@@ -83,25 +81,46 @@ export function commands<C extends Context>() {
 }
 
 /**
- * Iterates over an array of commands params, merging commands when two commandsParams
- * are from the same language.
- *
- * @param commandParams an array of commands params coming from multiple Commands instances
- * @returns an array containing all commands to be set on ctx
+ * Static class for manipulating {@link SetMyCommandsParams} coming from {@link Commands.toSingleScopeArgs}
  */
+class MyCommandParams {
+    /**
+     * Merges {@link SetMyCommandsParams} coming from one or more Commands instances
+     * into a single one. If only one source it's provided it will remain the same.
+     *
+     * @param commandsParams setMyCommandsParams coming from one or more Commands instances.
+     * @returns an array of SetCommandParams grouped by language
+     */
+    static mergeFrom(commandsParams: SetMyCommandsParams[][]) {
+        if (!commandsParams.flat().length) return [];
+        return this.mergeByLanguage(commandsParams.flat());
+    }
 
-export function _mergeMyCommandsParams(
-    commandParams: SetMyCommandsParams[][],
-): SetMyCommandsParams[] {
-    if (!commandParams.flat().length) return [];
-    return commandParams
-        .flat()
-        .sort((a, b) => {
+    /**
+     * Lexicographically sorts commandParams based on their language code.
+     * @returns the sorted array
+     */
+
+    static sortByLanguage(params: SetMyCommandsParams[]) {
+        return params.sort((a, b) => {
             if (!a.language_code) return -1;
             if (!b.language_code) return 1;
             return a.language_code.localeCompare(b.language_code);
-        })
-        .reduce((result, current, i, arr) => {
+        });
+    }
+
+    /**
+     * Iterates over an array of CommandsParams
+     * merging their respective {@link SetMyCommandsParams.commands}
+     * when they are from the same language, separating when they are not.
+     * 
+     * @param params a flattened array of commands params coming from one or more Commands instances
+     * @returns an array containing all commands grouped by language
+     */
+
+    static mergeByLanguage(params: SetMyCommandsParams[]) {
+        const sorted = this.sortByLanguage(params);
+        return sorted.reduce((result, current, i, arr) => {
             if (i === 0 || current.language_code !== arr[i - 1].language_code) {
                 result.push(current);
                 return result;
@@ -112,4 +131,5 @@ export function _mergeMyCommandsParams(
                 return result;
             }
         }, [] as SetMyCommandsParams[]);
+    }
 }

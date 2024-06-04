@@ -104,7 +104,7 @@ export class MyCommandParams {
         commands: Commands<C>[],
         chat_id: BotCommandScopeChat["chat_id"],
     ) {
-        const commandsParams = this.serialize(commands, chat_id).flat();
+        const commandsParams = this._serialize(commands, chat_id).flat();
         if (!commandsParams.length) return [];
         return this.mergeByLanguage(commandsParams);
     }
@@ -127,7 +127,7 @@ export class MyCommandParams {
      * @param chat_id the chat id relative to the message update, coming from the ctx object.
      * @returns an array of scoped {@link SetMyCommandsParams} mapped from their respective Commands instances
      */
-    static serialize<C extends Context>(
+    static _serialize<C extends Context>(
         commandsArr: Commands<C>[],
         chat_id: BotCommandScopeChat["chat_id"],
     ) {
@@ -144,7 +144,7 @@ export class MyCommandParams {
      * @returns the sorted array
      */
 
-    static sortByLanguage(params: SetMyCommandsParams[]) {
+    static _sortByLanguage(params: SetMyCommandsParams[]) {
         return params.sort((a, b) => {
             if (!a.language_code) return -1;
             if (!b.language_code) return 1;
@@ -162,7 +162,7 @@ export class MyCommandParams {
      */
 
     private static mergeByLanguage(params: SetMyCommandsParams[]) {
-        const sorted = this.sortByLanguage(params);
+        const sorted = this._sortByLanguage(params);
         return sorted.reduce((result, current, i, arr) => {
             if (i === 0 || current.language_code !== arr[i - 1].language_code) {
                 result.push(current);

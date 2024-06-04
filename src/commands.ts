@@ -13,8 +13,16 @@ import { type MaybeArray } from "./utils.ts";
 
 export type SetMyCommandsParams = {
     /**
-     * Scope
+     * Interface for grouping {@link BotCommand}'s that might or might not be related to each other
+     * by scope and/or language.
+     *
+     * If @param scope it's defined, they will only take effect on that scope.
+     * If @param language_code it's defined, they will only take effect on users of that language.
+     * 'Takes effect' in this case means: being displayed in the user commands menu.
+     *
+     * @param scope on which the commands will take effect
      * @param language_code two letter abbreviation in ISO_639 standard: https://en.wikipedia.org/wiki/List_of_ISO_639_language_codes
+     * @param commands that can be each one passed to a SetMyCommands Call
      */
     scope?: BotCommandScope;
     language_code?: string;

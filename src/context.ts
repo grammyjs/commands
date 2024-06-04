@@ -3,7 +3,6 @@ import { Commands } from "./commands.ts";
 import { BotCommandScopeChat, Context, NextFunction } from "./deps.deno.ts";
 import { fuzzyMatch, JaroWinklerOptions } from "./jaro-winkler.ts";
 import { SetMyCommandsParams } from "./mod.ts";
-import { CHAR_TAB } from "https://deno.land/std@0.211.0/path/_common/constants.ts";
 
 export interface CommandsFlavor<C extends Context = Context> extends Context {
     /**
@@ -86,8 +85,11 @@ export class MyCommandParams {
      * @param commands An array of one or more Commands instances.
      * @returns an array of {@link SetMyCommandsParams} grouped by language
      */
-    static from<C extends Context>(commands: Commands<C>[], chat_id: BotCommandScopeChat["chat_id"]) {
-        const commandsParams = this.serialize(commands, chat_id).flat()
+    static from<C extends Context>(
+        commands: Commands<C>[],
+        chat_id: BotCommandScopeChat["chat_id"],
+    ) {
+        const commandsParams = this.serialize(commands, chat_id).flat();
         if (!commandsParams.length) return [];
         return this.mergeByLanguage(commandsParams);
     }
@@ -95,17 +97,20 @@ export class MyCommandParams {
     /**
      * Serializes one or multiple {@link Commands} instances, each one into their respective
      * single scoped SetMyCommandsParams version.
-     * 
+     *
      * @param commandsArr an array of one or more commands instances
      * @param chat_id the chat id relative to the message update, coming from the ctx object.
      * @returns an array of scoped {@link SetMyCommandsParams} mapped from their respective Commands instances
      */
-    private static serialize<C extends Context>(commandsArr: Commands<C>[], chat_id: BotCommandScopeChat["chat_id"]) {
+    private static serialize<C extends Context>(
+        commandsArr: Commands<C>[],
+        chat_id: BotCommandScopeChat["chat_id"],
+    ) {
         return commandsArr.map((
             commands,
         ) => commands.toSingleScopeArgs({
             type: "chat",
-            chat_id
+            chat_id,
         }));
     }
 
@@ -126,7 +131,7 @@ export class MyCommandParams {
      * Iterates over an array of CommandsParams
      * merging their respective {@link SetMyCommandsParams.commands}
      * when they are from the same language, separating when they are not.
-     * 
+     *
      * @param params a flattened array of commands params coming from one or more Commands instances
      * @returns an array containing all commands grouped by language
      */

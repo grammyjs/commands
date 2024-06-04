@@ -14,9 +14,9 @@ export {
 export type {
     BotCommand,
     BotCommandScope,
-    BotCommandScopeChat,
     BotCommandScopeAllChatAdministrators,
     BotCommandScopeAllGroupChats,
     BotCommandScopeAllPrivateChats,
+    BotCommandScopeChat,
     Chat,
 } from "https://lib.deno.dev/x/grammy@1/types.ts";

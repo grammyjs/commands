@@ -14,9 +14,9 @@ export {
 export type {
     BotCommand,
     BotCommandScope,
-    BotCommandScopeChat,
     BotCommandScopeAllChatAdministrators,
     BotCommandScopeAllGroupChats,
     BotCommandScopeAllPrivateChats,
+    BotCommandScopeChat,
     Chat,
 } from "grammy/types";

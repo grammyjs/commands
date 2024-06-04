@@ -14,6 +14,7 @@ export {
 export type {
     BotCommand,
     BotCommandScope,
+    BotCommandScopeChat,
     BotCommandScopeAllChatAdministrators,
     BotCommandScopeAllGroupChats,
     BotCommandScopeAllPrivateChats,

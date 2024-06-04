@@ -1,8 +1,9 @@
 import { ensureArray } from "./utils.ts";
 import { Commands } from "./commands.ts";
-import { Context, NextFunction } from "./deps.deno.ts";
+import { BotCommandScopeChat, Context, NextFunction } from "./deps.deno.ts";
 import { fuzzyMatch, JaroWinklerOptions } from "./jaro-winkler.ts";
 import { SetMyCommandsParams } from "./mod.ts";
+import { CHAR_TAB } from "https://deno.land/std@0.211.0/path/_common/constants.ts";
 
 export interface CommandsFlavor<C extends Context = Context> extends Context {
     /**
@@ -55,15 +56,9 @@ export function commands<C extends Context>() {
                 );
             }
             commands = ensureArray(commands).concat(moreCommands);
-            const commandsParams = commands.map((
-                commands,
-            ) => commands.toSingleScopeArgs({
-                type: "chat",
-                chat_id: ctx.chat!.id,
-            }));
 
             await Promise.all(
-                MyCommandParams.mergeFrom(commandsParams)
+                MyCommandParams.from(commands, ctx.chat.id)
                     .map((args) => ctx.api.raw.setMyCommands(args)),
             );
         };
@@ -81,19 +76,37 @@ export function commands<C extends Context>() {
 }
 
 /**
- * Static class for manipulating {@link SetMyCommandsParams} coming from {@link Commands.toSingleScopeArgs}
+ * Static class for getting and manipulating {@link SetMyCommandsParams}
  */
-class MyCommandParams {
+export class MyCommandParams {
     /**
-     * Merges {@link SetMyCommandsParams} coming from one or more Commands instances
-     * into a single one. If only one source it's provided it will remain the same.
+     * Merges and serialize one or more Commands instances into a single array
+     * of commands params that can be used to set the commands menu displayed to the user.
      *
-     * @param commandsParams setMyCommandsParams coming from one or more Commands instances.
-     * @returns an array of SetCommandParams grouped by language
+     * @param commands An array of one or more Commands instances.
+     * @returns an array of {@link SetMyCommandsParams} grouped by language
      */
-    static mergeFrom(commandsParams: SetMyCommandsParams[][]) {
-        if (!commandsParams.flat().length) return [];
-        return this.mergeByLanguage(commandsParams.flat());
+    static from<C extends Context>(commands: Commands<C>[], chat_id: BotCommandScopeChat["chat_id"]) {
+        const commandsParams = this.serialize(commands, chat_id).flat()
+        if (!commandsParams.length) return [];
+        return this.mergeByLanguage(commandsParams);
+    }
+
+    /**
+     * Serializes one or multiple {@link Commands} instances, each one into their respective
+     * single scoped SetMyCommandsParams version.
+     * 
+     * @param commandsArr an array of one or more commands instances
+     * @param chat_id the chat id relative to the message update, coming from the ctx object.
+     * @returns an array of scoped {@link SetMyCommandsParams} mapped from their respective Commands instances
+     */
+    private static serialize<C extends Context>(commandsArr: Commands<C>[], chat_id: BotCommandScopeChat["chat_id"]) {
+        return commandsArr.map((
+            commands,
+        ) => commands.toSingleScopeArgs({
+            type: "chat",
+            chat_id
+        }));
     }
 
     /**
@@ -118,7 +131,7 @@ class MyCommandParams {
      * @returns an array containing all commands grouped by language
      */
 
-    static mergeByLanguage(params: SetMyCommandsParams[]) {
+    private static mergeByLanguage(params: SetMyCommandsParams[]) {
         const sorted = this.sortByLanguage(params);
         return sorted.reduce((result, current, i, arr) => {
             if (i === 0 || current.language_code !== arr[i - 1].language_code) {

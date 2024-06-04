@@ -1,5 +1,5 @@
 import { Commands } from "../src/commands.ts";
-import { _mergeMyCommandsParams } from "../src/mod.ts";
+import { MyCommandParams } from "../src/mod.ts";
 import { assertEquals, describe, it } from "./deps.test.ts";
 
 describe("Commands", () => {
@@ -13,7 +13,7 @@ describe("Commands", () => {
 
         it("should create a command with a default handler", () => {
             const commands = new Commands();
-            commands.command("test", "default handler", () => {}, {
+            commands.command("test", "default handler", () => { }, {
                 prefix: undefined,
             });
 
@@ -35,7 +35,7 @@ describe("Commands", () => {
 
         it("should support options with default handler", () => {
             const commands = new Commands();
-            commands.command("test", "default handler", () => {}, {
+            commands.command("test", "default handler", () => { }, {
                 prefix: "test",
             });
             assertEquals(
@@ -140,14 +140,7 @@ describe("Commands", () => {
                 const c = new Commands();
                 c.command("c", "test c", (_) => _);
 
-                const allParams = [a, b, c].map((
-                    commands,
-                ) => commands.toSingleScopeArgs({
-                    type: "chat",
-                    chat_id: 10,
-                }));
-
-                const mergedCommands = _mergeMyCommandsParams(allParams);
+                const mergedCommands = MyCommandParams.from([a, b, c], 10);
 
                 assertEquals(mergedCommands, [
                     {
@@ -180,14 +173,7 @@ describe("Commands", () => {
                     .localize("es", "localB", "prueba b localizada")
                     .localize("fr", "localiseB", "prueba b localisé");
 
-                const allParams = [a, b].map((
-                    commands,
-                ) => commands.toSingleScopeArgs({
-                    type: "chat",
-                    chat_id: 10,
-                }));
-
-                const mergedCommands = _mergeMyCommandsParams(allParams);
+                const mergedCommands = MyCommandParams.from([a, b], 10);
                 assertEquals(mergedCommands, [
                     {
                         scope: { type: "chat", chat_id: 10 },

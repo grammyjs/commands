@@ -13,7 +13,7 @@ describe("Commands", () => {
 
         it("should create a command with a default handler", () => {
             const commands = new Commands();
-            commands.command("test", "default handler", () => { }, {
+            commands.command("test", "default handler", () => {}, {
                 prefix: undefined,
             });
 
@@ -35,7 +35,7 @@ describe("Commands", () => {
 
         it("should support options with default handler", () => {
             const commands = new Commands();
-            commands.command("test", "default handler", () => { }, {
+            commands.command("test", "default handler", () => {}, {
                 prefix: "test",
             });
             assertEquals(

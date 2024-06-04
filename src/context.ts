@@ -75,13 +75,28 @@ export function commands<C extends Context>() {
 }
 
 /**
- * Static class for getting and manipulating {@link SetMyCommandsParams}
+ * Static class for getting and manipulating {@link SetMyCommandsParams}.
+ * The main function is {@link from}
  */
 export class MyCommandParams {
     /**
      * Merges and serialize one or more Commands instances into a single array
      * of commands params that can be used to set the commands menu displayed to the user.
-     *
+     * @example
+        ```ts
+        const adminCommands = new Commands();
+        const userCommands = new Commands();
+        adminCommands
+            .command("do a",
+                     "a description",
+                     (ctx) => ctx.doA());
+        userCommands
+            .command("do b",
+                     "b description",
+                     (ctx) => ctx.doB());
+        const mergedParams = 
+            MyCommandParams.from([a, b], someChatId);
+        ```
      * @param commands An array of one or more Commands instances.
      * @returns an array of {@link SetMyCommandsParams} grouped by language
      */
@@ -97,12 +112,22 @@ export class MyCommandParams {
     /**
      * Serializes one or multiple {@link Commands} instances, each one into their respective
      * single scoped SetMyCommandsParams version.
-     *
+     * @example
+        ```ts
+        const adminCommands = new Commands();
+        // add to scope, localize, etc
+        const userCommands = new Commands();
+        // add to scope, localize, etc
+        const [
+            singleScopedAdminParams,
+            singleScopedUserParams
+        ] = MyCommandsParams.serialize([adminCommands,userCommands])
+        ```
      * @param commandsArr an array of one or more commands instances
      * @param chat_id the chat id relative to the message update, coming from the ctx object.
      * @returns an array of scoped {@link SetMyCommandsParams} mapped from their respective Commands instances
      */
-    private static serialize<C extends Context>(
+    static serialize<C extends Context>(
         commandsArr: Commands<C>[],
         chat_id: BotCommandScopeChat["chat_id"],
     ) {

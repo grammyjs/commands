@@ -8,8 +8,7 @@ import {
     Context,
     Middleware,
 } from "./deps.deno.ts";
-import { type CommandElementals } from "./jaro-winkler.ts";
-import { CommandOptions } from "./types.ts";
+import type { CommandElementals, CommandOptions } from "./types.ts";
 import { type MaybeArray } from "./utils.ts";
 
 /**
@@ -159,8 +158,7 @@ export class Commands<C extends Context> {
                         : language,
                     commands: commands.map((command) =>
                         command.toObject(language)
-                    )
-                        .filter((args) => args.command.length > 0),
+                    ),
                 });
             }
         }
@@ -203,56 +201,45 @@ export class Commands<C extends Context> {
     }
 
     /**
-     * Serialize all register commands into an array of {@link CommandElementals},
-     * each registered command will be summarized into it's name, prefix and language
+     * Serialize all register commands into it's name, prefix and language
      *
-     * @param filterLanguage If given and valid, filters out all command localizations
-     * that not match the filterLanguage,
-     * if a command does not have the given language, it would fallback to "default"
+     * @param filterLanguage if undefined, it returns all names
+     * else get only the locales for the given filterLanguage 
+     * fallbacks to "default"
+     * 
+     * @returns an array of {@link CommandElementals}
      *
      * Note: mainly used to serialize for {@link FuzzyMatch}
      */
 
     public toElementals(filterLanguage?: string): CommandElementals[] {
         this._populateMetadata();
-        if (!filterLanguage) {
-            const commands = [];
-            for (const [_scope, _commands] of this._scopes.entries()) {
-                for (const language of this._languages) {
-                    commands.push(
-                        ..._commands.map((command) => ({
-                            name: command.toObject(language).command,
+
+        return Array.from(this._scopes.values())
+            .flat()
+            .flatMap(
+                (command) => {
+                    const elements = [];
+                    for (const [language, local] of command.languages.entries()) {
+                        elements.push({
+                            name: local.name instanceof RegExp
+                                ? local.name.source
+                                : local.name,
                             language,
                             prefix: command.prefix,
-                        })).filter((command) => command.name.length > 0),
-                    );
-                }
-            }
-            return commands;
-        }
-
-        const commands = Array.from(this._scopes.values())
-            .flat()
-            .map((command) => {
-                let local = command.languages.get(filterLanguage);
-                local ??= command.languages.get("default");
-                if (!local) {
-                    throw "never: If a command exist, 'default' should exist in _languages";
-                }
-                return {
-                    name: local.name instanceof RegExp
-                        ? local.name.source
-                        : local.name,
-                    prefix: command.prefix,
-                    language: filterLanguage,
-                };
-            });
-        const visited: Record<string, boolean> = {};
-        return commands.filter((command) => {
-            if (visited[command.name]) return false;
-            visited[command.name] = true;
-            return true;
-        });
+                        });
+                    }
+                    if (filterLanguage) {
+                        const filtered = elements.filter((command) =>
+                            command.language === filterLanguage
+                        );
+                        const defaulted = elements.filter((command) =>
+                            command.language === "default"
+                        );
+                        return filtered.length ? filtered[0] : defaulted[0];
+                    } else return elements;
+                },
+            );
     }
 
     /**

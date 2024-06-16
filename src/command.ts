@@ -11,7 +11,7 @@ import {
     type MiddlewareObj,
 } from "./deps.deno.ts";
 import { InvalidScopeError } from "./errors.ts";
-import { CommandOptions } from "./types.ts";
+import type { CommandOptions } from "./types.ts";
 import { ensureArray, type MaybeArray } from "./utils.ts";
 
 type BotCommandGroupsScope =

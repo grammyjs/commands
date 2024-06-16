@@ -84,6 +84,7 @@ type CommandSimilarity = {
 export interface CommandElementals {
     name: string;
     prefix: string;
+    // scope: BotCommandScope["type"]
     language: string;
 }
 
@@ -96,7 +97,7 @@ export interface CommandElementals {
 export function JaroWinklerDistance(
     s1: string,
     s2: string,
-    options: Partial<JaroWinklerOptions>,
+    options: Pick<Partial<JaroWinklerOptions>, "ignoreCase">,
 ) {
     if (s1 === s2) {
         return 1;

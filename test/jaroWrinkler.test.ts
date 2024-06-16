@@ -115,7 +115,7 @@ describe("Jaro-Wrinkler Algorithm", () => {
                 .localize("es", "duque", "_")
                 .localize("fr", "duc", "_");
 
-            it("must output all commands names, language and prefix", () => {
+            it("should output all commands names, language and prefix", () => {
                 const json = cmds.toElementals();
                 assertArrayIncludes(json, [
                     { name: "butcher", language: "default", prefix: "?" },
@@ -127,7 +127,7 @@ describe("Jaro-Wrinkler Algorithm", () => {
                 ]);
             });
         });
-        describe("Should return the command localization related to the user lang", () => {
+        describe("should return the command localization related to the user lang", () => {
             const cmds = new Commands<Context>();
             cmds.command("duke", "sniper", () => {})
                 .localize("es", "duque", "_")
@@ -217,7 +217,7 @@ describe("Jaro-Wrinkler Algorithm", () => {
                     ));
             });
         });
-        describe("Should return the command localization related to the user lang for similar command names from different command classes", () => {
+        describe("should return the command localization related to the user lang for similar command names from different command classes", () => {
             const cmds = new Commands<Context>();
             cmds.command("push", "push", () => {})
                 .localize("fr", "pousser", "a")
@@ -298,7 +298,7 @@ describe("Jaro-Wrinkler Algorithm", () => {
         cmds.command("endanger", "_", () => {});
         cmds.command("entitle", "_", () => {});
 
-        it("Should return null when no msg is given", () => {
+        it("should return null when no msg is given", () => {
             let ctx = dummyCtx({
                 userInput: "",
             });
@@ -308,7 +308,7 @@ describe("Jaro-Wrinkler Algorithm", () => {
             );
         });
 
-        describe("Should ignore localization when set to, and search trough all commands", () => {
+        describe("should ignore localization when set to, and search trough all commands", () => {
             it("ignore even if the language is set", () => { // should this console.warn? or maybe use an overload?
                 let ctx = dummyCtx({
                     userInput: "/duci",
@@ -461,7 +461,7 @@ describe("Jaro-Wrinkler Algorithm", () => {
             .localize("es", "papa", "_")
             .localize("fr", "pere", "_");
 
-        it("Should get the nearest between multiple command classes", () => {
+        it("should get the nearest between multiple command classes", () => {
             let ctx = dummyCtx({
                 userInput: "/papi",
                 language: "es",

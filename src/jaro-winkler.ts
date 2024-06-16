@@ -1,5 +1,6 @@
 import { Commands } from "./commands.ts";
 import { Context } from "./deps.deno.ts";
+import type { CommandElementals } from "./types.ts";
 
 export function distance(s1: string, s2: string) {
     if (s1.length === 0 || s2.length === 0) {
@@ -81,13 +82,6 @@ type CommandSimilarity = {
     similarity: number;
 };
 
-export interface CommandElementals {
-    name: string;
-    prefix: string;
-    // scope: BotCommandScope["type"]
-    language: string;
-}
-
 // Computes the Winkler distance between two string -- intrepreted from:
 // http://en.wikipedia.org/wiki/Jaro%E2%80%93Winkler_distance
 // s1 is the first string to compare
@@ -127,8 +121,6 @@ export function fuzzyMatch<C extends Context>(
     const defaultSimilarityThreshold = 0.82;
     const similarityThreshold = options.similarityThreshold ||
         defaultSimilarityThreshold;
-
-    options.language ??= "default";
 
     const cmds = options.ignoreLocalization
         ? commands.toElementals()

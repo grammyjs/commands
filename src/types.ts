@@ -22,3 +22,9 @@ export interface CommandOptions {
      */
     targetedCommands: "ignored" | "optional" | "required";
 }
+
+export interface CommandElementals {
+    name: string;
+    prefix: string;
+    language: string;
+}

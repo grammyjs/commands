@@ -47,7 +47,7 @@ describe("Jaro-Wrinkler Algorithm", () => {
             cmds.command(
                 "start",
                 "Starting",
-                () => { },
+                () => {},
             );
             assertEquals(
                 fuzzyMatch("strt", cmds, { language: "fr" })?.command?.name,
@@ -61,7 +61,7 @@ describe("Jaro-Wrinkler Algorithm", () => {
             cmds.command(
                 "start",
                 "Starting",
-                () => { },
+                () => {},
             ).addToScope(
                 { type: "all_private_chats" },
                 (ctx) => ctx.reply(`Hello, ${ctx.chat.first_name}!`),
@@ -107,11 +107,11 @@ describe("Jaro-Wrinkler Algorithm", () => {
     describe("Serialize commands for FuzzyMatch", () => {
         describe("toNameAndPrefix", () => {
             const cmds = new Commands<Context>();
-            cmds.command("butcher", "_", () => { }, { prefix: "?" })
+            cmds.command("butcher", "_", () => {}, { prefix: "?" })
                 .localize("es", "carnicero", "_")
                 .localize("it", "macellaio", "_");
 
-            cmds.command("duke", "_", () => { })
+            cmds.command("duke", "_", () => {})
                 .localize("es", "duque", "_")
                 .localize("fr", "duc", "_");
 
@@ -129,7 +129,7 @@ describe("Jaro-Wrinkler Algorithm", () => {
         });
         describe("Should return the command localization related to the user lang", () => {
             const cmds = new Commands<Context>();
-            cmds.command("duke", "sniper", () => { })
+            cmds.command("duke", "sniper", () => {})
                 .localize("es", "duque", "_")
                 .localize("fr", "duc", "_")
                 .localize("it", "duca", "_")
@@ -219,11 +219,11 @@ describe("Jaro-Wrinkler Algorithm", () => {
         });
         describe("Should return the command localization related to the user lang for similar command names from different command classes", () => {
             const cmds = new Commands<Context>();
-            cmds.command("push", "push", () => { })
+            cmds.command("push", "push", () => {})
                 .localize("fr", "pousser", "a")
                 .localize("pt", "empurrar", "b");
 
-            cmds.command("rest", "rest", () => { })
+            cmds.command("rest", "rest", () => {})
                 .localize("fr", "reposer", "c")
                 .localize("pt", "poussar", "d");
 
@@ -283,24 +283,24 @@ describe("Jaro-Wrinkler Algorithm", () => {
     });
     describe("Usage inside ctx", () => {
         const cmds = new Commands<Context>();
-        cmds.command("butcher", "_", () => { }, { prefix: "+" })
+        cmds.command("butcher", "_", () => {}, { prefix: "+" })
             .localize("es", "carnicero", "_")
             .localize("it", "macellaio", "_");
 
-        cmds.command("duke", "_", () => { })
+        cmds.command("duke", "_", () => {})
             .localize("es", "duque", "_")
             .localize("fr", "duc", "_");
 
-        cmds.command("daddy", "me", () => { }, { prefix: "?" })
+        cmds.command("daddy", "me", () => {}, { prefix: "?" })
             .localize("es", "papito", "yeyo");
 
-        cmds.command("ender", "_", () => { });
-        cmds.command("endanger", "_", () => { });
-        cmds.command("entitle", "_", () => { });
+        cmds.command("ender", "_", () => {});
+        cmds.command("endanger", "_", () => {});
+        cmds.command("entitle", "_", () => {});
 
         it("Should return null when no msg is given", () => {
             let ctx = dummyCtx({
-                userInput: ""
+                userInput: "",
             });
             assertEquals(
                 ctx.getNearestCommand(cmds),
@@ -312,7 +312,7 @@ describe("Jaro-Wrinkler Algorithm", () => {
             it("ignore even if the language is set", () => { // should this console.warn? or maybe use an overload?
                 let ctx = dummyCtx({
                     userInput: "/duci",
-                    language: "es"
+                    language: "es",
                 });
                 assertEquals(
                     ctx.getNearestCommand(cmds, {
@@ -322,7 +322,7 @@ describe("Jaro-Wrinkler Algorithm", () => {
                 );
                 ctx = dummyCtx({
                     userInput: "/duki",
-                    language: "es"
+                    language: "es",
                 });
                 assertEquals(
                     ctx.getNearestCommand(cmds, {
@@ -334,7 +334,7 @@ describe("Jaro-Wrinkler Algorithm", () => {
             it("ignore when the language is not set", () => {
                 let ctx = dummyCtx({
                     userInput: "/duki",
-                    language: "es"
+                    language: "es",
                 });
                 assertEquals(
                     ctx.getNearestCommand(cmds, { ignoreLocalization: true }),
@@ -342,7 +342,7 @@ describe("Jaro-Wrinkler Algorithm", () => {
                 );
                 ctx = dummyCtx({
                     userInput: "/macellaoo",
-                    language: "es"
+                    language: "es",
                 });
                 assertEquals(
                     ctx.getNearestCommand(cmds, { ignoreLocalization: true }),
@@ -350,7 +350,7 @@ describe("Jaro-Wrinkler Algorithm", () => {
                 );
                 ctx = dummyCtx({
                     userInput: "/dadd",
-                    language: "es"
+                    language: "es",
                 });
                 assertEquals(
                     ctx.getNearestCommand(cmds, { ignoreLocalization: true }),
@@ -358,7 +358,7 @@ describe("Jaro-Wrinkler Algorithm", () => {
                 );
                 ctx = dummyCtx({
                     userInput: "/duk",
-                    language: "es"
+                    language: "es",
                 });
                 assertEquals(
                     ctx.getNearestCommand(cmds, { ignoreLocalization: true }),
@@ -368,7 +368,7 @@ describe("Jaro-Wrinkler Algorithm", () => {
             it("should not restrict itself to default", () => {
                 let ctx = dummyCtx({
                     userInput: "/duqu",
-                    language: "es"
+                    language: "es",
                 });
                 assertEquals(
                     ctx.getNearestCommand(cmds, { ignoreLocalization: true }),
@@ -378,7 +378,7 @@ describe("Jaro-Wrinkler Algorithm", () => {
             it("language not know, but ignore localization still matches the best similarity", () => {
                 let ctx = dummyCtx({
                     userInput: "/duqu",
-                    language: "en-papacito"
+                    language: "en-papacito",
                 });
                 assertEquals(
                     ctx.getNearestCommand(cmds, { ignoreLocalization: true }),
@@ -388,7 +388,7 @@ describe("Jaro-Wrinkler Algorithm", () => {
             it("should chose localization if not ignore", () => {
                 let ctx = dummyCtx({
                     userInput: "/duku",
-                    language: "es"
+                    language: "es",
                 });
                 assertEquals(
                     ctx.getNearestCommand(cmds),
@@ -396,7 +396,7 @@ describe("Jaro-Wrinkler Algorithm", () => {
                 );
                 ctx = dummyCtx({
                     userInput: "/duk",
-                    language: "fr"
+                    language: "fr",
                 });
                 assertEquals(
                     ctx.getNearestCommand(cmds),
@@ -408,19 +408,19 @@ describe("Jaro-Wrinkler Algorithm", () => {
             it("should fallback to default", () => {
                 let ctx = dummyCtx({
                     userInput: "/duko",
-                    language: "en-papacito"
+                    language: "en-papacito",
                 });
                 assertEquals(ctx.getNearestCommand(cmds), "/duke");
                 ctx = dummyCtx({
                     userInput: "/butxher",
-                    language: "no-language"
+                    language: "no-language",
                 });
                 assertEquals(ctx.getNearestCommand(cmds), "+butcher");
             });
             it("should not fallback to a locale even if its the same name", () => {
                 let ctx = dummyCtx({
                     userInput: "/duque",
-                    language: "narnian"
+                    language: "narnian",
                 });
                 assertEquals(ctx.getNearestCommand(cmds), "/duke");
             });
@@ -429,21 +429,21 @@ describe("Jaro-Wrinkler Algorithm", () => {
             it("ender", () => {
                 let ctx = dummyCtx({
                     userInput: "/endr",
-                    language: "es"
+                    language: "es",
                 });
                 assertEquals(ctx.getNearestCommand(cmds), "/ender");
             });
             it("endanger", () => {
                 let ctx = dummyCtx({
                     userInput: "/enanger",
-                    language: "en"
+                    language: "en",
                 });
                 assertEquals(ctx.getNearestCommand(cmds), "/endanger");
             });
             it("entitle", () => {
                 let ctx = dummyCtx({
                     userInput: "/entities",
-                    language: "pt"
+                    language: "pt",
                 });
                 assertEquals(ctx.getNearestCommand(cmds), "/entitle");
             });
@@ -451,32 +451,32 @@ describe("Jaro-Wrinkler Algorithm", () => {
     });
     describe("Test multiple commands instances", () => {
         const cmds = new Commands<Context>();
-        cmds.command("bread", "_", () => { })
+        cmds.command("bread", "_", () => {})
             .localize("es", "pan", "_")
             .localize("fr", "pain", "_");
 
         const cmds2 = new Commands<Context>();
 
-        cmds.command("dad", "_", () => { })
+        cmds.command("dad", "_", () => {})
             .localize("es", "papa", "_")
             .localize("fr", "pere", "_");
 
         it("Should get the nearest between multiple command classes", () => {
             let ctx = dummyCtx({
                 userInput: "/papi",
-                language: "es"
+                language: "es",
             });
             assertEquals(ctx.getNearestCommand([cmds, cmds2]), "/papa");
             ctx = dummyCtx({
                 userInput: "/pai",
-                language: "fr"
+                language: "fr",
             });
             assertEquals(ctx.getNearestCommand([cmds, cmds2]), "/pain");
         });
         it("Without localization it should get the best between multiple command classes", () => {
             let ctx = dummyCtx({
                 userInput: "/pana",
-                language: "???"
+                language: "???",
             });
             assertEquals(
                 ctx.getNearestCommand([cmds, cmds2], {
@@ -486,7 +486,7 @@ describe("Jaro-Wrinkler Algorithm", () => {
             );
             ctx = dummyCtx({
                 userInput: "/para",
-                language: "???"
+                language: "???",
             });
             assertEquals(
                 ctx.getNearestCommand([cmds, cmds2], {
@@ -497,4 +497,3 @@ describe("Jaro-Wrinkler Algorithm", () => {
         });
     });
 });
-

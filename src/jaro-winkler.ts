@@ -1,5 +1,5 @@
 import { Commands } from "./commands.ts";
-import { Context } from "./deps.deno.ts";
+import { Context, LanguageCode, LanguageCodes } from "./deps.deno.ts";
 import type { CommandElementals } from "./types.ts";
 
 export function distance(s1: string, s2: string) {
@@ -73,7 +73,7 @@ export function distance(s1: string, s2: string) {
 export type JaroWinklerOptions = {
     ignoreCase?: boolean;
     similarityThreshold?: number;
-    language?: string;
+    language?: LanguageCode | string;
     ignoreLocalization?: boolean;
 };
 
@@ -113,6 +113,12 @@ export function JaroWinklerDistance(
     }
 }
 
+export function isLanguageCode(
+    value: string | undefined,
+): value is LanguageCode {
+    return Object.values(LanguageCodes).includes(value as LanguageCode);
+}
+
 export function fuzzyMatch<C extends Context>(
     userInput: string,
     commands: Commands<C>,
@@ -122,9 +128,16 @@ export function fuzzyMatch<C extends Context>(
     const similarityThreshold = options.similarityThreshold ||
         defaultSimilarityThreshold;
 
+    /**
+     * ctx.from.id is IETF
+     * https://en.wikipedia.org/wiki/IETF_language_tag
+     */
+    const possiblyISO639 = options.language?.split("-")[0];
+    const language = isLanguageCode(possiblyISO639) ? possiblyISO639 : "default";
+
     const cmds = options.ignoreLocalization
         ? commands.toElementals()
-        : commands.toElementals(options.language);
+        : commands.toElementals(language);
 
     const bestMatch = cmds.reduce(
         (best: CommandSimilarity, command) => {

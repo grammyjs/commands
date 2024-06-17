@@ -7,6 +7,7 @@ import {
     type ChatTypeMiddleware,
     Composer,
     type Context,
+    type LanguageCode,
     type Middleware,
     type MiddlewareObj,
 } from "./deps.deno.ts";
@@ -32,7 +33,7 @@ export const matchesPattern = (value: string, pattern: string | RegExp) =>
 export class Command<C extends Context = Context> implements MiddlewareObj<C> {
     private _scopes: BotCommandScope[] = [];
     private _languages: Map<
-        string,
+        LanguageCode | "default",
         { name: string | RegExp; description: string }
     > = new Map();
     private _composer: Composer<C> = new Composer<C>();
@@ -266,7 +267,7 @@ export class Command<C extends Context = Context> implements MiddlewareObj<C> {
      * @param description Localized command description
      */
     public localize(
-        languageCode: string,
+        languageCode: LanguageCode,
         name: string | RegExp,
         description: string,
     ) {
@@ -282,7 +283,7 @@ export class Command<C extends Context = Context> implements MiddlewareObj<C> {
      * @param languageCode Language to get the name for
      * @returns Localized command name
      */
-    public getLocalizedName(languageCode: string) {
+    public getLocalizedName(languageCode: LanguageCode | "default") {
         return this._languages.get(languageCode)?.name ?? this.name;
     }
 
@@ -291,7 +292,7 @@ export class Command<C extends Context = Context> implements MiddlewareObj<C> {
      * @param languageCode Language to get the name for
      * @returns Localized command name
      */
-    public getLocalizedDescription(languageCode: string) {
+    public getLocalizedDescription(languageCode: LanguageCode | "default") {
         return this._languages.get(languageCode)?.description ??
             this.description;
     }
@@ -303,7 +304,9 @@ export class Command<C extends Context = Context> implements MiddlewareObj<C> {
      * @param languageCode If specified, uses localized versions of the command name and description
      * @returns Object representation of this command
      */
-    public toObject(languageCode = "default"): BotCommand {
+    public toObject(
+        languageCode: LanguageCode | "default" = "default",
+    ): BotCommand {
         const localizedName = this.getLocalizedName(languageCode);
         return {
             command: localizedName instanceof RegExp

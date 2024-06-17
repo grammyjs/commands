@@ -1,3 +1,5 @@
+import type { LanguageCode } from "./deps.deno.ts";
+
 /**
  * Supported command options
  */
@@ -26,5 +28,5 @@ export interface CommandOptions {
 export interface CommandElementals {
     name: string;
     prefix: string;
-    language: string;
+    language: LanguageCode | "default";
 }

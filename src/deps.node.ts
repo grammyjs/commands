@@ -19,4 +19,7 @@ export type {
     BotCommandScopeAllPrivateChats,
     BotCommandScopeChat,
     Chat,
-} from "grammy/types";
+    LanguageCode,
+} from "@grammyjs/types";
+
+export { LanguageCodes } from "@grammyjs/types";

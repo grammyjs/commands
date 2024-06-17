@@ -6,6 +6,7 @@ import {
     CommandContext,
     Composer,
     Context,
+    type LanguageCode,
     Middleware,
 } from "./deps.deno.ts";
 import type { CommandElementals, CommandOptions } from "./types.ts";
@@ -21,8 +22,8 @@ export type SetMyCommandsParams = {
     /** If defined: Language on which the commands will take effect.
      * Two letter abbreviation in ISO_639 standard: https://en.wikipedia.org/wiki/List_of_ISO_639_language_codes
      */
-    language_code?: string;
-    /** commands that can be each one passed to a SetMyCommands Call */
+    language_code?: LanguageCode;
+    /** Commands that can be each one passed to a SetMyCommands Call */
     commands: BotCommand[];
 };
 
@@ -57,7 +58,7 @@ const isMiddleware = <C extends Context>(
  * ```
  */
 export class Commands<C extends Context> {
-    private _languages: Set<string> = new Set();
+    private _languages: Set<LanguageCode | "default"> = new Set();
     private _scopes: Map<string, Array<Command<C>>> = new Map();
     private _commands: Command<C>[] = [];
     private _composer: Composer<C> = new Composer();
@@ -204,15 +205,17 @@ export class Commands<C extends Context> {
      * Serialize all register commands into it's name, prefix and language
      *
      * @param filterLanguage if undefined, it returns all names
-     * else get only the locales for the given filterLanguage 
+     * else get only the locales for the given filterLanguage
      * fallbacks to "default"
-     * 
+     *
      * @returns an array of {@link CommandElementals}
      *
      * Note: mainly used to serialize for {@link FuzzyMatch}
      */
 
-    public toElementals(filterLanguage?: string): CommandElementals[] {
+    public toElementals(
+        filterLanguage?: LanguageCode | "default",
+    ): CommandElementals[] {
         this._populateMetadata();
 
         return Array.from(this._scopes.values())
@@ -220,7 +223,9 @@ export class Commands<C extends Context> {
             .flatMap(
                 (command) => {
                     const elements = [];
-                    for (const [language, local] of command.languages.entries()) {
+                    for (
+                        const [language, local] of command.languages.entries()
+                    ) {
                         elements.push({
                             name: local.name instanceof RegExp
                                 ? local.name.source

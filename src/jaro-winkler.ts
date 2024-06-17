@@ -133,7 +133,9 @@ export function fuzzyMatch<C extends Context>(
      * https://en.wikipedia.org/wiki/IETF_language_tag
      */
     const possiblyISO639 = options.language?.split("-")[0];
-    const language = isLanguageCode(possiblyISO639) ? possiblyISO639 : "default";
+    const language = isLanguageCode(possiblyISO639)
+        ? possiblyISO639
+        : "default";
 
     const cmds = options.ignoreLocalization
         ? commands.toElementals()

@@ -135,7 +135,7 @@ export function fuzzyMatch<C extends Context>(
     const possiblyISO639 = options.language?.split("-")[0];
     const language = isLanguageCode(possiblyISO639)
         ? possiblyISO639
-        : "default";
+        : undefined;
 
     const cmds = options.ignoreLocalization
         ? commands.toElementals()

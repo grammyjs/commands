@@ -232,6 +232,10 @@ export class Commands<C extends Context> {
                                 : local.name,
                             language,
                             prefix: command.prefix,
+                            scopes: command.scopes,
+                            description: command.getLocalizedDescription(
+                                language,
+                            ),
                         });
                     }
                     if (filterLanguage) {

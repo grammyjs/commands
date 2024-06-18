@@ -1,4 +1,4 @@
-import type { LanguageCode } from "./deps.deno.ts";
+import type { BotCommandScope, LanguageCode } from "./deps.deno.ts";
 
 /**
  * Supported command options
@@ -29,4 +29,6 @@ export interface CommandElementals {
     name: string;
     prefix: string;
     language: LanguageCode | "default";
+    scopes: BotCommandScope[];
+    description: string;
 }

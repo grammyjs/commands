@@ -118,12 +118,48 @@ describe("Jaro-Wrinkler Algorithm", () => {
             it("should output all commands names, language and prefix", () => {
                 const json = cmds.toElementals();
                 assertArrayIncludes(json, [
-                    { name: "butcher", language: "default", prefix: "?" },
-                    { name: "carnicero", language: "es", prefix: "?" },
-                    { name: "macellaio", language: "it", prefix: "?" },
-                    { name: "duke", language: "default", prefix: "/" },
-                    { name: "duque", language: "es", prefix: "/" },
-                    { name: "duc", language: "fr", prefix: "/" },
+                    {
+                        name: "butcher",
+                        language: "default",
+                        prefix: "?",
+                        scopes: [{ type: "default" }],
+                        description: "_",
+                    },
+                    {
+                        name: "carnicero",
+                        language: "es",
+                        prefix: "?",
+                        scopes: [{ type: "default" }],
+                        description: "_",
+                    },
+                    {
+                        name: "macellaio",
+                        language: "it",
+                        prefix: "?",
+                        scopes: [{ type: "default" }],
+                        description: "_",
+                    },
+                    {
+                        name: "duke",
+                        language: "default",
+                        prefix: "/",
+                        scopes: [{ type: "default" }],
+                        description: "_",
+                    },
+                    {
+                        name: "duque",
+                        language: "es",
+                        prefix: "/",
+                        scopes: [{ type: "default" }],
+                        description: "_",
+                    },
+                    {
+                        name: "duc",
+                        language: "fr",
+                        prefix: "/",
+                        scopes: [{ type: "default" }],
+                        description: "_",
+                    },
                 ]);
             });
         });

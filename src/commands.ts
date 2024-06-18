@@ -157,9 +157,9 @@ export class Commands<C extends Context> {
                     language_code: language === "default"
                         ? undefined
                         : language,
-                    commands: commands.map((command) =>
-                        command.toObject(language)
-                    ),
+                    commands: commands
+                        .filter((command) => typeof command.name === "string")
+                        .map((command) => command.toObject(language)),
                 });
             }
         }

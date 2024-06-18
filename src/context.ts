@@ -107,7 +107,7 @@ export class MyCommandParams {
             .command("do b",
                      "b description",
                      (ctx) => ctx.doB());
-        const mergedParams = 
+        const mergedParams =
             MyCommandParams.from([a, b], someChatId);
         ```
      * @param commands An array of one or more Commands instances.

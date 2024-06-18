@@ -13,7 +13,7 @@ export interface CommandsFlavor<C extends Context = Context> extends Context {
      * Calling this method with upperCased command names registered, will throw
      * @see https://core.telegram.org/bots/api#botcommand
      * @see https://core.telegram.org/method/bots.setBotCommands
-     * 
+     *
      * @example
      * ```typescript
      *  bot.hears("sudo", (ctx) =>

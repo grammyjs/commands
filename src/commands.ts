@@ -197,7 +197,7 @@ export class Commands<C extends Context> {
      * Calling this method with upperCased command names registered, will throw
      * @see https://core.telegram.org/bots/api#botcommand
      * @see https://core.telegram.org/method/bots.setBotCommands
-     * 
+     *
      * @param Instance of `bot` or { api: bot.api }
      */
     public async setCommands({ api }: { api: Api }) {

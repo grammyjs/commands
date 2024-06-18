@@ -115,67 +115,67 @@ describe("Jaro-Wrinkler Algorithm", () => {
                 .localize("fr", "duc", "d");
 
             cmds.command(/dad_(.*)/, "dad", () => {})
-                .localize('es', /papa_(.*)/, "f",);
+                .localize("es", /papa_(.*)/, "f");
             it("should output all commands names, language and prefix", () => {
                 const json = cmds.toElementals();
                 assertEquals(json, [
                     {
-                      name: "butcher",
-                      language: "default",
-                      prefix: "?",
-                      scopes: [ { type: "default" } ],
-                      description: "_"
+                        name: "butcher",
+                        language: "default",
+                        prefix: "?",
+                        scopes: [{ type: "default" }],
+                        description: "_",
                     },
                     {
-                      name: "carnicero",
-                      language: "es",
-                      prefix: "?",
-                      scopes: [ { type: "default" } ],
-                      description: "a"
+                        name: "carnicero",
+                        language: "es",
+                        prefix: "?",
+                        scopes: [{ type: "default" }],
+                        description: "a",
                     },
                     {
-                      name: "macellaio",
-                      language: "it",
-                      prefix: "?",
-                      scopes: [ { type: "default" } ],
-                      description: "b"
+                        name: "macellaio",
+                        language: "it",
+                        prefix: "?",
+                        scopes: [{ type: "default" }],
+                        description: "b",
                     },
                     {
-                      name: "duke",
-                      language: "default",
-                      prefix: "/",
-                      scopes: [ { type: "default" } ],
-                      description: "_"
+                        name: "duke",
+                        language: "default",
+                        prefix: "/",
+                        scopes: [{ type: "default" }],
+                        description: "_",
                     },
                     {
-                      name: "duque",
-                      language: "es",
-                      prefix: "/",
-                      scopes: [ { type: "default" } ],
-                      description: "c"
+                        name: "duque",
+                        language: "es",
+                        prefix: "/",
+                        scopes: [{ type: "default" }],
+                        description: "c",
                     },
                     {
-                      name: "duc",
-                      language: "fr",
-                      prefix: "/",
-                      scopes: [ { type: "default" } ],
-                      description: "d"
+                        name: "duc",
+                        language: "fr",
+                        prefix: "/",
+                        scopes: [{ type: "default" }],
+                        description: "d",
                     },
                     {
-                      name: "dad_(.*)",
-                      language: "default",
-                      prefix: "/",
-                      scopes: [ { type: "default" } ],
-                      description: "dad"
+                        name: "dad_(.*)",
+                        language: "default",
+                        prefix: "/",
+                        scopes: [{ type: "default" }],
+                        description: "dad",
                     },
                     {
-                      name: "papa_(.*)",
-                      language: "es",
-                      prefix: "/",
-                      scopes: [ { type: "default" } ],
-                      description: "f"
-                    }
-                  ]);
+                        name: "papa_(.*)",
+                        language: "es",
+                        prefix: "/",
+                        scopes: [{ type: "default" }],
+                        description: "f",
+                    },
+                ]);
             });
         });
         describe("should return the command localization related to the user lang", () => {

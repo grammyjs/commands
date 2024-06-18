@@ -193,6 +193,11 @@ export class Commands<C extends Context> {
      * Registers all commands to be displayed by clients according to their scopes and languages
      * Calls `setMyCommands` for each language of each scope of each command.
      *
+     * [!IMPORTANT]
+     * Calling this method with upperCased command names registered, will throw
+     * @see https://core.telegram.org/bots/api#botcommand
+     * @see https://core.telegram.org/method/bots.setBotCommands
+     * 
      * @param Instance of `bot` or { api: bot.api }
      */
     public async setCommands({ api }: { api: Api }) {

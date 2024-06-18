@@ -9,6 +9,11 @@ export interface CommandsFlavor<C extends Context = Context> extends Context {
      * Sets the provided commands for the current chat.
      * Cannot be called on updates that don't have a `chat` property.
      *
+     * [!IMPORTANT]
+     * Calling this method with upperCased command names registered, will throw
+     * @see https://core.telegram.org/bots/api#botcommand
+     * @see https://core.telegram.org/method/bots.setBotCommands
+     * 
      * @example
      * ```typescript
      *  bot.hears("sudo", (ctx) =>

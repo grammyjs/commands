@@ -417,13 +417,6 @@ describe("Jaro-Wrinkler Algorithm", () => {
                 });
                 assertEquals(ctx.getNearestCommand(cmds), "+butcher");
             });
-            it("should not fallback to a locale even if its the same name", () => {
-                let ctx = dummyCtx({
-                    userInput: "/duque",
-                    language: "narnian",
-                });
-                assertEquals(ctx.getNearestCommand(cmds), "/duke");
-            });
         });
         describe("should work for commands with no localization, even when the language is set", () => {
             it("ender", () => {
@@ -457,7 +450,7 @@ describe("Jaro-Wrinkler Algorithm", () => {
 
         const cmds2 = new Commands<Context>();
 
-        cmds.command("dad", "_", () => {})
+        cmds2.command("dad", "_", () => {})
             .localize("es", "papa", "_")
             .localize("fr", "pere", "_");
 

@@ -269,6 +269,13 @@ export class Commands<C extends Context> {
     }
 
     /**
+     * @returns all commands contained in the instance
+     */
+    public get commands(): Command[] {
+        return this._commands;
+    }
+
+    /**
      * Replaces the `toString` method on node.js
      *
      * @see toString

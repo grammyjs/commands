@@ -63,6 +63,7 @@ export class Commands<C extends Context> {
     private _commands: Command<C>[] = [];
     private _composer: Composer<C> = new Composer();
     private _commandOptions: Partial<CommandOptions> = {};
+    private _isComposerPopulated = false;
 
     constructor(options: Partial<CommandOptions> = {}) {
         this._commandOptions = options;
@@ -74,9 +75,11 @@ export class Commands<C extends Context> {
     }
 
     private _populateComposer() {
+        if (this._isComposerPopulated) return;
         for (const command of this._commands) {
             this._composer.use(command.middleware());
         }
+        this._isComposerPopulated = true;
     }
 
     private _populateMetadata() {

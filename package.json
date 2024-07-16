@@ -1,6 +1,6 @@
 {
     "name": "@grammyjs/commands",
-    "version": "0.8.0",
+    "version": "0.8.1",
     "description": "grammY Commands Plugin",
     "main": "out/mod.js",
     "scripts": {
@@ -21,6 +21,7 @@
         "ts-pattern": "^5.0.1"
     },
     "devDependencies": {
+        "deno-bin": "^1.45.2",
         "typescript": "^5.1.6"
     },
     "files": [

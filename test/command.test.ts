@@ -51,6 +51,7 @@ describe("Command", () => {
         matchOnlyAtStart: true,
         prefix: "/",
         targetedCommands: "optional",
+        ignoreCase: false,
     };
 
     describe("hasCommand", () => {
@@ -376,6 +377,70 @@ describe("Command", () => {
                             ...options,
                             targetedCommands: "required",
                             matchOnlyAtStart: false,
+                        })(ctx),
+                    );
+                });
+            });
+        });
+
+        describe("ignoreCase", () => {
+            describe("true", () => {
+                it("should match a command in a case-insensitive manner", () => {
+                    m.text = "/START";
+                    m.entities = [{
+                        type: "bot_command",
+                        offset: 0,
+                        length: 6,
+                    }];
+                    const ctx = new Context(update, api, me);
+                    assert(
+                        Command.hasCommand("start", {
+                            ...options,
+                            ignoreCase: true,
+                        })(ctx),
+                    );
+
+                    m.text = "/start";
+                    m.entities = [{
+                        type: "bot_command",
+                        offset: 0,
+                        length: 6,
+                    }];
+                    assert(
+                        Command.hasCommand("start", {
+                            ...options,
+                            ignoreCase: true,
+                        })(ctx),
+                    );
+                });
+            });
+
+            describe("false", () => {
+                it("should match a command in a case-sensitive manner", () => {
+                    m.text = "/START";
+                    m.entities = [{
+                        type: "bot_command",
+                        offset: 0,
+                        length: 6,
+                    }];
+                    const ctx = new Context(update, api, me);
+                    assertFalse(
+                        Command.hasCommand("start", {
+                            ...options,
+                            ignoreCase: false,
+                        })(ctx),
+                    );
+
+                    m.text = "/start";
+                    m.entities = [{
+                        type: "bot_command",
+                        offset: 0,
+                        length: 6,
+                    }];
+                    assert(
+                        Command.hasCommand("start", {
+                            ...options,
+                            ignoreCase: false,
                         })(ctx),
                     );
                 });

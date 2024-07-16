@@ -23,6 +23,11 @@ export interface CommandOptions {
      * - `"required"`: only targeted commands are matched
      */
     targetedCommands: "ignored" | "optional" | "required";
+    /**
+     * Whether match against commands in a case-insensitive manner.
+     * Defaults to `false`.
+     */
+    ignoreCase: boolean;
 }
 
 export interface CommandElementals {

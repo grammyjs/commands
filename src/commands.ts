@@ -62,8 +62,8 @@ export class Commands<C extends Context> {
     private _scopes: Map<string, Array<Command<C>>> = new Map();
     private _commands: Command<C>[] = [];
 
-    private _dirty: boolean = false;
-    private _composer: Composer<C> = new Composer();
+    private _cachedComposer: Composer<C> = new Composer();
+    private _cachedComposerInvalidated: boolean = false;
 
     private _commandOptions: Partial<CommandOptions> = {};
 
@@ -137,7 +137,7 @@ export class Commands<C extends Context> {
         if (handler) command.addToScope({ type: "default" }, handler);
 
         this._commands.push(command);
-        this._dirty = true;
+        this._cachedComposerInvalidated = true;
         return command;
     }
     /**
@@ -262,11 +262,11 @@ export class Commands<C extends Context> {
     }
 
     middleware() {
-        if (this._dirty) {
-            this._composer = new Composer(...this._commands);
-            this._dirty = false;
+        if (this._cachedComposerInvalidated) {
+            this._cachedComposer = new Composer(...this._commands);
+            this._cachedComposerInvalidated = false;
         }
-        return this._composer.middleware();
+        return this._cachedComposer.middleware();
     }
 
     /**

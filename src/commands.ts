@@ -61,7 +61,10 @@ export class Commands<C extends Context> {
     private _languages: Set<LanguageCode | "default"> = new Set();
     private _scopes: Map<string, Array<Command<C>>> = new Map();
     private _commands: Command<C>[] = [];
+
+    private _dirty: boolean = false;
     private _composer: Composer<C> = new Composer();
+
     private _commandOptions: Partial<CommandOptions> = {};
 
     constructor(options: Partial<CommandOptions> = {}) {
@@ -71,12 +74,6 @@ export class Commands<C extends Context> {
     private _addCommandToScope(scope: BotCommandScope, command: Command<C>) {
         const commands = this._scopes.get(JSON.stringify(scope)) ?? [];
         this._scopes.set(JSON.stringify(scope), commands.concat([command]));
-    }
-
-    private _populateComposer() {
-        for (const command of this._commands) {
-            this._composer.use(command.middleware());
-        }
     }
 
     private _populateMetadata() {
@@ -140,6 +137,7 @@ export class Commands<C extends Context> {
         if (handler) command.addToScope({ type: "default" }, handler);
 
         this._commands.push(command);
+        this._dirty = true;
         return command;
     }
     /**
@@ -264,7 +262,10 @@ export class Commands<C extends Context> {
     }
 
     middleware() {
-        this._populateComposer();
+        if (this._dirty) {
+            this._composer = new Composer(...this._commands);
+            this._dirty = false;
+        }
         return this._composer.middleware();
     }
 

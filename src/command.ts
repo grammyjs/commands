@@ -30,10 +30,13 @@ export const matchesPattern = (
     ignoreCase = false,
 ) => {
     const transformedValue = ignoreCase ? value.toLowerCase() : value;
-
-    return typeof pattern === "string"
-        ? transformedValue === pattern
-        : pattern.test(transformedValue);
+    const transformedPattern =
+        pattern instanceof RegExp && ignoreCase && !pattern.flags.includes("i")
+            ? new RegExp(pattern, pattern.flags + "i")
+            : pattern;
+    return typeof transformedPattern === "string"
+        ? transformedValue === transformedPattern
+        : transformedPattern.test(transformedValue);
 };
 
 /**

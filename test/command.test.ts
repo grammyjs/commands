@@ -385,64 +385,141 @@ describe("Command", () => {
 
         describe("ignoreCase", () => {
             describe("true", () => {
-                it("should match a command in a case-insensitive manner", () => {
-                    m.text = "/START";
-                    m.entities = [{
-                        type: "bot_command",
-                        offset: 0,
-                        length: 6,
-                    }];
-                    const ctx = new Context(update, api, me);
-                    assert(
-                        Command.hasCommand("start", {
-                            ...options,
-                            ignoreCase: true,
-                        })(ctx),
-                    );
-
-                    m.text = "/start";
-                    m.entities = [{
-                        type: "bot_command",
-                        offset: 0,
-                        length: 6,
-                    }];
-                    assert(
-                        Command.hasCommand("start", {
-                            ...options,
-                            ignoreCase: true,
-                        })(ctx),
-                    );
+                describe("for string commands", () => {
+                    it("should match a command in a case-insensitive manner", () => {
+                        m.text = "/START";
+                        m.entities = [{
+                            type: "bot_command",
+                            offset: 0,
+                            length: 6,
+                        }];
+                        const ctx = new Context(update, api, me);
+                        assert(
+                            Command.hasCommand("start", {
+                                ...options,
+                                ignoreCase: true,
+                            })(ctx),
+                        );
+                        m.text = "/start";
+                        assert(
+                            Command.hasCommand("start", {
+                                ...options,
+                                ignoreCase: true,
+                            })(ctx),
+                        );
+                    });
+                });
+                describe("for regex commands", () => {
+                    it("should match a command in a case-insensitive manner", () => {
+                        m.text = "/START";
+                        m.entities = [{
+                            type: "bot_command",
+                            offset: 0,
+                            length: 6,
+                        }];
+                        const ctx = new Context(update, api, me);
+                        assert(
+                            Command.hasCommand(/start/, {
+                                ...options,
+                                ignoreCase: true,
+                            })(ctx),
+                        );
+                        assert(
+                            Command.hasCommand(/start/i, {
+                                ...options,
+                                ignoreCase: true,
+                            })(ctx),
+                        );
+                        m.text = "/start";
+                        assert(
+                            Command.hasCommand(/sTaRt/, {
+                                ...options,
+                                ignoreCase: true,
+                            })(ctx),
+                        );
+                        assert(
+                            Command.hasCommand(/sTaRt/i, {
+                                ...options,
+                                ignoreCase: true,
+                            })(ctx),
+                        );
+                    });
                 });
             });
 
             describe("false", () => {
-                it("should match a command in a case-sensitive manner", () => {
-                    m.text = "/START";
-                    m.entities = [{
-                        type: "bot_command",
-                        offset: 0,
-                        length: 6,
-                    }];
-                    const ctx = new Context(update, api, me);
-                    assertFalse(
-                        Command.hasCommand("start", {
-                            ...options,
-                            ignoreCase: false,
-                        })(ctx),
-                    );
+                describe("for string commands", () => {
+                    it("should match a command in a case-sensitive manner", () => {
+                        m.text = "/START";
+                        m.entities = [{
+                            type: "bot_command",
+                            offset: 0,
+                            length: 6,
+                        }];
+                        const ctx = new Context(update, api, me);
+                        assertFalse(
+                            Command.hasCommand("start", {
+                                ...options,
+                                ignoreCase: false,
+                            })(ctx),
+                        );
 
-                    m.text = "/start";
-                    m.entities = [{
-                        type: "bot_command",
-                        offset: 0,
-                        length: 6,
-                    }];
-                    assert(
-                        Command.hasCommand("start", {
-                            ...options,
-                            ignoreCase: false,
-                        })(ctx),
-                    );
+                        m.text = "/start";
+                        assert(
+                            Command.hasCommand("start", {
+                                ...options,
+                                ignoreCase: false,
+                            })(ctx),
+                        );
+                    });
+                });
+                describe("for regex commands", () => {
+                    describe("should match a command in a case-sensitive manner", () => {
+                        it("under normal conditions", () => {
+                            m.text = "/START";
+                            m.entities = [{
+                                type: "bot_command",
+                                offset: 0,
+                                length: 6,
+                            }];
+                            const ctx = new Context(update, api, me);
+                            assertFalse(
+                                Command.hasCommand(/start/, {
+                                    ...options,
+                                    ignoreCase: false,
+                                })(ctx),
+                            );
+                            m.text = "/start";
+                            assertFalse(
+                                Command.hasCommand(/START/, {
+                                    ...options,
+                                    ignoreCase: false,
+                                })(ctx),
+                            );
+                            m.text = "/start";
+                            assert(
+                                Command.hasCommand(/start/, {
+                                    ...options,
+                                    ignoreCase: false,
+                                })(ctx),
+                            );
+                        });
+                    });
+                    it("should prioritize the `i` flag even if ignoreCase is set to false", () => {
+                        m.text = "/START";
+                        m.entities = [{
+                            type: "bot_command",
+                            offset: 0,
+                            length: 6,
+                        }];
+                        const ctx = new Context(update, api, me);
+                        assert(
+                            Command.hasCommand(/start/i, {
+                                ...options,
+                                ignoreCase: false,
+                            })(ctx),
+                        );
+                    });
                 });
             });
         });

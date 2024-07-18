@@ -404,7 +404,7 @@ describe("Commands", () => {
                     );
                 }
             });
-            it("", () => {
+            it("should get command entities for custom prefixes", () => {
                 let ctx = dummyCtx({
                     userInput: "/hi ?momi abcdfghi",
                 });

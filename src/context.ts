@@ -1,4 +1,3 @@
-import { matchesPattern } from "./command.ts";
 import { Commands } from "./commands.ts";
 import { BotCommandScopeChat, Context, NextFunction } from "./deps.deno.ts";
 import { fuzzyMatch, JaroWinklerOptions } from "./jaro-winkler.ts";
@@ -136,12 +135,12 @@ export function commands<C extends Context>() {
             const regexes = prefixes.map(
                 (prefix) =>
                     new RegExp(
-                        `${
+                        `(\?\<\!\\S)${
                             escapeSpecial(
                                 prefix,
                             )
                         }\\S+(\\s|$)`,
-                        "gd",
+                        "g",
                     ),
             );
             const allMatches = regexes.flatMap((regex) => {

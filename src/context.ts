@@ -82,13 +82,18 @@ export function commands<C extends Context>() {
         };
 
         ctx.getNearestCommand = (commands, options) => {
-            if (ctx.msg?.text) {
-                commands = ensureArray(commands);
-                const results = commands
+            if (ctx.has(":text")) {
+                const results = ensureArray(commands)
                     .map((commands) => {
-                        const userInput = ctx.msg!.text!.substring(1);
+                        const firstMatch = ctx.getCommandEntities(
+                            commands,
+                        )[0];
+                        const commandLike = firstMatch?.text.replace(
+                            firstMatch.prefix,
+                            "",
+                        ) || "";
                         const result = fuzzyMatch(
-                            userInput,
+                            commandLike,
                             commands,
                             {
                                 ...options,
@@ -135,33 +140,31 @@ export function commands<C extends Context>() {
             const regexes = prefixes.map(
                 (prefix) =>
                     new RegExp(
-                        `(\?\<\!\\S)${
+                        `(\?\<\!\\S)(\?<prefix>${
                             escapeSpecial(
                                 prefix,
                             )
-                        }\\S+(\\s|$)`,
+                        })\\S+(\\s|$)`,
                         "g",
                     ),
             );
-            const allMatches = regexes.flatMap((regex) => {
-                let match;
+            const entities = regexes.flatMap((regex) => {
+                let match: RegExpExecArray | null;
                 const matches = [];
                 while (
                     (match = regex.exec(text)) !== null
                 ) {
+                    const text = match[0].trim();
                     matches.push({
-                        text: match[0].trim(),
+                        text,
                         offset: match.index,
+                        prefix: match.groups!.prefix,
+                        type: "bot_command",
+                        length: text.length,
                     });
                 }
-                return matches;
+                return matches as botCommandEntity[];
             });
-
-            const entities = allMatches.map((match) => ({
-                ...match,
-                type: "bot_command",
-                length: match.text.length,
-            })) as botCommandEntity[];
 
             return entities;
         };

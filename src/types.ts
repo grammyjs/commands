@@ -46,4 +46,5 @@ export interface CommandElementals {
 export interface botCommandEntity extends MessageEntity.CommonMessageEntity {
     type: "bot_command";
     text: string;
+    prefix: string;
 }

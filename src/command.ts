@@ -24,8 +24,20 @@ const isAdmin = (ctx: Context) =>
         .getAuthor()
         .then((author) => ["administrator", "creator"].includes(author.status));
 
-export const matchesPattern = (value: string, pattern: string | RegExp) =>
-    typeof pattern === "string" ? value === pattern : pattern.test(value);
+export const matchesPattern = (
+    value: string,
+    pattern: string | RegExp,
+    ignoreCase = false,
+) => {
+    const transformedValue = ignoreCase ? value.toLowerCase() : value;
+    const transformedPattern =
+        pattern instanceof RegExp && ignoreCase && !pattern.flags.includes("i")
+            ? new RegExp(pattern, pattern.flags + "i")
+            : pattern;
+    return typeof transformedPattern === "string"
+        ? transformedValue === transformedPattern
+        : transformedPattern.test(transformedValue);
+};
 
 /**
  * Class that represents a single command and allows you to configure it.
@@ -41,6 +53,7 @@ export class Command<C extends Context = Context> implements MiddlewareObj<C> {
         prefix: "/",
         matchOnlyAtStart: true,
         targetedCommands: "optional",
+        ignoreCase: false,
     };
 
     /**
@@ -241,7 +254,11 @@ export class Command<C extends Context = Context> implements MiddlewareObj<C> {
                 if (username && username !== ctx.me.username) continue;
                 if (
                     commandNames.some((name) =>
-                        matchesPattern(command.replace(prefix, ""), name)
+                        matchesPattern(
+                            command.replace(prefix, ""),
+                            name,
+                            options.ignoreCase,
+                        )
                     )
                 ) {
                     return true;

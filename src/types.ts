@@ -43,7 +43,7 @@ export interface CommandElementals {
 }
 
 /** represents a bot__command entity inside a text message */
-export interface botCommandEntity extends MessageEntity.CommonMessageEntity {
+export interface BotCommandEntity extends MessageEntity.CommonMessageEntity {
     type: "bot_command";
     text: string;
     prefix: string;

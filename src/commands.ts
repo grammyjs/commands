@@ -270,7 +270,7 @@ export class Commands<C extends Context> {
     }
 
     /**
-     * Replaces the `toString` method on node.js
+     * Replaces the `toString` method on Deno
      *
      * @see toString
      */
@@ -279,7 +279,7 @@ export class Commands<C extends Context> {
     }
 
     /**
-     * Replaces the `toString` method on Deno
+     * Replaces the `toString` method on Node.js
      *
      * @see toString
      */

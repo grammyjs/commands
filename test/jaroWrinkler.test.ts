@@ -44,11 +44,7 @@ describe("Jaro-Wrinkler Algorithm", () => {
         it("should return the found command", () => {
             const cmds = new Commands<Context>();
 
-            cmds.command(
-                "start",
-                "Starting",
-                () => {},
-            );
+            cmds.command("start", "Starting", () => {});
             assertEquals(
                 fuzzyMatch("strt", cmds, { language: "fr" })?.command?.name,
                 "start",
@@ -58,27 +54,24 @@ describe("Jaro-Wrinkler Algorithm", () => {
         it("should return null because command doesn't exist", () => {
             const cmds = new Commands<Context>();
 
-            cmds.command(
-                "start",
-                "Starting",
-                () => {},
-            ).addToScope(
-                { type: "all_private_chats" },
-                (ctx) => ctx.reply(`Hello, ${ctx.chat.first_name}!`),
-            );
+            cmds
+                .command("start", "Starting", () => {})
+                .addToScope(
+                    { type: "all_private_chats" },
+                    (ctx) => ctx.reply(`Hello, ${ctx.chat.first_name}!`),
+                );
 
             assertEquals(fuzzyMatch("xyz", cmds, {}), null);
         });
 
         it("should work for simple regex commands", () => {
             const cmds = new Commands<Context>();
-            cmds.command(
-                /magical_\d/,
-                "Magical Command",
-            ).addToScope(
-                { type: "all_private_chats" },
-                (ctx) => ctx.reply(`Hello, ${ctx.chat.first_name}!`),
-            );
+            cmds
+                .command(/magical_\d/, "Magical Command")
+                .addToScope(
+                    { type: "all_private_chats" },
+                    (ctx) => ctx.reply(`Hello, ${ctx.chat.first_name}!`),
+                );
             assertEquals(
                 fuzzyMatch("magcal", cmds, { language: "fr" })?.command?.name,
                 "magical_\\d",
@@ -86,13 +79,13 @@ describe("Jaro-Wrinkler Algorithm", () => {
         });
         it("should work for localized regex", () => {
             const cmds = new Commands<Context>();
-            cmds.command(
-                /magical_(a|b)/,
-                "Magical Command",
-            ).addToScope(
-                { type: "all_private_chats" },
-                (ctx) => ctx.reply(`Hello, ${ctx.chat.first_name}!`),
-            ).localize("es", /magico_(c|d)/, "Comando Mágico");
+            cmds
+                .command(/magical_(a|b)/, "Magical Command")
+                .addToScope(
+                    { type: "all_private_chats" },
+                    (ctx) => ctx.reply(`Hello, ${ctx.chat.first_name}!`),
+                )
+                .localize("es", /magico_(c|d)/, "Comando Mágico");
 
             assertEquals(
                 fuzzyMatch("magici_c", cmds, { language: "es" })?.command?.name,
@@ -107,15 +100,18 @@ describe("Jaro-Wrinkler Algorithm", () => {
     describe("Serialize commands for FuzzyMatch", () => {
         describe("toNameAndPrefix", () => {
             const cmds = new Commands<Context>();
-            cmds.command("butcher", "_", () => {}, { prefix: "?" })
+            cmds
+                .command("butcher", "_", () => {}, { prefix: "?" })
                 .localize("es", "carnicero", "a")
                 .localize("it", "macellaio", "b");
 
-            cmds.command("duke", "_", () => {})
+            cmds
+                .command("duke", "_", () => {})
                 .localize("es", "duque", "c")
                 .localize("fr", "duc", "d");
 
-            cmds.command(/dad_(.*)/, "dad", () => {})
+            cmds
+                .command(/dad_(.*)/, "dad", () => {})
                 .localize("es", /papa_(.*)/, "f");
             it("should output all commands names, language and prefix", () => {
                 const json = cmds.toElementals();
@@ -181,7 +177,8 @@ describe("Jaro-Wrinkler Algorithm", () => {
         });
         describe("should return the command localization related to the user lang", () => {
             const cmds = new Commands<Context>();
-            cmds.command("duke", "sniper", () => {})
+            cmds
+                .command("duke", "sniper", () => {})
                 .localize("es", "duque", "_")
                 .localize("fr", "duc", "_")
                 .localize("it", "duca", "_")
@@ -271,11 +268,13 @@ describe("Jaro-Wrinkler Algorithm", () => {
         });
         describe("should return the command localization related to the user lang for similar command names from different command classes", () => {
             const cmds = new Commands<Context>();
-            cmds.command("push", "push", () => {})
+            cmds
+                .command("push", "push", () => {})
                 .localize("fr", "pousser", "a")
                 .localize("pt", "empurrar", "b");
 
-            cmds.command("rest", "rest", () => {})
+            cmds
+                .command("rest", "rest", () => {})
                 .localize("fr", "reposer", "c")
                 .localize("pt", "poussar", "d");
 
@@ -335,15 +334,18 @@ describe("Jaro-Wrinkler Algorithm", () => {
     });
     describe("Usage inside ctx", () => {
         const cmds = new Commands<Context>();
-        cmds.command("butcher", "_", () => {}, { prefix: "+" })
+        cmds
+            .command("butcher", "_", () => {}, { prefix: "+" })
             .localize("es", "carnicero", "_")
             .localize("it", "macellaio", "_");
 
-        cmds.command("duke", "_", () => {})
+        cmds
+            .command("duke", "_", () => {})
             .localize("es", "duque", "_")
             .localize("fr", "duc", "_");
 
-        cmds.command("daddy", "me", () => {}, { prefix: "?" })
+        cmds
+            .command("daddy", "me", () => {}, { prefix: "?" })
             .localize("es", "papito", "yeyo");
 
         cmds.command("ender", "_", () => {});
@@ -352,13 +354,12 @@ describe("Jaro-Wrinkler Algorithm", () => {
 
         it("should throw when no msg is given", () => {
             let ctx = dummyCtx({});
-            assertThrows(
-                () => ctx.getNearestCommand(cmds),
-            );
+            assertThrows(() => ctx.getNearestCommand(cmds));
         });
 
         describe("should ignore localization when set to, and search trough all commands", () => {
-            it("ignore even if the language is set", () => { // should this console.warn? or maybe use an overload?
+            it("ignore even if the language is set", () => {
+                // should this console.warn? or maybe use an overload?
                 let ctx = dummyCtx({
                     userInput: "/duci",
                     language: "es",
@@ -439,18 +440,12 @@ describe("Jaro-Wrinkler Algorithm", () => {
                     userInput: "/duku",
                     language: "es",
                 });
-                assertEquals(
-                    ctx.getNearestCommand(cmds),
-                    "/duque",
-                );
+                assertEquals(ctx.getNearestCommand(cmds), "/duque");
                 ctx = dummyCtx({
                     userInput: "/duk",
                     language: "fr",
                 });
-                assertEquals(
-                    ctx.getNearestCommand(cmds),
-                    "/duc",
-                );
+                assertEquals(ctx.getNearestCommand(cmds), "/duc");
             });
         });
         describe("should not fail even if the language it's not know", () => {
@@ -493,13 +488,15 @@ describe("Jaro-Wrinkler Algorithm", () => {
     });
     describe("Test multiple commands instances", () => {
         const cmds = new Commands<Context>();
-        cmds.command("bread", "_", () => {})
+        cmds
+            .command("bread", "_", () => {})
             .localize("es", "pan", "_")
             .localize("fr", "pain", "_");
 
         const cmds2 = new Commands<Context>();
 
-        cmds2.command("dad", "_", () => {})
+        cmds2
+            .command("dad", "_", () => {})
             .localize("es", "papa", "_")
             .localize("fr", "pere", "_");
 

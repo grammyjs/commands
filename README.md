@@ -22,7 +22,8 @@ const bot = new Bot("<telegram token>");
 
 const myCommands = new Commands();
 
-myCommands.command("start", "Initializes bot configuration")
+myCommands
+    .command("start", "Initializes bot configuration")
     .localize("pt", "start", "Inicializa as configurações do bot")
     .addToScope(
         { type: "all_private_chats" },
@@ -62,7 +63,8 @@ bot.use(commands());
 bot.on("message", async (ctx) => {
     const cmds = new Commands();
 
-    cmds.command("start", "Initializes bot configuration")
+    cmds
+        .command("start", "Initializes bot configuration")
         .localize("pt", "start", "Inicializa as configurações do bot");
 
     await ctx.setMyCommands(cmds);

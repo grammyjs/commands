@@ -42,10 +42,7 @@ export interface CommandsFlavor<C extends Context = Context> extends Context {
      */
     getNearestCommand: (
         commands: Commands<C> | Commands<C>[],
-        options?: Omit<
-            Partial<JaroWinklerOptions>,
-            "language"
-        >,
+        options?: Omit<Partial<JaroWinklerOptions>, "language">,
     ) => string | null;
 
     /**
@@ -74,10 +71,9 @@ export function commands<C extends Context>() {
             commands = ensureArray(commands).concat(moreCommands);
 
             await Promise.all(
-                MyCommandParams.from(
-                    commands,
-                    ctx.chat.id,
-                ).map((args) => ctx.api.raw.setMyCommands(args)),
+                MyCommandParams.from(commands, ctx.chat.id).map((args) =>
+                    ctx.api.raw.setMyCommands(args)
+                ),
             );
         };
 
@@ -89,44 +85,29 @@ export function commands<C extends Context>() {
             } else {
                 const results = ensureArray(commands)
                     .map((commands) => {
-                        const firstMatch = ctx.getCommandEntities(
-                            commands,
-                        )[0];
-                        const commandLike = firstMatch?.text.replace(
-                            firstMatch.prefix,
-                            "",
-                        ) || "";
-                        const result = fuzzyMatch(
-                            commandLike,
-                            commands,
-                            {
-                                ...options,
-                                language: !options?.ignoreLocalization
-                                    ? ctx.from
-                                        ?.language_code
-                                    : undefined,
-                            },
-                        );
+                        const firstMatch = ctx.getCommandEntities(commands)[0];
+                        const commandLike =
+                            firstMatch?.text.replace(firstMatch.prefix, "") ||
+                            "";
+                        const result = fuzzyMatch(commandLike, commands, {
+                            ...options,
+                            language: !options?.ignoreLocalization
+                                ? ctx.from?.language_code
+                                : undefined,
+                        });
                         return result;
                     })
-                    .sort(
-                        (a, b) =>
-                            (b?.similarity ?? 0) -
-                            (a?.similarity ?? 0),
+                    .sort((a, b) =>
+                        (b?.similarity ?? 0) - (a?.similarity ?? 0)
                     );
                 const result = results[0];
                 if (!result || !result.command) return null;
 
-                return (
-                    result.command.prefix +
-                    result.command.name
-                );
+                return result.command.prefix + result.command.name;
             }
         };
 
-        ctx.getCommandEntities = (
-            commands: Commands<C> | Commands<C>[],
-        ) => {
+        ctx.getCommandEntities = (commands: Commands<C> | Commands<C>[]) => {
             if (!ctx.has(":text")) {
                 throw new Error(
                     "cannot call `ctx.commandEntities` on an update with no `text`",
@@ -134,8 +115,8 @@ export function commands<C extends Context>() {
             }
             const text = ctx.msg.text;
             if (!text) return [];
-            const prefixes = ensureArray(commands).flatMap(
-                (cmds) => cmds.prefixes,
+            const prefixes = ensureArray(commands).flatMap((cmds) =>
+                cmds.prefixes
             );
 
             if (!prefixes.length) return [];
@@ -144,9 +125,7 @@ export function commands<C extends Context>() {
                 (prefix) =>
                     new RegExp(
                         `(\?\<\!\\S)(\?<prefix>${
-                            escapeSpecial(
-                                prefix,
-                            )
+                            escapeSpecial(prefix)
                         })\\S+(\\s|$)`,
                         "g",
                     ),
@@ -154,9 +133,7 @@ export function commands<C extends Context>() {
             const entities = regexes.flatMap((regex) => {
                 let match: RegExpExecArray | null;
                 const matches = [];
-                while (
-                    (match = regex.exec(text)) !== null
-                ) {
+                while ((match = regex.exec(text)) !== null) {
                     const text = match[0].trim();
                     matches.push({
                         text,
@@ -206,10 +183,7 @@ export class MyCommandParams {
         commands: Commands<C>[],
         chat_id: BotCommandScopeChat["chat_id"],
     ) {
-        const commandsParams = this._serialize(
-            commands,
-            chat_id,
-        ).flat();
+        const commandsParams = this._serialize(commands, chat_id).flat();
         if (!commandsParams.length) return [];
         return this.mergeByLanguage(commandsParams);
     }
@@ -253,9 +227,7 @@ export class MyCommandParams {
         return params.sort((a, b) => {
             if (!a.language_code) return -1;
             if (!b.language_code) return 1;
-            return a.language_code.localeCompare(
-                b.language_code,
-            );
+            return a.language_code.localeCompare(b.language_code);
         });
     }
 
@@ -268,16 +240,10 @@ export class MyCommandParams {
      * @returns an array containing all commands grouped by language
      */
 
-    private static mergeByLanguage(
-        params: SetMyCommandsParams[],
-    ) {
+    private static mergeByLanguage(params: SetMyCommandsParams[]) {
         const sorted = this._sortByLanguage(params);
         return sorted.reduce((result, current, i, arr) => {
-            if (
-                i === 0 ||
-                current.language_code !==
-                    arr[i - 1].language_code
-            ) {
+            if (i === 0 || current.language_code !== arr[i - 1].language_code) {
                 result.push(current);
                 return result;
             } else {

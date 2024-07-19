@@ -4,11 +4,8 @@ export const ensureArray = <T>(value: MaybeArray<T>): T[] =>
 
 const specialChars = "\\.^$|?*+()[]{}-".split("");
 
-const replaceAll = (
-    s: string,
-    find: string,
-    replace: string,
-) => s.replace(new RegExp(`\\${find}`, "g"), replace);
+const replaceAll = (s: string, find: string, replace: string) =>
+    s.replace(new RegExp(`\\${find}`, "g"), replace);
 
 export function escapeSpecial(str: string) {
     return specialChars.reduce(

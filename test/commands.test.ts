@@ -1,4 +1,4 @@
-import { Commands } from "../src/commands.ts";
+import { CommandGroup } from "../src/commands.ts";
 import { MyCommandParams } from "../src/mod.ts";
 import { dummyCtx } from "./context.test.ts";
 import {
@@ -13,14 +13,14 @@ import {
 describe("Commands", () => {
     describe("command", () => {
         it("should create a command with no handlers", () => {
-            const commands = new Commands();
+            const commands = new CommandGroup();
             commands.command("test", "no handler");
 
             assertEquals(commands.toArgs(), []);
         });
 
         it("should create a command with a default handler", () => {
-            const commands = new Commands();
+            const commands = new CommandGroup();
             commands.command("test", "default handler", () => {}, {
                 prefix: undefined,
             });
@@ -33,7 +33,7 @@ describe("Commands", () => {
         });
 
         it("should support options with no handler", () => {
-            const commands = new Commands();
+            const commands = new CommandGroup();
             commands.command("test", "no handler", { prefix: "test" });
             assertEquals(
                 (commands as any)._commands[0]._options.prefix,
@@ -42,7 +42,7 @@ describe("Commands", () => {
         });
 
         it("should support options with default handler", () => {
-            const commands = new Commands();
+            const commands = new CommandGroup();
             commands.command("test", "default handler", () => {}, {
                 prefix: "test",
             });
@@ -55,12 +55,12 @@ describe("Commands", () => {
     describe("setMyCommands", () => {
         it("should throw if the update has no chat property", () => {
             const ctx = dummyCtx({ noMessage: true });
-            const a = new Commands();
+            const a = new CommandGroup();
             assertRejects(() => ctx.setMyCommands(a));
         });
         describe("toSingleScopeArgs", () => {
             it("should omit regex commands", () => {
-                const commands = new Commands();
+                const commands = new CommandGroup();
                 commands.command("test", "handler1", (_) => _);
                 commands.command("test2", "handler2", (_) => _);
                 commands.command(/omitMe_\d\d/, "handler3", (_) => _);
@@ -80,7 +80,7 @@ describe("Commands", () => {
                 ]);
             });
             it("should return an array with the localized versions of commands", () => {
-                const commands = new Commands();
+                const commands = new CommandGroup();
                 commands.command("test", "handler1", (_) => _).localize(
                     "es",
                     "prueba1",
@@ -126,7 +126,7 @@ describe("Commands", () => {
                 ]);
             });
             it("should omit commands with no handler", () => {
-                const commands = new Commands();
+                const commands = new CommandGroup();
                 commands.command("test", "handler", (_) => _);
                 commands.command("omitme", "nohandler");
                 const params = commands.toSingleScopeArgs({
@@ -146,11 +146,11 @@ describe("Commands", () => {
         });
         describe("merge MyCommandsParams", () => {
             it("should merge command's from different Commands instances", () => {
-                const a = new Commands();
+                const a = new CommandGroup();
                 a.command("a", "test a", (_) => _);
-                const b = new Commands();
+                const b = new CommandGroup();
                 b.command("b", "test b", (_) => _);
-                const c = new Commands();
+                const c = new CommandGroup();
                 c.command("c", "test c", (_) => _);
 
                 const mergedCommands = MyCommandParams.from([a, b, c], 10);
@@ -168,7 +168,7 @@ describe("Commands", () => {
                 ]);
             });
             it("should merge for localized scopes", () => {
-                const a = new Commands();
+                const a = new CommandGroup();
                 a.command("a", "test a", (_) => _);
                 a.command("a1", "test a1", (_) => _).localize(
                     "es",
@@ -181,7 +181,7 @@ describe("Commands", () => {
                     "test a2 localisé",
                 );
 
-                const b = new Commands();
+                const b = new CommandGroup();
                 b.command("b", "test b", (_) => _)
                     .localize("es", "localB", "prueba b localizada")
                     .localize("fr", "localiseB", "prueba b localisé");
@@ -234,7 +234,7 @@ describe("Commands", () => {
             });
         });
         describe("get all prefixes registered in a Commands instance", () => {
-            const a = new Commands();
+            const a = new CommandGroup();
             a.command("a", "/", (_) => _);
             a.command("a2", "/", (_) => _);
             a.command("b", "?", (_) => _, {
@@ -246,7 +246,7 @@ describe("Commands", () => {
             assertEquals(a.prefixes, ["/", "?", "abcd"]);
         });
         describe("get Entities from an update", () => {
-            const a = new Commands();
+            const a = new CommandGroup();
             a.command("a", "/", (_) => _);
             a.command("b", "?", (_) => _, {
                 prefix: "?",
@@ -255,9 +255,9 @@ describe("Commands", () => {
                 prefix: "abcd",
             });
 
-            const b = new Commands();
+            const b = new CommandGroup();
             b.command("one", "normal", (_) => _, { prefix: "superprefix" });
-            const c = new Commands();
+            const c = new CommandGroup();
 
             it("should only consider as entities prefixes registered in the command instance", () => {
                 const text = "/papi hola papacito como estamos /papi /ecco";

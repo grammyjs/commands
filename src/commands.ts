@@ -50,14 +50,14 @@ const isMiddleware = <C extends Context>(
  *
  * @example
  * ```typescript
- * const myCommands = new Commands()
+ * const myCommands = new CommandGroup()
  * commands.command("start", "start the bot configuration", (ctx) => ctx.reply("Hello there!"))
  *
  * // Registers the commands with the bot instance.
  * bot.use(myCommands)
  * ```
  */
-export class Commands<C extends Context> {
+export class CommandGroup<C extends Context> {
     private _languages: Set<LanguageCode | "default"> = new Set();
     private _scopes: Map<string, Array<Command<C>>> = new Map();
     private _commands: Command<C>[] = [];

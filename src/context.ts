@@ -1,4 +1,4 @@
-import { Commands } from "./commands.ts";
+import { CommandGroup } from "./commands.ts";
 import { BotCommandScopeChat, Context, NextFunction } from "./deps.deno.ts";
 import { fuzzyMatch, JaroWinklerOptions } from "./jaro-winkler.ts";
 import { SetMyCommandsParams } from "./mod.ts";
@@ -29,8 +29,8 @@ export interface CommandsFlavor<C extends Context = Context> extends Context {
      * @returns Promise with the result of the operations
      */
     setMyCommands: (
-        commands: Commands<C> | Commands<C>[],
-        ...moreCommands: Commands<C>[]
+        commands: CommandGroup<C> | CommandGroup<C>[],
+        ...moreCommands: CommandGroup<C>[]
     ) => Promise<void>;
     /**
      * Returns the nearest command to the user input.
@@ -41,7 +41,7 @@ export interface CommandsFlavor<C extends Context = Context> extends Context {
      * @returns The nearest command or `null`
      */
     getNearestCommand: (
-        commands: Commands<C> | Commands<C>[],
+        commands: CommandGroup<C> | CommandGroup<C>[],
         options?: Omit<Partial<JaroWinklerOptions>, "language">,
     ) => string | null;
 
@@ -50,7 +50,7 @@ export interface CommandsFlavor<C extends Context = Context> extends Context {
      * @returns command entities hydrated with the custom prefixes
      */
     getCommandEntities: (
-        commands: Commands<C> | Commands<C>[],
+        commands: CommandGroup<C> | CommandGroup<C>[],
     ) => BotCommandEntity[];
 }
 
@@ -61,7 +61,7 @@ export function commands<C extends Context>() {
     return (ctx: CommandsFlavor<C>, next: NextFunction) => {
         ctx.setMyCommands = async (
             commands,
-            ...moreCommands: Commands<C>[]
+            ...moreCommands: CommandGroup<C>[]
         ) => {
             if (!ctx.chat) {
                 throw new Error(
@@ -105,7 +105,9 @@ export function commands<C extends Context>() {
             return result.command.prefix + result.command.name;
         };
 
-        ctx.getCommandEntities = (commands: Commands<C> | Commands<C>[]) => {
+        ctx.getCommandEntities = (
+            commands: CommandGroup<C> | CommandGroup<C>[],
+        ) => {
             if (!ctx.has(":text")) {
                 throw new Error(
                     "cannot call `ctx.commandEntities` on an update with no `text`",
@@ -178,7 +180,7 @@ export class MyCommandParams {
      * @returns an array of {@link SetMyCommandsParams} grouped by language
      */
     static from<C extends Context>(
-        commands: Commands<C>[],
+        commands: CommandGroup<C>[],
         chat_id: BotCommandScopeChat["chat_id"],
     ) {
         const commandsParams = this._serialize(commands, chat_id).flat();
@@ -187,7 +189,7 @@ export class MyCommandParams {
     }
 
     /**
-     * Serializes one or multiple {@link Commands} instances, each one into their respective
+     * Serializes one or multiple {@link CommandGroup} instances, each one into their respective
      * single scoped SetMyCommandsParams version.
      * @example
         ```ts
@@ -205,7 +207,7 @@ export class MyCommandParams {
      * @returns an array of scoped {@link SetMyCommandsParams} mapped from their respective Commands instances
      */
     static _serialize<C extends Context>(
-        commandsArr: Commands<C>[],
+        commandsArr: CommandGroup<C>[],
         chat_id: BotCommandScopeChat["chat_id"],
     ) {
         return commandsArr.map((

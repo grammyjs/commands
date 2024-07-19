@@ -3,7 +3,7 @@ import {
     fuzzyMatch,
     JaroWinklerDistance,
 } from "../src/jaro-winkler.ts";
-import { Commands, commands, CommandsFlavor } from "../src/mod.ts";
+import { CommandGroup, commands, CommandsFlavor } from "../src/mod.ts";
 import {
     Api,
     assertEquals,
@@ -42,7 +42,7 @@ describe("Jaro-Wrinkler Algorithm", () => {
 
     describe("Fuzzy Matching", () => {
         it("should return the found command", () => {
-            const cmds = new Commands<Context>();
+            const cmds = new CommandGroup<Context>();
 
             cmds.command(
                 "start",
@@ -56,7 +56,7 @@ describe("Jaro-Wrinkler Algorithm", () => {
         });
 
         it("should return null because command doesn't exist", () => {
-            const cmds = new Commands<Context>();
+            const cmds = new CommandGroup<Context>();
 
             cmds.command(
                 "start",
@@ -71,7 +71,7 @@ describe("Jaro-Wrinkler Algorithm", () => {
         });
 
         it("should work for simple regex commands", () => {
-            const cmds = new Commands<Context>();
+            const cmds = new CommandGroup<Context>();
             cmds.command(
                 /magical_\d/,
                 "Magical Command",
@@ -85,7 +85,7 @@ describe("Jaro-Wrinkler Algorithm", () => {
             );
         });
         it("should work for localized regex", () => {
-            const cmds = new Commands<Context>();
+            const cmds = new CommandGroup<Context>();
             cmds.command(
                 /magical_(a|b)/,
                 "Magical Command",
@@ -106,7 +106,7 @@ describe("Jaro-Wrinkler Algorithm", () => {
     });
     describe("Serialize commands for FuzzyMatch", () => {
         describe("toNameAndPrefix", () => {
-            const cmds = new Commands<Context>();
+            const cmds = new CommandGroup<Context>();
             cmds.command("butcher", "_", () => {}, { prefix: "?" })
                 .localize("es", "carnicero", "a")
                 .localize("it", "macellaio", "b");
@@ -180,7 +180,7 @@ describe("Jaro-Wrinkler Algorithm", () => {
             });
         });
         describe("should return the command localization related to the user lang", () => {
-            const cmds = new Commands<Context>();
+            const cmds = new CommandGroup<Context>();
             cmds.command("duke", "sniper", () => {})
                 .localize("es", "duque", "_")
                 .localize("fr", "duc", "_")
@@ -270,7 +270,7 @@ describe("Jaro-Wrinkler Algorithm", () => {
             });
         });
         describe("should return the command localization related to the user lang for similar command names from different command classes", () => {
-            const cmds = new Commands<Context>();
+            const cmds = new CommandGroup<Context>();
             cmds.command("push", "push", () => {})
                 .localize("fr", "pousser", "a")
                 .localize("pt", "empurrar", "b");
@@ -334,7 +334,7 @@ describe("Jaro-Wrinkler Algorithm", () => {
         });
     });
     describe("Usage inside ctx", () => {
-        const cmds = new Commands<Context>();
+        const cmds = new CommandGroup<Context>();
         cmds.command("butcher", "_", () => {}, { prefix: "+" })
             .localize("es", "carnicero", "_")
             .localize("it", "macellaio", "_");
@@ -490,12 +490,12 @@ describe("Jaro-Wrinkler Algorithm", () => {
         });
     });
     describe("Test multiple commands instances", () => {
-        const cmds = new Commands<Context>();
+        const cmds = new CommandGroup<Context>();
         cmds.command("bread", "_", () => {})
             .localize("es", "pan", "_")
             .localize("fr", "pain", "_");
 
-        const cmds2 = new Commands<Context>();
+        const cmds2 = new CommandGroup<Context>();
 
         cmds2.command("dad", "_", () => {})
             .localize("es", "papa", "_")

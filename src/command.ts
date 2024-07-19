@@ -123,7 +123,7 @@ export class Command<C extends Context = Context> implements MiddlewareObj<C> {
      *
      * @example
      * ```ts
-     * const myCommands = new Commands();
+     * const myCommands = new CommandGroup();
      * myCommands.command("start", "Initializes bot configuration")
      *     .addToScope(
      *         { type: "all_private_chats" },

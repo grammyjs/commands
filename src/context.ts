@@ -82,7 +82,11 @@ export function commands<C extends Context>() {
         };
 
         ctx.getNearestCommand = (commands, options) => {
-            if (ctx.has(":text")) {
+            if (!ctx.has(":text")) {
+                throw new Error(
+                    "cannot call `ctx.getNearestCommand` on an update with no `text`",
+                );
+            } else {
                 const results = ensureArray(commands)
                     .map((commands) => {
                         const firstMatch = ctx.getCommandEntities(
@@ -118,7 +122,6 @@ export function commands<C extends Context>() {
                     result.command.name
                 );
             }
-            return null;
         };
 
         ctx.getCommandEntities = (

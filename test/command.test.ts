@@ -230,11 +230,13 @@ describe("Command", () => {
             describe("ignored", () => {
                 it("should match a non-targeted command", () => {
                     m.text = "/start";
-                    m.entities = [{
-                        type: "bot_command",
-                        offset: 0,
-                        length: 6,
-                    }];
+                    m.entities = [
+                        {
+                            type: "bot_command",
+                            offset: 0,
+                            length: 6,
+                        },
+                    ];
                     const ctx = new Context(update, api, me);
                     assert(
                         Command.hasCommand("start", {
@@ -244,11 +246,13 @@ describe("Command", () => {
                     );
 
                     m.text = "blabla /start";
-                    m.entities = [{
-                        type: "bot_command",
-                        offset: 7,
-                        length: 6,
-                    }];
+                    m.entities = [
+                        {
+                            type: "bot_command",
+                            offset: 7,
+                            length: 6,
+                        },
+                    ];
                     assertFalse(
                         Command.hasCommand("start", {
                             ...options,
@@ -266,11 +270,13 @@ describe("Command", () => {
 
                 it("should ignore a targeted command", () => {
                     m.text = "/start@bot";
-                    m.entities = [{
-                        type: "bot_command",
-                        offset: 0,
-                        length: 10,
-                    }];
+                    m.entities = [
+                        {
+                            type: "bot_command",
+                            offset: 0,
+                            length: 10,
+                        },
+                    ];
                     const ctx = new Context(update, api, me);
                     assertFalse(
                         Command.hasCommand("start", {
@@ -280,11 +286,13 @@ describe("Command", () => {
                     );
 
                     m.text = "blabla /start@bot";
-                    m.entities = [{
-                        type: "bot_command",
-                        offset: 7,
-                        length: 10,
-                    }];
+                    m.entities = [
+                        {
+                            type: "bot_command",
+                            offset: 7,
+                            length: 10,
+                        },
+                    ];
                     assertFalse(
                         Command.hasCommand("start", {
                             ...options,
@@ -293,11 +301,13 @@ describe("Command", () => {
                     );
 
                     m.text = "/start@otherbot";
-                    m.entities = [{
-                        type: "bot_command",
-                        offset: 0,
-                        length: 13,
-                    }];
+                    m.entities = [
+                        {
+                            type: "bot_command",
+                            offset: 0,
+                            length: 13,
+                        },
+                    ];
                     assertFalse(
                         Command.hasCommand("start", {
                             ...options,
@@ -310,11 +320,13 @@ describe("Command", () => {
             describe("required", () => {
                 it("should match a targeted command", () => {
                     m.text = "/start@bot";
-                    m.entities = [{
-                        type: "bot_command",
-                        offset: 0,
-                        length: 10,
-                    }];
+                    m.entities = [
+                        {
+                            type: "bot_command",
+                            offset: 0,
+                            length: 10,
+                        },
+                    ];
                     const ctx = new Context(update, api, me);
                     assert(
                         Command.hasCommand("start", {
@@ -324,11 +336,13 @@ describe("Command", () => {
                     );
 
                     m.text = "blabla /start@bot";
-                    m.entities = [{
-                        type: "bot_command",
-                        offset: 7,
-                        length: 10,
-                    }];
+                    m.entities = [
+                        {
+                            type: "bot_command",
+                            offset: 7,
+                            length: 10,
+                        },
+                    ];
                     assert(
                         Command.hasCommand("start", {
                             ...options,
@@ -338,11 +352,13 @@ describe("Command", () => {
                     );
 
                     m.text = "/start@otherbot";
-                    m.entities = [{
-                        type: "bot_command",
-                        offset: 0,
-                        length: 13,
-                    }];
+                    m.entities = [
+                        {
+                            type: "bot_command",
+                            offset: 0,
+                            length: 13,
+                        },
+                    ];
                     assertFalse(
                         Command.hasCommand("start", {
                             ...options,
@@ -353,11 +369,13 @@ describe("Command", () => {
 
                 it("should ignore a non-targeted command", () => {
                     m.text = "/start";
-                    m.entities = [{
-                        type: "bot_command",
-                        offset: 0,
-                        length: 6,
-                    }];
+                    m.entities = [
+                        {
+                            type: "bot_command",
+                            offset: 0,
+                            length: 6,
+                        },
+                    ];
                     const ctx = new Context(update, api, me);
                     assertFalse(
                         Command.hasCommand("start", {
@@ -367,11 +385,13 @@ describe("Command", () => {
                     );
 
                     m.text = "blabla /start";
-                    m.entities = [{
-                        type: "bot_command",
-                        offset: 7,
-                        length: 6,
-                    }];
+                    m.entities = [
+                        {
+                            type: "bot_command",
+                            offset: 7,
+                            length: 6,
+                        },
+                    ];
                     assertFalse(
                         Command.hasCommand("start", {
                             ...options,
@@ -388,11 +408,13 @@ describe("Command", () => {
                 describe("for string commands", () => {
                     it("should match a command in a case-insensitive manner", () => {
                         m.text = "/START";
-                        m.entities = [{
-                            type: "bot_command",
-                            offset: 0,
-                            length: 6,
-                        }];
+                        m.entities = [
+                            {
+                                type: "bot_command",
+                                offset: 0,
+                                length: 6,
+                            },
+                        ];
                         const ctx = new Context(update, api, me);
                         assert(
                             Command.hasCommand("start", {
@@ -412,11 +434,13 @@ describe("Command", () => {
                 describe("for regex commands", () => {
                     it("should match a command in a case-insensitive manner", () => {
                         m.text = "/START";
-                        m.entities = [{
-                            type: "bot_command",
-                            offset: 0,
-                            length: 6,
-                        }];
+                        m.entities = [
+                            {
+                                type: "bot_command",
+                                offset: 0,
+                                length: 6,
+                            },
+                        ];
                         const ctx = new Context(update, api, me);
                         assert(
                             Command.hasCommand(/start/, {
@@ -451,11 +475,13 @@ describe("Command", () => {
                 describe("for string commands", () => {
                     it("should match a command in a case-sensitive manner", () => {
                         m.text = "/START";
-                        m.entities = [{
-                            type: "bot_command",
-                            offset: 0,
-                            length: 6,
-                        }];
+                        m.entities = [
+                            {
+                                type: "bot_command",
+                                offset: 0,
+                                length: 6,
+                            },
+                        ];
                         const ctx = new Context(update, api, me);
                         assertFalse(
                             Command.hasCommand("start", {
@@ -477,11 +503,13 @@ describe("Command", () => {
                     describe("should match a command in a case-sensitive manner", () => {
                         it("under normal conditions", () => {
                             m.text = "/START";
-                            m.entities = [{
-                                type: "bot_command",
-                                offset: 0,
-                                length: 6,
-                            }];
+                            m.entities = [
+                                {
+                                    type: "bot_command",
+                                    offset: 0,
+                                    length: 6,
+                                },
+                            ];
                             const ctx = new Context(update, api, me);
                             assertFalse(
                                 Command.hasCommand(/start/, {
@@ -507,11 +535,13 @@ describe("Command", () => {
                     });
                     it("should prioritize the `i` flag even if ignoreCase is set to false", () => {
                         m.text = "/START";
-                        m.entities = [{
-                            type: "bot_command",
-                            offset: 0,
-                            length: 6,
-                        }];
+                        m.entities = [
+                            {
+                                type: "bot_command",
+                                offset: 0,
+                                length: 6,
+                            },
+                        ];
                         const ctx = new Context(update, api, me);
                         assert(
                             Command.hasCommand(/start/i, {

@@ -66,9 +66,7 @@ export function distance(s1: string, s2: string) {
     // transpositions divided by 2
     t /= 2.0;
 
-    return (
-        (m / s1.length + m / s2.length + (m - t) / m) / 3.0
-    ); // HtD: therefore, m - t > 0, and m - t < m
+    return (m / s1.length + m / s2.length + (m - t) / m) / 3.0; // HtD: therefore, m - t > 0, and m - t < m
     // HtD: => return value is between 0 and 1
 }
 
@@ -118,9 +116,7 @@ export function JaroWinklerDistance(
 export function isLanguageCode(
     value: string | undefined,
 ): value is LanguageCode {
-    return Object.values(LanguageCodes).includes(
-        value as LanguageCode,
-    );
+    return Object.values(LanguageCodes).includes(value as LanguageCode);
 }
 
 export function fuzzyMatch<C extends Context>(
@@ -147,13 +143,9 @@ export function fuzzyMatch<C extends Context>(
 
     const bestMatch = cmds.reduce(
         (best: CommandSimilarity, command) => {
-            const similarity = JaroWinklerDistance(
-                userInput,
-                command.name,
-                {
-                    ...options,
-                },
-            );
+            const similarity = JaroWinklerDistance(userInput, command.name, {
+                ...options,
+            });
             return similarity > best.similarity
                 ? { command, similarity }
                 : best;

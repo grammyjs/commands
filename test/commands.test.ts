@@ -20,14 +20,9 @@ describe("Commands", () => {
 
         it("should create a command with a default handler", () => {
             const commands = new Commands();
-            commands.command(
-                "test",
-                "default handler",
-                () => {},
-                {
-                    prefix: undefined,
-                },
-            );
+            commands.command("test", "default handler", () => {}, {
+                prefix: undefined,
+            });
 
             assertEquals(commands.toArgs(), [
                 {
@@ -49,25 +44,18 @@ describe("Commands", () => {
                 prefix: "test",
             });
             assertEquals(
-                (commands as any)._commands[0]._options
-                    .prefix,
+                (commands as any)._commands[0]._options.prefix,
                 "test",
             );
         });
 
         it("should support options with default handler", () => {
             const commands = new Commands();
-            commands.command(
-                "test",
-                "default handler",
-                () => {},
-                {
-                    prefix: "test",
-                },
-            );
+            commands.command("test", "default handler", () => {}, {
+                prefix: "test",
+            });
             assertEquals(
-                (commands as any)._commands[0]._options
-                    .prefix,
+                (commands as any)._commands[0]._options.prefix,
                 "test",
             );
         });
@@ -91,21 +79,9 @@ describe("Commands", () => {
         describe("toSingleScopeArgs", () => {
             it("should omit regex commands", () => {
                 const commands = new Commands();
-                commands.command(
-                    "test",
-                    "handler1",
-                    (_) => _,
-                );
-                commands.command(
-                    "test2",
-                    "handler2",
-                    (_) => _,
-                );
-                commands.command(
-                    /omitMe_\d\d/,
-                    "handler3",
-                    (_) => _,
-                );
+                commands.command("test", "handler1", (_) => _);
+                commands.command("test2", "handler2", (_) => _);
+                commands.command(/omitMe_\d\d/, "handler3", (_) => _);
                 const params = commands.toSingleScopeArgs({
                     type: "chat",
                     chat_id: 10,
@@ -134,27 +110,11 @@ describe("Commands", () => {
                 const commands = new Commands();
                 commands
                     .command("test", "handler1", (_) => _)
-                    .localize(
-                        "es",
-                        "prueba1",
-                        "resolvedor1",
-                    );
-                commands.command(
-                    "test2",
-                    "handler2",
-                    (_) => _,
-                );
+                    .localize("es", "prueba1", "resolvedor1");
+                commands.command("test2", "handler2", (_) => _);
                 commands
-                    .command(
-                        /omitMe_\d\d/,
-                        "handler3",
-                        (_) => _,
-                    )
-                    .localize(
-                        "es",
-                        /omiteme_\d/,
-                        "resolvedor3",
-                    );
+                    .command(/omitMe_\d\d/, "handler3", (_) => _)
+                    .localize("es", /omiteme_\d/, "resolvedor3");
 
                 const params = commands.toSingleScopeArgs({
                     type: "chat",
@@ -199,11 +159,7 @@ describe("Commands", () => {
             });
             it("should omit commands with no handler", () => {
                 const commands = new Commands();
-                commands.command(
-                    "test",
-                    "handler",
-                    (_) => _,
-                );
+                commands.command("test", "handler", (_) => _);
                 commands.command("omitme", "nohandler");
                 const params = commands.toSingleScopeArgs({
                     type: "chat",
@@ -235,10 +191,7 @@ describe("Commands", () => {
                 const c = new Commands();
                 c.command("c", "test c", (_) => _);
 
-                const mergedCommands = MyCommandParams.from(
-                    [a, b, c],
-                    10,
-                );
+                const mergedCommands = MyCommandParams.from([a, b, c], 10);
 
                 assertEquals(mergedCommands, [
                     {
@@ -267,20 +220,12 @@ describe("Commands", () => {
             it("should merge for localized scopes", () => {
                 const a = new Commands();
                 a.command("a", "test a", (_) => _);
-                a.command(
-                    "a1",
-                    "test a1",
-                    (_) => _,
-                ).localize(
+                a.command("a1", "test a1", (_) => _).localize(
                     "es",
                     "localA1",
                     "prueba a1 localizada",
                 );
-                a.command(
-                    "a2",
-                    "test a2",
-                    (_) => _,
-                ).localize(
+                a.command("a2", "test a2", (_) => _).localize(
                     "fr",
                     "localiseA2",
                     "test a2 localisé",
@@ -288,21 +233,10 @@ describe("Commands", () => {
 
                 const b = new Commands();
                 b.command("b", "test b", (_) => _)
-                    .localize(
-                        "es",
-                        "localB",
-                        "prueba b localizada",
-                    )
-                    .localize(
-                        "fr",
-                        "localiseB",
-                        "prueba b localisé",
-                    );
+                    .localize("es", "localB", "prueba b localizada")
+                    .localize("fr", "localiseB", "prueba b localisé");
 
-                const mergedCommands = MyCommandParams.from(
-                    [a, b],
-                    10,
-                );
+                const mergedCommands = MyCommandParams.from([a, b], 10);
                 assertEquals(mergedCommands, [
                     {
                         scope: {
@@ -422,11 +356,7 @@ describe("Commands", () => {
                         ),
                         entity.text,
                     );
-                    assert(
-                        !"hola papacito como estamos".includes(
-                            entity.text,
-                        ),
-                    );
+                    assert(!"hola papacito como estamos".includes(entity.text));
                 }
             });
             it("should get command entities for custom prefixes", () => {

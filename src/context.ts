@@ -71,9 +71,8 @@ export function commands<C extends Context>() {
             commands = ensureArray(commands).concat(moreCommands);
 
             await Promise.all(
-                MyCommandParams.from(commands, ctx.chat.id).map((args) =>
-                    ctx.api.raw.setMyCommands(args)
-                ),
+                MyCommandParams.from(commands, ctx.chat.id)
+                    .map((args) => ctx.api.raw.setMyCommands(args)),
             );
         };
 
@@ -96,8 +95,7 @@ export function commands<C extends Context>() {
                                 : undefined,
                         });
                         return result;
-                    })
-                    .sort((a, b) =>
+                    }).sort((a, b) =>
                         (b?.similarity ?? 0) - (a?.similarity ?? 0)
                     );
                 const result = results[0];
@@ -210,12 +208,12 @@ export class MyCommandParams {
         commandsArr: Commands<C>[],
         chat_id: BotCommandScopeChat["chat_id"],
     ) {
-        return commandsArr.map((commands) =>
-            commands.toSingleScopeArgs({
-                type: "chat",
-                chat_id,
-            })
-        );
+        return commandsArr.map((
+            commands,
+        ) => commands.toSingleScopeArgs({
+            type: "chat",
+            chat_id,
+        }));
     }
 
     /**
@@ -247,9 +245,9 @@ export class MyCommandParams {
                 result.push(current);
                 return result;
             } else {
-                result[result.length - 1].commands = result[
-                    result.length - 1
-                ].commands.concat(current.commands);
+                result[result.length - 1].commands = result[result.length - 1]
+                    .commands
+                    .concat(current.commands);
                 return result;
             }
         }, [] as SetMyCommandsParams[]);

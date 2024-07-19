@@ -130,13 +130,11 @@ export class Commands<C extends Context> {
             : undefined;
         const options = handler
             ? _options ?? this._commandOptions
-            : (handlerOrOptions as Partial<CommandOptions>) ??
+            : handlerOrOptions as Partial<CommandOptions> ??
                 this._commandOptions;
 
         const command = new Command<C>(name, description, options);
-        if (handler) {
-            command.addToScope({ type: "default" }, handler);
-        }
+        if (handler) command.addToScope({ type: "default" }, handler);
 
         this._commands.push(command);
         this._cachedComposerInvalidated = true;
@@ -225,29 +223,35 @@ export class Commands<C extends Context> {
 
         return Array.from(this._scopes.values())
             .flat()
-            .flatMap((command) => {
-                const elements = [];
-                for (const [language, local] of command.languages.entries()) {
-                    elements.push({
-                        name: local.name instanceof RegExp
-                            ? local.name.source
-                            : local.name,
-                        language,
-                        prefix: command.prefix,
-                        scopes: command.scopes,
-                        description: command.getLocalizedDescription(language),
-                    });
-                }
-                if (filterLanguage) {
-                    const filtered = elements.filter(
-                        (command) => command.language === filterLanguage,
-                    );
-                    const defaulted = elements.filter(
-                        (command) => command.language === "default",
-                    );
-                    return filtered.length ? filtered[0] : defaulted[0];
-                } else return elements;
-            });
+            .flatMap(
+                (command) => {
+                    const elements = [];
+                    for (
+                        const [language, local] of command.languages.entries()
+                    ) {
+                        elements.push({
+                            name: local.name instanceof RegExp
+                                ? local.name.source
+                                : local.name,
+                            language,
+                            prefix: command.prefix,
+                            scopes: command.scopes,
+                            description: command.getLocalizedDescription(
+                                language,
+                            ),
+                        });
+                    }
+                    if (filterLanguage) {
+                        const filtered = elements.filter((command) =>
+                            command.language === filterLanguage
+                        );
+                        const defaulted = elements.filter((command) =>
+                            command.language === "default"
+                        );
+                        return filtered.length ? filtered[0] : defaulted[0];
+                    } else return elements;
+                },
+            );
     }
 
     /**
@@ -282,7 +286,7 @@ export class Commands<C extends Context> {
     }
 
     /**
-     * Replaces the `toString` method on node.js
+     * Replaces the `toString` method on Deno
      *
      * @see toString
      */
@@ -291,7 +295,7 @@ export class Commands<C extends Context> {
     }
 
     /**
-     * Replaces the `toString` method on Deno
+     * Replaces the `toString` method on Node.js
      *
      * @see toString
      */

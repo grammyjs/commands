@@ -2,7 +2,7 @@ import { Commands } from "./commands.ts";
 import { BotCommandScopeChat, Context, NextFunction } from "./deps.deno.ts";
 import { fuzzyMatch, JaroWinklerOptions } from "./jaro-winkler.ts";
 import { SetMyCommandsParams } from "./mod.ts";
-import { botCommandEntity } from "./types.ts";
+import { BotCommandEntity } from "./types.ts";
 import { ensureArray, escapeSpecial } from "./utils.ts";
 
 export interface CommandsFlavor<C extends Context = Context> extends Context {
@@ -51,7 +51,7 @@ export interface CommandsFlavor<C extends Context = Context> extends Context {
      */
     getCommandEntities: (
         commands: Commands<C> | Commands<C>[],
-    ) => botCommandEntity[];
+    ) => BotCommandEntity[];
 }
 
 /**
@@ -141,7 +141,7 @@ export function commands<C extends Context>() {
                         length: text.length,
                     });
                 }
-                return matches as botCommandEntity[];
+                return matches as BotCommandEntity[];
             });
 
             return entities;

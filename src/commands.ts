@@ -13,7 +13,7 @@ import type { CommandElementals, CommandOptions } from "./types.ts";
 import { type MaybeArray } from "./utils.ts";
 
 /**
- * Interface for grouping {@link BotCommand}'s that might (or not)
+ * Interface for grouping {@link BotCommand}s that might (or not)
  * be related to each other by scope and/or language.
  */
 export type SetMyCommandsParams = {
@@ -270,14 +270,14 @@ export class Commands<C extends Context> {
     }
 
     /**
-     * @returns all {@link Command}'s contained in the instance
+     * @returns all {@link Command}s contained in the instance
      */
     public get commands(): Command<C>[] {
         return this._commands;
     }
 
     /**
-     * @returns all prefixes register in this instance
+     * @returns all prefixes registered in this instance
      */
     public get prefixes(): string[] {
         return [

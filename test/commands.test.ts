@@ -1,6 +1,7 @@
 import { Commands } from "../src/commands.ts";
 import { MyCommandParams } from "../src/mod.ts";
-import { assertEquals, describe, it } from "./deps.test.ts";
+import { CustomPrefixNotSupportedError } from "../src/utils/errors.ts";
+import { assertEquals, assertThrows, describe, it } from "./deps.test.ts";
 
 describe("Commands", () => {
     describe("command", () => {
@@ -130,6 +131,44 @@ describe("Commands", () => {
                     },
                 ]);
             });
+            it("should throw if a command has a custom prefix", () => {
+                const commands = new Commands({ prefix: "!" });
+                commands.command("test", "handler", (_) => _);
+                assertThrows(
+                    () => {
+                        commands.toSingleScopeArgs({
+                            type: "chat",
+                            chat_id: 10,
+                        });
+                    },
+                    CustomPrefixNotSupportedError,
+                    "toSingleScopeArgs called for commands with custom prefixes, which cannot be converted into setMyCommands args: test",
+                );
+            });
+            it("should omit commands with a custom prefix when ignoreCommandsWithCustomPrefixes is true", () => {
+                const commands = new Commands();
+                commands.command("withCustomPrefix", "handler", (_) => _, {
+                    prefix: "!",
+                });
+                commands.command("withoutCustomPrefix", "handler", (_) => _);
+
+                const params = commands.toSingleScopeArgs({
+                    type: "chat",
+                    chat_id: 10,
+                }, { ignoreCommandsWithCustomPrefixes: true });
+                assertEquals(params, [
+                    {
+                        scope: { type: "chat", chat_id: 10 },
+                        language_code: undefined,
+                        commands: [
+                            {
+                                command: "withoutCustomPrefix",
+                                description: "handler",
+                            },
+                        ],
+                    },
+                ]);
+            });
         });
         describe("_mergeMyCommandsParams", () => {
             it("should merge command's from different Commands instances", () => {
@@ -219,6 +258,70 @@ describe("Commands", () => {
                     },
                 ]);
             });
+        });
+    });
+    describe("toArgs", () => {
+        it("should return an array of SetMyCommandsParams", () => {
+            const commands = new Commands();
+            commands.command("test", "handler", (_) => _);
+            commands.command("test2", "handler2", (_) => _)
+                .localize("es", "prueba2", "resolvedor2");
+            const params = commands.toArgs();
+
+            assertEquals(params, [
+                {
+                    commands: [
+                        { command: "test", description: "handler" },
+                        { command: "test2", description: "handler2" },
+                    ],
+                    language_code: undefined,
+                    scope: { type: "default" },
+                },
+                {
+                    commands: [
+                        { command: "test", description: "handler" },
+                        { command: "prueba2", description: "resolvedor2" },
+                    ],
+                    language_code: "es",
+                    scope: { type: "default" },
+                },
+            ]);
+        });
+
+        it("should throw if a command has a custom prefix", () => {
+            const commands = new Commands({ prefix: "!" });
+            commands.command("test", "handler", (_) => _);
+            assertThrows(
+                () => {
+                    commands.toArgs();
+                },
+                CustomPrefixNotSupportedError,
+                "toArgs called for commands with custom prefixes, which cannot be converted into setMyCommands args: test",
+            );
+        });
+
+        it("should omit commands with a custom prefix when ignoreCommandsWithCustomPrefixes is true", () => {
+            const commands = new Commands();
+            commands.command("withCustomPrefix", "handler", (_) => _, {
+                prefix: "!",
+            });
+            commands.command("withoutCustomPrefix", "handler", (_) => _);
+
+            const params = commands.toArgs({
+                ignoreCommandsWithCustomPrefixes: true,
+            });
+            assertEquals(params, [
+                {
+                    scope: { type: "default" },
+                    language_code: undefined,
+                    commands: [
+                        {
+                            command: "withoutCustomPrefix",
+                            description: "handler",
+                        },
+                    ],
+                },
+            ]);
         });
     });
 });

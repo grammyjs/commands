@@ -1,32 +1,13 @@
-import { Commands } from "./commands.ts";
+import { Commands, ToArgsOptions } from "./commands.ts";
 import { BotCommandScopeChat, Context, NextFunction } from "./deps.deno.ts";
-import { fuzzyMatch, JaroWinklerOptions } from "./jaro-winkler.ts";
 import { SetMyCommandsParams } from "./mod.ts";
-import { ensureArray } from "./utils.ts";
-
-const isCommandTooLong = (command: string) => command.length > 32;
-const doesCommandContainInvalidChars = (command: string) =>
-    !/^[a-z0-9_]+$/.test(command);
-
-const isCommandValid = (command: string) => {
-    return !isCommandTooLong(command) &&
-        !doesCommandContainInvalidChars(command);
-};
-
-/**
- * Options for the `setMyCommands` method.
- */
-export interface SetMyCommandsOptions {
-    /**
-     * Wether to remove invalid commands from the list of calls to the Bot API.
-     *
-     * If set to `false`, the method will throw an error if any of the commands
-     * is invalid according to the {@link https://core.telegram.org/bots/api#botcommand|official Bot API documentation}.
-     *
-     * Defaults to `false`.
-     */
-    filterInvalidCommands?: boolean;
-}
+import { ensureArray } from "./utils/array.ts";
+import { CustomPrefixNotSupportedError } from "./utils/errors.ts";
+import { fuzzyMatch, JaroWinklerOptions } from "./utils/jaro-winkler.ts";
+import {
+    setBotCommands,
+    SetBotCommandsOptions,
+} from "./utils/set-bot-commants.ts";
 
 export interface CommandsFlavor<C extends Context = Context> extends Context {
     /**
@@ -53,7 +34,7 @@ export interface CommandsFlavor<C extends Context = Context> extends Context {
      */
     setMyCommands: (
         commands: Commands<C> | Commands<C>[],
-        options?: SetMyCommandsOptions,
+        options?: SetBotCommandsOptions,
     ) => Promise<void>;
     /**
      * Returns the nearest command to the user input.
@@ -76,7 +57,7 @@ export function commands<C extends Context>() {
     return (ctx: CommandsFlavor<C>, next: NextFunction) => {
         ctx.setMyCommands = async (
             commands,
-            { filterInvalidCommands = false } = {},
+            options?: Partial<SetBotCommandsOptions> & ToArgsOptions,
         ) => {
             if (!ctx.chat) {
                 throw new Error(
@@ -84,55 +65,22 @@ export function commands<C extends Context>() {
                 );
             }
 
-            const commandParams = MyCommandParams.from(
-                ensureArray(commands),
-                ctx.chat.id,
-            );
+            try {
+                const commandParams = MyCommandParams.from(
+                    ensureArray(commands),
+                    ctx.chat.id,
+                );
 
-            const invalidCommands = filterInvalidCommands ? [] : commandParams
-                .flatMap(({ commands }) => commands)
-                .filter(({ command }) => !isCommandValid(command));
-
-            const commandErrors = invalidCommands.map(({ command }) => {
-                const errors: string[] = [];
-
-                if (isCommandTooLong(command)) {
-                    errors.push("Command is too long. Max 32 characters.");
-                }
-
-                if (doesCommandContainInvalidChars(command)) {
-                    errors.push(
-                        "Command must contain only lowercase letters, digits and underscores.",
+                await setBotCommands(ctx.api, commandParams, options);
+            } catch (error) {
+                if (error instanceof CustomPrefixNotSupportedError) {
+                    throw new Error(
+                        `Tried to call setMyCommands with one or more commands that have a custom prefix, which is not supported by the Bot API. Offending command(s): ${
+                            error.offendingCommands.join(", ")
+                        }`,
                     );
                 }
-
-                return `${command}: ${errors.join(", ")}`;
-            });
-
-            if (commandErrors.length) {
-                throw new Error(
-                    [
-                        "setMyCommands called with commands that would cause an error from the Bot API because they are invalid.",
-                        "Invalid commands:",
-                        commandErrors.join("\n"),
-                    ].join("\n"),
-                );
             }
-
-            const validCommandParams = commandParams.map((
-                { commands, ...params },
-            ) => ({
-                ...params,
-                commands: commands.filter(({ command }) =>
-                    isCommandValid(command)
-                ),
-            }));
-
-            await Promise.all(
-                validCommandParams.map((args) =>
-                    ctx.api.raw.setMyCommands(args)
-                ),
-            );
         };
 
         ctx.getNearestCommand = (commands, options) => {

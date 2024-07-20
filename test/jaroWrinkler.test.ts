@@ -1,23 +1,11 @@
+import { Commands } from "../src/mod.ts";
 import {
     distance,
     fuzzyMatch,
     JaroWinklerDistance,
-} from "../src/jaro-winkler.ts";
-import { Commands, commands, CommandsFlavor } from "../src/mod.ts";
-import {
-    Api,
-    assertEquals,
-    assertObjectMatch,
-    Chat,
-    Context,
-    describe,
-    it,
-    Message,
-    Update,
-    User,
-    UserFromGetMe,
-} from "./deps.test.ts";
+} from "../src/utils/jaro-winkler.ts";
 import { dummyCtx } from "./context.test.ts";
+import { assertEquals, Context, describe, it } from "./deps.test.ts";
 
 describe("Jaro-Wrinkler Algorithm", () => {
     it("should return value 0, because the empty string was given", () => {

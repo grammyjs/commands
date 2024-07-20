@@ -2,7 +2,6 @@ import {
     assertSpyCalls,
     resolvesNext,
 } from "https://deno.land/std@0.203.0/testing/mock.ts";
-import { RawApi } from "https://deno.land/x/grammy@v1.27.0/mod.ts";
 import { Commands } from "../src/commands.ts";
 import { Bot } from "../src/deps.deno.ts";
 import { commands, CommandsFlavor } from "../src/mod.ts";
@@ -103,13 +102,18 @@ describe("Integration", () => {
                 },
             });
 
+            bot.api.config.use(async (prev, method, payload, signal) => {
+                if (method !== "setMyCommands") {
+                    return prev(method, payload, signal);
+                }
+                await setMyCommandsSpy(payload);
+
+                return { ok: true, result: true as ReturnType<typeof prev> };
+            });
+
             bot.use(commands());
 
             bot.use(async (ctx, next) => {
-                // @ts-expect-error Testing purposes
-                ctx.api.raw = {
-                    setMyCommands: setMyCommandsSpy,
-                } as unknown as RawApi;
                 await ctx.setMyCommands(myCommands);
                 await next();
             });
@@ -148,13 +152,18 @@ describe("Integration", () => {
                 },
             });
 
+            bot.api.config.use(async (prev, method, payload, signal) => {
+                if (method !== "setMyCommands") {
+                    return prev(method, payload, signal);
+                }
+                await setMyCommandsSpy(payload);
+
+                return { ok: true, result: true as ReturnType<typeof prev> };
+            });
+
             bot.use(commands());
 
             bot.use(async (ctx, next) => {
-                // @ts-expect-error Testing purposes
-                ctx.api.raw = {
-                    setMyCommands: setMyCommandsSpy,
-                } as unknown as RawApi;
                 await assertRejects(() => ctx.setMyCommands(myCommands));
                 await next();
             });

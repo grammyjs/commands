@@ -1,4 +1,4 @@
-import { BotCommandScope } from "../deps.deno.ts";
+import { BotCommand, BotCommandScope } from "../deps.deno.ts";
 
 export class InvalidScopeError extends Error {
     constructor(scope: BotCommandScope) {
@@ -7,9 +7,17 @@ export class InvalidScopeError extends Error {
     }
 }
 
-export class CustomPrefixNotSupportedError extends Error {
-    constructor(message: string, public readonly offendingCommands: string[]) {
+export class OffenderBotCommand extends Error implements BotCommand {
+    public readonly command: string;
+    public readonly description: string;
+    constructor(
+        message: string,
+        from: BotCommand,
+        public readonly cause: string,
+    ) {
         super(message);
-        this.name = "CustomPrefixNotSupportedError";
+        this.name = "OffendingCommand";
+        this.command = from.command;
+        this.description = from.description;
     }
 }

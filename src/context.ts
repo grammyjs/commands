@@ -2,7 +2,6 @@ import { Commands, ToArgsOptions } from "./commands.ts";
 import { BotCommandScopeChat, Context, NextFunction } from "./deps.deno.ts";
 import { SetMyCommandsParams } from "./mod.ts";
 import { ensureArray } from "./utils/array.ts";
-import { CustomPrefixNotSupportedError } from "./utils/errors.ts";
 import { fuzzyMatch, JaroWinklerOptions } from "./utils/jaro-winkler.ts";
 import {
     setBotCommands,
@@ -65,22 +64,12 @@ export function commands<C extends Context>() {
                 );
             }
 
-            try {
-                const commandParams = MyCommandParams.from(
-                    ensureArray(commands),
-                    ctx.chat.id,
-                );
+            const commandParams = MyCommandParams.from(
+                ensureArray(commands),
+                ctx.chat.id,
+            );
 
-                await setBotCommands(ctx.api, commandParams, options);
-            } catch (error) {
-                if (error instanceof CustomPrefixNotSupportedError) {
-                    throw new Error(
-                        `Tried to call setMyCommands with one or more commands that have a custom prefix, which is not supported by the Bot API. Offending command(s): ${
-                            error.offendingCommands.join(", ")
-                        }`,
-                    );
-                }
-            }
+            await setBotCommands(ctx.api, commandParams, options);
         };
 
         ctx.getNearestCommand = (commands, options) => {

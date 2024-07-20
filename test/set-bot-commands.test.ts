@@ -35,9 +35,9 @@ describe("setBotCommands", () => {
             [
                 "setMyCommands called with commands that would cause an error from the Bot API because they are invalid.",
                 "Invalid commands:",
-                "Command: Command must contain only lowercase letters, digits and underscores.",
-                "/command: Command must contain only lowercase letters, digits and underscores.",
-                "longcommandlongcommandlongcommand: Command is too long. Max 32 characters.",
+                "OffendingCommand: Command: Command must contain only lowercase letters, digits and underscores.",
+                "OffendingCommand: /command: Command must contain only lowercase letters, digits and underscores.",
+                "OffendingCommand: longcommandlongcommandlongcommand: Command is too long. Max 32 characters.",
             ].join("\n"),
         );
     });

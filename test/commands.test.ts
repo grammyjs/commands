@@ -1,6 +1,5 @@
 import { Commands } from "../src/commands.ts";
 import { MyCommandParams } from "../src/mod.ts";
-import { CustomPrefixNotSupportedError } from "../src/utils/errors.ts";
 import { assertEquals, assertThrows, describe, it } from "./deps.test.ts";
 
 describe("Commands", () => {
@@ -19,7 +18,10 @@ describe("Commands", () => {
             });
 
             assertEquals(commands.toArgs(), [{
-                commands: [{ command: "test", description: "default handler" }],
+                commands: [{
+                    command: "test",
+                    description: "default handler",
+                }],
                 language_code: undefined,
                 scope: { type: "default" },
             }]);
@@ -141,7 +143,6 @@ describe("Commands", () => {
                             chat_id: 10,
                         });
                     },
-                    CustomPrefixNotSupportedError,
                     "toSingleScopeArgs called for commands with custom prefixes, which cannot be converted into setMyCommands args: test",
                 );
             });
@@ -155,7 +156,7 @@ describe("Commands", () => {
                 const params = commands.toSingleScopeArgs({
                     type: "chat",
                     chat_id: 10,
-                }, { ignoreCommandsWithCustomPrefixes: true });
+                });
                 assertEquals(params, [
                     {
                         scope: { type: "chat", chat_id: 10 },
@@ -295,7 +296,6 @@ describe("Commands", () => {
                 () => {
                     commands.toArgs();
                 },
-                CustomPrefixNotSupportedError,
                 "toArgs called for commands with custom prefixes, which cannot be converted into setMyCommands args: test",
             );
         });
@@ -307,9 +307,7 @@ describe("Commands", () => {
             });
             commands.command("withoutCustomPrefix", "handler", (_) => _);
 
-            const params = commands.toArgs({
-                ignoreCommandsWithCustomPrefixes: true,
-            });
+            const params = commands.toArgs();
             assertEquals(params, [
                 {
                     scope: { type: "default" },
@@ -318,6 +316,7 @@ describe("Commands", () => {
                         {
                             command: "withoutCustomPrefix",
                             description: "handler",
+                            name: "OffendingCommand",
                         },
                     ],
                 },

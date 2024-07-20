@@ -1,8 +1,9 @@
 import { SetMyCommandsParams } from "../commands.ts";
 import { Api } from "../deps.deno.ts";
+import { OffenderBotCommand } from "./errors.ts";
 
-const isCommandTooLong = (command: string) => command.length > 32;
-const doesCommandContainInvalidChars = (command: string) =>
+export const isCommandTooLong = (command: string) => command.length > 32;
+export const doesCommandContainInvalidChars = (command: string) =>
     !/^[a-z0-9_]+$/.test(command);
 
 const isCommandValid = (command: string) => {
@@ -40,22 +41,12 @@ export async function setBotCommands(
 
     const invalidCommands = filterInvalidCommands ? [] : commandParams
         .flatMap(({ commands }) => commands)
-        .filter(({ command }) => !isCommandValid(command));
+        .filter((command) =>
+            command instanceof OffenderBotCommand
+        ) as OffenderBotCommand[];
 
-    const commandErrors = invalidCommands.map(({ command }) => {
-        const errors: string[] = [];
-
-        if (isCommandTooLong(command)) {
-            errors.push("Command is too long. Max 32 characters.");
-        }
-
-        if (doesCommandContainInvalidChars(command)) {
-            errors.push(
-                "Command must contain only lowercase letters, digits and underscores.",
-            );
-        }
-
-        return `${command}: ${errors.join(", ")}`;
+    const commandErrors = invalidCommands.map((command) => {
+        return `${command}: ${command.cause}`;
     });
 
     if (commandErrors.length) {
@@ -72,7 +63,9 @@ export async function setBotCommands(
         { commands, ...params },
     ) => ({
         ...params,
-        commands: commands.filter(({ command }) => isCommandValid(command)),
+        commands: commands.filter((command) =>
+            !(command instanceof OffenderBotCommand)
+        ),
     }));
 
     await Promise.all(

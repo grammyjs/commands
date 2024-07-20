@@ -11,9 +11,13 @@ import {
     type Middleware,
     type MiddlewareObj,
 } from "./deps.deno.ts";
-import { InvalidScopeError } from "./utils/errors.ts";
+import { InvalidScopeError, OffenderBotCommand } from "./utils/errors.ts";
 import type { CommandOptions } from "./types.ts";
 import { ensureArray, type MaybeArray } from "./utils/array.ts";
+import {
+    doesCommandContainInvalidChars,
+    isCommandTooLong,
+} from "./utils/set-bot-commants.ts";
 
 type BotCommandGroupsScope =
     | BotCommandScopeAllGroupChats
@@ -331,6 +335,33 @@ export class Command<C extends Context = Context> implements MiddlewareObj<C> {
                 : localizedName,
             description: this.getLocalizedDescription(languageCode),
         };
+    }
+
+    public toApiCompliant(
+        languageCode: LanguageCode | "default" = "default",
+    ): BotCommand | OffenderBotCommand {
+        const cmd = this.toObject(languageCode);
+        const errors: string[] = [];
+        if (this.prefix !== "/") {
+            errors.push(
+                "Command is custom prefix. Only '/' it's allowed for the command Menu.",
+            );
+        } else if (isCommandTooLong(cmd.command)) {
+            errors.push(
+                "Command is too long. Max 32 characters.",
+            );
+        } else if (doesCommandContainInvalidChars(cmd.command)) {
+            errors.push(
+                "Command must contain only lowercase letters, digits and underscores.",
+            );
+        }
+        if (errors.length) {
+            return new OffenderBotCommand(
+                cmd.command,
+                cmd,
+                errors.join("\n"),
+            );
+        } else return cmd;
     }
 
     middleware() {

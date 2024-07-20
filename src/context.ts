@@ -3,7 +3,7 @@ import { BotCommandScopeChat, Context, NextFunction } from "./deps.deno.ts";
 import { fuzzyMatch, JaroWinklerOptions } from "./jaro-winkler.ts";
 import { SetMyCommandsParams } from "./mod.ts";
 import { BotCommandEntity } from "./types.ts";
-import { ensureArray, escapeSpecial } from "./utils.ts";
+import { ensureArray, getCommandsRegex } from "./utils.ts";
 
 export interface CommandsFlavor<C extends Context = Context> extends Context {
     /**
@@ -122,13 +122,7 @@ export function commands<C extends Context>() {
             if (!prefixes.length) return [];
 
             const regexes = prefixes.map(
-                (prefix) =>
-                    new RegExp(
-                        `(\?\<\!\\S)(\?<prefix>${
-                            escapeSpecial(prefix)
-                        })\\S+(\\s|$)`,
-                        "g",
-                    ),
+                (prefix) => getCommandsRegex(prefix),
             );
             const entities = regexes.flatMap((regex) => {
                 let match: RegExpExecArray | null;

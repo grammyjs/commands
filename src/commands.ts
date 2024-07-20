@@ -1,4 +1,4 @@
-import { Command } from "./command.ts";
+import { Command, CommandsFlavor } from "./mod.ts";
 import {
     Api,
     BotCommand,
@@ -10,7 +10,8 @@ import {
     Middleware,
 } from "./deps.deno.ts";
 import type { CommandElementals, CommandOptions } from "./types.ts";
-import { type MaybeArray } from "./utils.ts";
+import { ensureArray, getCommandsRegex, type MaybeArray } from "./utils.ts";
+import { JaroWinklerOptions } from "./jaro-winkler.ts";
 
 /**
  * Interface for grouping {@link BotCommand}s that might (or not)
@@ -303,3 +304,36 @@ export class CommandGroup<C extends Context> {
         return this.toString();
     }
 }
+
+export function commandNotFound<C extends Context & CommandsFlavor<C>>(
+    commands: CommandGroup<C> | CommandGroup<C>[],
+    opts: Omit<Partial<JaroWinklerOptions>, "language"> = {},
+) {
+    return function (
+        ctx: C,
+    ): ctx is haveCommands<C> {
+        if (containsCommands(ctx, commands)) {
+            ctx.commandSuggestion = ctx.getNearestCommand(commands, opts);
+            return true;
+        }
+        return false;
+    };
+}
+
+function containsCommands<C extends Context & CommandsFlavor<C>>(
+    ctx: C,
+    commands: CommandGroup<C> | CommandGroup<C>[],
+): ctx is haveCommands<C> {
+    const allPrefixes = [
+        ...new Set(ensureArray(commands).flatMap((cmds) => cmds.prefixes)),
+    ];
+    for (const prefix of allPrefixes) {
+        const regex = getCommandsRegex(prefix);
+        if (ctx.hasText(regex)) return true;
+    }
+    return false;
+}
+
+type haveCommands<C extends Context & CommandsFlavor<C>> = C & {
+    commandSuggestion: string | null;
+};

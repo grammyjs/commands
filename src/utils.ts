@@ -13,3 +13,9 @@ export function escapeSpecial(str: string) {
         str,
     );
 }
+export function getCommandsRegex(prefix: string) {
+    return new RegExp(
+        `(\?\<\!\\S)(\?<prefix>${escapeSpecial(prefix)})\\S+(\\s|$)`,
+        "g",
+    );
+}

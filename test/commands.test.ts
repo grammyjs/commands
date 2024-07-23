@@ -54,7 +54,7 @@ describe("Commands", () => {
     });
     describe("setMyCommands", () => {
         it("should throw if the update has no chat property", () => {
-            const ctx = dummyCtx({ noChat: true });
+            const ctx = dummyCtx({ noMessage: true });
             const a = new Commands();
             assertRejects(() => ctx.setMyCommands(a));
         });

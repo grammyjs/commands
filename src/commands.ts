@@ -305,17 +305,18 @@ export class CommandGroup<C extends Context> {
     }
 }
 
-type haveCommandLike<C extends Context & CommandsFlavor<C>> = C & {
-    commandSuggestion: string | null;
-};
-
-export function commandNotFound<C extends Context & CommandsFlavor<C>>(
+export function commandNotFound<
+    CF extends CommandsFlavor<C>,
+    C extends Context = Context,
+>(
     commands: CommandGroup<C> | CommandGroup<C>[],
     opts: Omit<Partial<JaroWinklerOptions>, "language"> = {},
 ) {
     return function (
         ctx: C,
-    ): ctx is haveCommandLike<C> {
+    ): ctx is C & CF & {
+        commandSuggestion: string | null;
+    } {
         if (containsCommands(ctx, commands)) {
             ctx.commandSuggestion = ctx.getNearestCommand(commands, opts);
             return true;
@@ -324,10 +325,15 @@ export function commandNotFound<C extends Context & CommandsFlavor<C>>(
     };
 }
 
-function containsCommands<C extends Context & CommandsFlavor<C>>(
+function containsCommands<
+    CF extends CommandsFlavor<C>,
+    C extends Context,
+>(
     ctx: C,
     commands: CommandGroup<C> | CommandGroup<C>[],
-): ctx is haveCommandLike<C> {
+): ctx is C & CF & {
+    commandSuggestion: string | null;
+} {
     const allPrefixes = [
         ...new Set(ensureArray(commands).flatMap((cmds) => cmds.prefixes)),
     ];

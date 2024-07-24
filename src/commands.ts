@@ -305,7 +305,7 @@ export class CommandGroup<C extends Context> {
     }
 }
 
-type haveCommandLike<
+type HaveCommandLike<
     C extends Context = Context,
     CF extends CommandsFlavor<C> = CommandsFlavor<C>,
 > = C & CF & {

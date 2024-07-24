@@ -1,8 +1,4 @@
-import type {
-    BotCommandScope,
-    LanguageCode,
-    MessageEntity,
-} from "./deps.deno.ts";
+import type { BotCommandScope, LanguageCode } from "./deps.deno.ts";
 
 /**
  * Supported command options
@@ -40,10 +36,4 @@ export interface CommandElementals {
     language: LanguageCode | "default";
     scopes: BotCommandScope[];
     description: string;
-}
-
-/** represents a bot__command entity inside a text message */
-export interface botCommandEntity extends MessageEntity.CommonMessageEntity {
-    type: "bot_command";
-    text: string;
 }

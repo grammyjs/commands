@@ -16,7 +16,7 @@ import type {
 import { type MaybeArray } from './utils.ts'
 
 /**
- * Interface for grouping {@link BotCommand}'s that might (or not)
+ * Interface for grouping {@link BotCommand}s that might (or not)
  * be related to each other by scope and/or language.
  */
 export type SetMyCommandsParams = {
@@ -150,9 +150,8 @@ export class Commands<C extends Context> {
             description,
             options
         )
-        if (handler) {
+        if (handler)
             command.addToScope({ type: 'default' }, handler)
-        }
 
         this._commands.push(command)
         this._cachedComposerInvalidated = true
@@ -320,27 +319,14 @@ export class Commands<C extends Context> {
     }
 
     /**
-     * @returns all {@link Command}'s contained in the instance
+     * @returns all commands contained in the instance
      */
     public get commands(): Command<C>[] {
         return this._commands
     }
 
     /**
-     * @returns all prefixes register in this instance
-     */
-    public get prefixes(): string[] {
-        return [
-            ...new Set(
-                this._commands.flatMap(
-                    (command) => command.prefix
-                )
-            ),
-        ]
-    }
-
-    /**
-     * Replaces the `toString` method on node.js
+     * Replaces the `toString` method on Deno
      *
      * @see toString
      */
@@ -349,7 +335,7 @@ export class Commands<C extends Context> {
     }
 
     /**
-     * Replaces the `toString` method on Deno
+     * Replaces the `toString` method on Node.js
      *
      * @see toString
      */

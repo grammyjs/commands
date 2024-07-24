@@ -1,10 +1,8 @@
-import { matchesPattern } from "./command.ts";
 import { Commands } from "./commands.ts";
 import { BotCommandScopeChat, Context, NextFunction } from "./deps.deno.ts";
 import { fuzzyMatch, JaroWinklerOptions } from "./jaro-winkler.ts";
 import { SetMyCommandsParams } from "./mod.ts";
-import { botCommandEntity } from "./types.ts";
-import { ensureArray, escapeSpecial } from "./utils.ts";
+import { ensureArray } from "./utils.ts";
 
 export interface CommandsFlavor<C extends Context = Context> extends Context {
     /**
@@ -43,19 +41,8 @@ export interface CommandsFlavor<C extends Context = Context> extends Context {
      */
     getNearestCommand: (
         commands: Commands<C> | Commands<C>[],
-        options?: Omit<
-            Partial<JaroWinklerOptions>,
-            "language"
-        >,
+        options?: Omit<Partial<JaroWinklerOptions>, "language">,
     ) => string | null;
-
-    /**
-     * @param commands
-     * @returns command entities hydrated with the custom prefixes
-     */
-    getCommandEntities: (
-        commands: Commands<C> | Commands<C>[],
-    ) => botCommandEntity[];
 }
 
 /**
@@ -75,96 +62,30 @@ export function commands<C extends Context>() {
             commands = ensureArray(commands).concat(moreCommands);
 
             await Promise.all(
-                MyCommandParams.from(
-                    commands,
-                    ctx.chat.id,
-                ).map((args) => ctx.api.raw.setMyCommands(args)),
+                MyCommandParams.from(commands, ctx.chat.id)
+                    .map((args) => ctx.api.raw.setMyCommands(args)),
             );
         };
 
         ctx.getNearestCommand = (commands, options) => {
             if (ctx.msg?.text) {
                 commands = ensureArray(commands);
-                const results = commands
-                    .map((commands) => {
-                        const userInput = ctx.msg!.text!.substring(1);
-                        const result = fuzzyMatch(
-                            userInput,
-                            commands,
-                            {
-                                ...options,
-                                language: !options?.ignoreLocalization
-                                    ? ctx.from
-                                        ?.language_code
-                                    : undefined,
-                            },
-                        );
-                        return result;
-                    })
-                    .sort(
-                        (a, b) =>
-                            (b?.similarity ?? 0) -
-                            (a?.similarity ?? 0),
-                    );
+                const results = commands.map((commands) => {
+                    const userInput = ctx.msg!.text!.substring(1);
+                    const result = fuzzyMatch(userInput, commands, {
+                        ...options,
+                        language: !options?.ignoreLocalization
+                            ? ctx.from?.language_code
+                            : undefined,
+                    });
+                    return result;
+                }).sort((a, b) => (b?.similarity ?? 0) - (a?.similarity ?? 0));
                 const result = results[0];
                 if (!result || !result.command) return null;
 
-                return (
-                    result.command.prefix +
-                    result.command.name
-                );
+                return result.command.prefix + result.command.name;
             }
             return null;
-        };
-
-        ctx.getCommandEntities = (
-            commands: Commands<C> | Commands<C>[],
-        ) => {
-            if (!ctx.has(":text")) {
-                throw new Error(
-                    "cannot call `ctx.commandEntities` on an update with no `text`",
-                );
-            }
-            const text = ctx.msg.text;
-            if (!text) return [];
-            const prefixes = ensureArray(commands).flatMap(
-                (cmds) => cmds.prefixes,
-            );
-
-            if (!prefixes.length) return [];
-
-            const regexes = prefixes.map(
-                (prefix) =>
-                    new RegExp(
-                        `${
-                            escapeSpecial(
-                                prefix,
-                            )
-                        }\\S+(\\s|$)`,
-                        "gd",
-                    ),
-            );
-            const allMatches = regexes.flatMap((regex) => {
-                let match;
-                const matches = [];
-                while (
-                    (match = regex.exec(text)) !== null
-                ) {
-                    matches.push({
-                        text: match[0].trim(),
-                        offset: match.index,
-                    });
-                }
-                return matches;
-            });
-
-            const entities = allMatches.map((match) => ({
-                ...match,
-                type: "bot_command",
-                length: match.text.length,
-            })) as botCommandEntity[];
-
-            return entities;
         };
 
         return next();
@@ -201,10 +122,7 @@ export class MyCommandParams {
         commands: Commands<C>[],
         chat_id: BotCommandScopeChat["chat_id"],
     ) {
-        const commandsParams = this._serialize(
-            commands,
-            chat_id,
-        ).flat();
+        const commandsParams = this._serialize(commands, chat_id).flat();
         if (!commandsParams.length) return [];
         return this.mergeByLanguage(commandsParams);
     }
@@ -231,12 +149,12 @@ export class MyCommandParams {
         commandsArr: Commands<C>[],
         chat_id: BotCommandScopeChat["chat_id"],
     ) {
-        return commandsArr.map((commands) =>
-            commands.toSingleScopeArgs({
-                type: "chat",
-                chat_id,
-            })
-        );
+        return commandsArr.map((
+            commands,
+        ) => commands.toSingleScopeArgs({
+            type: "chat",
+            chat_id,
+        }));
     }
 
     /**
@@ -248,9 +166,7 @@ export class MyCommandParams {
         return params.sort((a, b) => {
             if (!a.language_code) return -1;
             if (!b.language_code) return 1;
-            return a.language_code.localeCompare(
-                b.language_code,
-            );
+            return a.language_code.localeCompare(b.language_code);
         });
     }
 
@@ -263,22 +179,16 @@ export class MyCommandParams {
      * @returns an array containing all commands grouped by language
      */
 
-    private static mergeByLanguage(
-        params: SetMyCommandsParams[],
-    ) {
+    private static mergeByLanguage(params: SetMyCommandsParams[]) {
         const sorted = this._sortByLanguage(params);
         return sorted.reduce((result, current, i, arr) => {
-            if (
-                i === 0 ||
-                current.language_code !==
-                    arr[i - 1].language_code
-            ) {
+            if (i === 0 || current.language_code !== arr[i - 1].language_code) {
                 result.push(current);
                 return result;
             } else {
-                result[result.length - 1].commands = result[
-                    result.length - 1
-                ].commands.concat(current.commands);
+                result[result.length - 1].commands = result[result.length - 1]
+                    .commands
+                    .concat(current.commands);
                 return result;
             }
         }, [] as SetMyCommandsParams[]);

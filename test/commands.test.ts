@@ -415,21 +415,18 @@ describe("Commands", () => {
                         offset: 0,
                         type: "bot_command",
                         length: 3,
-                        prefix: "/",
                     },
                     {
                         text: "?momi",
                         offset: 4,
                         type: "bot_command",
                         length: 5,
-                        prefix: "?",
                     },
                     {
                         text: "abcdfghi",
                         offset: 10,
                         type: "bot_command",
                         length: 8,
-                        prefix: "abcd",
                     },
                 ]);
             });

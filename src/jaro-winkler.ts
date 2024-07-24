@@ -1,4 +1,4 @@
-import { Commands } from "./commands.ts";
+import { CommandGroup } from "./commands.ts";
 import { Context, LanguageCode, LanguageCodes } from "./deps.deno.ts";
 import type { CommandElementals } from "./types.ts";
 
@@ -121,7 +121,7 @@ export function isLanguageCode(
 
 export function fuzzyMatch<C extends Context>(
     userInput: string,
-    commands: Commands<C>,
+    commands: CommandGroup<C>,
     options: Partial<JaroWinklerOptions>,
 ): CommandSimilarity | null {
     const defaultSimilarityThreshold = 0.82;

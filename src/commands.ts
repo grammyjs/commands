@@ -321,10 +321,10 @@ export function commandNotFound<
 ) {
     return function (
         ctx: C,
-    ): ctx is haveCommandLike<C, CF> {
+    ): ctx is HaveCommandLike<C, CF> {
         if (containsCommands(ctx, commands)) {
-            (ctx as haveCommandLike<C, CF>)
-                .commandSuggestion = (ctx as haveCommandLike<C, CF>)
+            (ctx as HaveCommandLike<C, CF>)
+                .commandSuggestion = (ctx as HaveCommandLike<C, CF>)
                     .getNearestCommand(commands, opts);
             return true;
         }

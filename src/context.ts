@@ -81,28 +81,28 @@ export function commands<C extends Context>() {
                 throw new Error(
                     "cannot call `ctx.getNearestCommand` on an update with no `text`",
                 );
+            } else {
+                const results = ensureArray(commands)
+                    .map((commands) => {
+                        const firstMatch = ctx.getCommandEntities(commands)[0];
+                        const commandLike =
+                            firstMatch?.text.replace(firstMatch.prefix, "") ||
+                            "";
+                        const result = fuzzyMatch(commandLike, commands, {
+                            ...options,
+                            language: !options?.ignoreLocalization
+                                ? ctx.from?.language_code
+                                : undefined,
+                        });
+                        return result;
+                    }).sort((a, b) =>
+                        (b?.similarity ?? 0) - (a?.similarity ?? 0)
+                    );
+                const result = results[0];
+                if (!result || !result.command) return null;
+
+                return result.command.prefix + result.command.name;
             }
-
-            const results = ensureArray(commands)
-                .map((commands) => {
-                    const firstMatch = ctx.getCommandEntities(commands)[0];
-                    const commandLike =
-                        firstMatch?.text.replace(firstMatch.prefix, "") ||
-                        "";
-                    const result = fuzzyMatch(commandLike, commands, {
-                        ...options,
-                        language: !options?.ignoreLocalization
-                            ? ctx.from?.language_code
-                            : undefined,
-                    });
-                    return result;
-                }).sort((a, b) => (b?.similarity ?? 0) - (a?.similarity ?? 0));
-
-            const result = results[0];
-
-            if (!result || !result.command) return null;
-
-            return result.command.prefix + result.command.name;
         };
 
         ctx.getCommandEntities = (commands: Commands<C> | Commands<C>[]) => {

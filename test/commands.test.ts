@@ -24,16 +24,25 @@ describe("Commands", () => {
                 prefix: undefined,
             });
 
-            assertEquals(commands.toArgs(), [{
-                commands: [{ command: "test", description: "default handler" }],
-                language_code: undefined,
-                scope: { type: "default" },
-            }]);
+            assertEquals(commands.toArgs(), [
+                {
+                    commands: [
+                        {
+                            command: "test",
+                            description: "default handler",
+                        },
+                    ],
+                    language_code: undefined,
+                    scope: { type: "default" },
+                },
+            ]);
         });
 
         it("should support options with no handler", () => {
             const commands = new Commands();
-            commands.command("test", "no handler", { prefix: "test" });
+            commands.command("test", "no handler", {
+                prefix: "test",
+            });
             assertEquals(
                 (commands as any)._commands[0]._options.prefix,
                 "test",
@@ -79,28 +88,33 @@ describe("Commands", () => {
                 });
                 assertEquals(params, [
                     {
-                        scope: { type: "chat", chat_id: 10 },
+                        scope: {
+                            type: "chat",
+                            chat_id: 10,
+                        },
                         language_code: undefined,
                         commands: [
-                            { command: "test", description: "handler1" },
-                            { command: "test2", description: "handler2" },
+                            {
+                                command: "test",
+                                description: "handler1",
+                            },
+                            {
+                                command: "test2",
+                                description: "handler2",
+                            },
                         ],
                     },
                 ]);
             });
             it("should return an array with the localized versions of commands", () => {
                 const commands = new Commands();
-                commands.command("test", "handler1", (_) => _).localize(
-                    "es",
-                    "prueba1",
-                    "resolvedor1",
-                );
+                commands
+                    .command("test", "handler1", (_) => _)
+                    .localize("es", "prueba1", "resolvedor1");
                 commands.command("test2", "handler2", (_) => _);
-                commands.command(/omitMe_\d\d/, "handler3", (_) => _).localize(
-                    "es",
-                    /omiteme_\d/,
-                    "resolvedor3",
-                );
+                commands
+                    .command(/omitMe_\d\d/, "handler3", (_) => _)
+                    .localize("es", /omiteme_\d/, "resolvedor3");
 
                 const params = commands.toSingleScopeArgs({
                     type: "chat",
@@ -108,11 +122,20 @@ describe("Commands", () => {
                 });
                 assertEquals(params, [
                     {
-                        scope: { type: "chat", chat_id: 10 },
+                        scope: {
+                            type: "chat",
+                            chat_id: 10,
+                        },
                         language_code: undefined,
                         commands: [
-                            { command: "test", description: "handler1" },
-                            { command: "test2", description: "handler2" },
+                            {
+                                command: "test",
+                                description: "handler1",
+                            },
+                            {
+                                command: "test2",
+                                description: "handler2",
+                            },
                         ],
                     },
                     {
@@ -144,10 +167,16 @@ describe("Commands", () => {
                 });
                 assertEquals(params, [
                     {
-                        scope: { type: "chat", chat_id: 10 },
+                        scope: {
+                            type: "chat",
+                            chat_id: 10,
+                        },
                         language_code: undefined,
                         commands: [
-                            { command: "test", description: "handler" },
+                            {
+                                command: "test",
+                                description: "handler",
+                            },
                         ],
                     },
                 ]);
@@ -166,12 +195,24 @@ describe("Commands", () => {
 
                 assertEquals(mergedCommands, [
                     {
-                        scope: { type: "chat", chat_id: 10 },
+                        scope: {
+                            type: "chat",
+                            chat_id: 10,
+                        },
                         language_code: undefined,
                         commands: [
-                            { command: "c", description: "test c" },
-                            { command: "b", description: "test b" },
-                            { command: "a", description: "test a" },
+                            {
+                                command: "c",
+                                description: "test c",
+                            },
+                            {
+                                command: "b",
+                                description: "test b",
+                            },
+                            {
+                                command: "a",
+                                description: "test a",
+                            },
                         ],
                     },
                 ]);
@@ -198,25 +239,49 @@ describe("Commands", () => {
                 const mergedCommands = MyCommandParams.from([a, b], 10);
                 assertEquals(mergedCommands, [
                     {
-                        scope: { type: "chat", chat_id: 10 },
+                        scope: {
+                            type: "chat",
+                            chat_id: 10,
+                        },
                         language_code: undefined,
                         commands: [
-                            { command: "b", description: "test b" },
-                            { command: "a", description: "test a" },
-                            { command: "a1", description: "test a1" },
-                            { command: "a2", description: "test a2" },
+                            {
+                                command: "b",
+                                description: "test b",
+                            },
+                            {
+                                command: "a",
+                                description: "test a",
+                            },
+                            {
+                                command: "a1",
+                                description: "test a1",
+                            },
+                            {
+                                command: "a2",
+                                description: "test a2",
+                            },
                         ],
                     },
                     {
-                        scope: { type: "chat", chat_id: 10 },
+                        scope: {
+                            type: "chat",
+                            chat_id: 10,
+                        },
                         language_code: "es",
                         commands: [
-                            { command: "a", description: "test a" },
+                            {
+                                command: "a",
+                                description: "test a",
+                            },
                             {
                                 command: "localA1",
                                 description: "prueba a1 localizada",
                             },
-                            { command: "a2", description: "test a2" },
+                            {
+                                command: "a2",
+                                description: "test a2",
+                            },
                             {
                                 command: "localB",
                                 description: "prueba b localizada",
@@ -224,11 +289,20 @@ describe("Commands", () => {
                         ],
                     },
                     {
-                        scope: { type: "chat", chat_id: 10 },
+                        scope: {
+                            type: "chat",
+                            chat_id: 10,
+                        },
                         language_code: "fr",
                         commands: [
-                            { command: "a", description: "test a" },
-                            { command: "a1", description: "test a1" },
+                            {
+                                command: "a",
+                                description: "test a",
+                            },
+                            {
+                                command: "a1",
+                                description: "test a1",
+                            },
                             {
                                 command: "localiseA2",
                                 description: "test a2 localisé",

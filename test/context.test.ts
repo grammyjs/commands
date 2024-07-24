@@ -31,7 +31,11 @@ describe("commands", () => {
     });
 });
 
-export function dummyCtx({ userInput, language, noChat }: {
+export function dummyCtx({
+    userInput,
+    language,
+    noChat,
+}: {
     userInput?: string;
     language?: string;
     noChat?: boolean;

@@ -22,6 +22,4 @@ export type {
     LanguageCode,
     MessageEntity,
 } from "https://lib.deno.dev/x/grammy_types@^v3.8.1/mod.ts";
-export {
-    LanguageCodes,
-} from "https://lib.deno.dev/x/grammy_types@^v3.8.1/mod.ts";
+export { LanguageCodes } from "https://lib.deno.dev/x/grammy_types@^v3.8.1/mod.ts";

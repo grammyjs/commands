@@ -1,5 +1,6 @@
 export {
     assert,
+    assertArrayIncludes,
     assertEquals,
     assertFalse,
     assertInstanceOf,

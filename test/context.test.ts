@@ -31,14 +31,14 @@ describe("commands", () => {
     });
 });
 
-export function dummyCtx({ userInput, language, noMessage }: {
+export function dummyCtx({ userInput, language, noChat }: {
     userInput?: string;
     language?: string;
-    noMessage?: boolean;
+    noChat?: boolean;
 }) {
     const u = { id: 42, first_name: "yo", language_code: language } as User;
     const c = { id: 100, type: "private" } as Chat;
-    const m = noMessage ? undefined : ({
+    const m = noChat ? undefined : ({
         text: userInput,
         from: u,
         chat: c,

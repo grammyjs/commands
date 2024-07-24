@@ -10,7 +10,12 @@ import {
     Middleware,
 } from "./deps.deno.ts";
 import type { CommandElementals, CommandOptions } from "./types.ts";
-import { type MaybeArray } from "./utils.ts";
+import { type MaybeArray } from "./utils/array.ts";
+import { CustomPrefixNotSupportedError } from "./utils/errors.ts";
+import {
+    setBotCommands,
+    SetBotCommandsOptions,
+} from "./utils/set-bot-commants.ts";
 
 /**
  * Interface for grouping {@link BotCommand}s that might (or not)
@@ -26,6 +31,19 @@ export type SetMyCommandsParams = {
     /** Commands that can be each one passed to a SetMyCommands Call */
     commands: BotCommand[];
 };
+
+/**
+ * Options for methods that convert the commands into `setMyCommands` args.
+ */
+export interface ToArgsOptions {
+    /**
+     * If true, commands that are not valid will be filtered out.
+     * Otherwise, an error will be thrown.
+     *
+     * @default false
+     */
+    ignoreCommandsWithCustomPrefixes?: boolean;
+}
 
 const isMiddleware = <C extends Context>(
     obj: unknown,
@@ -142,14 +160,42 @@ export class Commands<C extends Context> {
     }
     /**
      * Serializes the commands into multiple objects that can each be passed to a `setMyCommands` call.
+     *
+     * @param options Options for the serialization
      * @returns One item for each combination of command + scope + language
      */
-    public toArgs() {
+    public toArgs(
+        options: Partial<ToArgsOptions> = {},
+    ) {
+        const { ignoreCommandsWithCustomPrefixes } = options;
         this._populateMetadata();
         const params: SetMyCommandsParams[] = [];
 
         for (const [scope, commands] of this._scopes.entries()) {
             for (const language of this._languages) {
+                const commandsWithCustomPrefix =
+                    ignoreCommandsWithCustomPrefixes
+                        ? []
+                        : commands.filter((command) =>
+                            command.prefix && command.prefix !== "/"
+                        );
+
+                if (
+                    commandsWithCustomPrefix.length &&
+                    !ignoreCommandsWithCustomPrefixes
+                ) {
+                    throw new CustomPrefixNotSupportedError(
+                        `toArgs called for commands with custom prefixes, which cannot be converted into setMyCommands args: ${
+                            commandsWithCustomPrefix
+                                .map((command) => command.name)
+                                .join(", ")
+                        }`,
+                        commandsWithCustomPrefix.map((command) =>
+                            command.name.toString()
+                        ),
+                    );
+                }
+
                 params.push({
                     scope: JSON.parse(scope),
                     language_code: language === "default"
@@ -157,6 +203,9 @@ export class Commands<C extends Context> {
                         : language,
                     commands: commands
                         .filter((command) => typeof command.name === "string")
+                        .filter((command) =>
+                            !command.prefix || command.prefix === "/"
+                        )
                         .map((command) => command.toObject(language)),
                 });
             }
@@ -171,16 +220,47 @@ export class Commands<C extends Context> {
      * @param scope Selected scope to be serialized
      * @returns One item per command per language
      */
-    public toSingleScopeArgs(scope: BotCommandScope) {
+    public toSingleScopeArgs(
+        scope: BotCommandScope,
+        options: Partial<ToArgsOptions> = {},
+    ) {
+        const { ignoreCommandsWithCustomPrefixes } = options;
+
         this._populateMetadata();
+
         const params: SetMyCommandsParams[] = [];
         for (const language of this._languages) {
+            const commandsWithCustomPrefix = ignoreCommandsWithCustomPrefixes
+                ? []
+                : this._commands.filter((
+                    command,
+                ) => command.prefix && command.prefix !== "/");
+
+            if (
+                commandsWithCustomPrefix.length &&
+                !ignoreCommandsWithCustomPrefixes
+            ) {
+                throw new CustomPrefixNotSupportedError(
+                    `toSingleScopeArgs called for commands with custom prefixes, which cannot be converted into setMyCommands args: ${
+                        commandsWithCustomPrefix
+                            .map((command) => command.name)
+                            .join(", ")
+                    }`,
+                    commandsWithCustomPrefix.map((command) =>
+                        command.name.toString()
+                    ),
+                );
+            }
+
             params.push({
                 scope,
                 language_code: language === "default" ? undefined : language,
                 commands: this._commands
                     .filter((command) => command.scopes.length)
                     .filter((command) => typeof command.name === "string")
+                    .filter((command) =>
+                        !command.prefix || command.prefix === "/"
+                    )
                     .map((command) => command.toObject(language)),
             });
         }
@@ -198,10 +278,21 @@ export class Commands<C extends Context> {
      *
      * @param Instance of `bot` or { api: bot.api }
      */
-    public async setCommands({ api }: { api: Api }) {
-        await Promise.all(
-            this.toArgs().map((args) => api.raw.setMyCommands(args)),
-        );
+    public async setCommands(
+        { api }: { api: Api },
+        options?: Partial<SetBotCommandsOptions> & Partial<ToArgsOptions>,
+    ) {
+        try {
+            await setBotCommands(api, this.toArgs(options), options);
+        } catch (error) {
+            if (error instanceof CustomPrefixNotSupportedError) {
+                throw new Error(
+                    `Tried to call setCommands with a command that has a custom prefix, which is not supported by the Bot API. Offending command(s): ${
+                        error.offendingCommands.join(", ")
+                    }`,
+                );
+            }
+        }
     }
 
     /**

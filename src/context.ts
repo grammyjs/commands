@@ -1,8 +1,13 @@
-import { Commands } from "./commands.ts";
+import { Commands, ToArgsOptions } from "./commands.ts";
 import { BotCommandScopeChat, Context, NextFunction } from "./deps.deno.ts";
-import { fuzzyMatch, JaroWinklerOptions } from "./jaro-winkler.ts";
 import { SetMyCommandsParams } from "./mod.ts";
-import { ensureArray } from "./utils.ts";
+import { ensureArray } from "./utils/array.ts";
+import { CustomPrefixNotSupportedError } from "./utils/errors.ts";
+import { fuzzyMatch, JaroWinklerOptions } from "./utils/jaro-winkler.ts";
+import {
+    setBotCommands,
+    SetBotCommandsOptions,
+} from "./utils/set-bot-commants.ts";
 
 export interface CommandsFlavor<C extends Context = Context> extends Context {
     /**
@@ -29,7 +34,7 @@ export interface CommandsFlavor<C extends Context = Context> extends Context {
      */
     setMyCommands: (
         commands: Commands<C> | Commands<C>[],
-        ...moreCommands: Commands<C>[]
+        options?: SetBotCommandsOptions,
     ) => Promise<void>;
     /**
      * Returns the nearest command to the user input.
@@ -52,19 +57,30 @@ export function commands<C extends Context>() {
     return (ctx: CommandsFlavor<C>, next: NextFunction) => {
         ctx.setMyCommands = async (
             commands,
-            ...moreCommands: Commands<C>[]
+            options?: Partial<SetBotCommandsOptions> & ToArgsOptions,
         ) => {
             if (!ctx.chat) {
                 throw new Error(
                     "cannot call `ctx.setMyCommands` on an update with no `chat` property",
                 );
             }
-            commands = ensureArray(commands).concat(moreCommands);
 
-            await Promise.all(
-                MyCommandParams.from(commands, ctx.chat.id)
-                    .map((args) => ctx.api.raw.setMyCommands(args)),
-            );
+            try {
+                const commandParams = MyCommandParams.from(
+                    ensureArray(commands),
+                    ctx.chat.id,
+                );
+
+                await setBotCommands(ctx.api, commandParams, options);
+            } catch (error) {
+                if (error instanceof CustomPrefixNotSupportedError) {
+                    throw new Error(
+                        `Tried to call setMyCommands with one or more commands that have a custom prefix, which is not supported by the Bot API. Offending command(s): ${
+                            error.offendingCommands.join(", ")
+                        }`,
+                    );
+                }
+            }
         };
 
         ctx.getNearestCommand = (commands, options) => {

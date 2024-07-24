@@ -38,10 +38,10 @@ export function dummyCtx({ userInput, language, noChat }: {
 }) {
     const u = { id: 42, first_name: "yo", language_code: language } as User;
     const c = { id: 100, type: "private" } as Chat;
-    const m = noChat ? undefined : {
+    const m = {
         text: userInput,
         from: u,
-        chat: c,
+        chat: noChat ? undefined : c,
     } as Message;
     const update = {
         message: m,

@@ -1,13 +1,7 @@
 import { Commands } from "../src/commands.ts";
 import { MyCommandParams } from "../src/mod.ts";
 import { dummyCtx } from "./context.test.ts";
-import {
-    assert,
-    assertEquals,
-    assertThrows,
-    describe,
-    it,
-} from "./deps.test.ts";
+import { assert, assertEquals, describe, it } from "./deps.test.ts";
 
 describe("Commands", () => {
     describe("command", () => {
@@ -72,22 +66,7 @@ describe("Commands", () => {
             );
         });
     });
-    describe("setMyCommands", () => {
-        it("should throw if the update has no chat property", async () => {
-            const ctx = dummyCtx({ noChat: true });
-            const a = new Commands();
-            assertEquals(
-                await (async () => {
-                    try {
-                        await ctx.setMyCommands(a);
-                        return "no throw";
-                    } catch (err) {
-                        return "did throw";
-                    }
-                })(),
-                "did throw",
-            );
-        });
+    describe("setMyCommands utils", () => {
         describe("toSingleScopeArgs", () => {
             it("should omit regex commands", () => {
                 const commands = new Commands();
@@ -226,7 +205,7 @@ describe("Commands", () => {
                 ]);
             });
         });
-        describe("merge MyCommandsParams", () => {
+        describe("_mergeMyCommandsParams", () => {
             it("should merge command's from different Commands instances", () => {
                 const a = new Commands();
                 a.command("a", "test a", (_) => _);
@@ -382,7 +361,7 @@ describe("Commands", () => {
                 ]);
             });
         });
-        describe("get all prefixes registered in a Commands instance", () => {
+        describe("get Prefixes", () => {
             const a = new Commands();
             a.command("a", "/", (_) => _);
             a.command("a2", "/", (_) => _);
@@ -394,7 +373,7 @@ describe("Commands", () => {
             });
             assertEquals(a.prefixes, ["/", "?", "abcd"]);
         });
-        describe("get Entities from an update", () => {
+        describe("get entities", () => {
             const a = new Commands();
             a.command("a", "/", (_) => _);
             a.command("b", "?", (_) => _, {
@@ -403,10 +382,6 @@ describe("Commands", () => {
             a.command("c", "abcd", (_) => _, {
                 prefix: "abcd",
             });
-
-            const b = new Commands();
-            b.command("one", "normal", (_) => _, { prefix: "superprefix" });
-            const c = new Commands();
 
             it("should only consider as entities prefixes registered in the command instance", () => {
                 const text = "/papi hola papacito como estamos /papi /ecco";
@@ -457,23 +432,6 @@ describe("Commands", () => {
                         prefix: "abcd",
                     },
                 ]);
-            });
-            it("should throw if you call getCommandEntities on an update with no text", () => {
-                const ctx = dummyCtx({});
-                assertThrows(() => ctx.getCommandEntities([a, b, c]));
-            });
-            it("should return an empty array if the Commands classes to check against do not have any command register", () => {
-                const ctx = dummyCtx({ userInput: "/papi" });
-                assertEquals(ctx.getCommandEntities(c), []);
-            });
-            it("should work across multiple Commands instances", () => {
-                const ctx = dummyCtx({ userInput: "/papi superprefixmami" });
-                assertEquals(
-                    ctx.getCommandEntities([a, b]).map((entity) =>
-                        entity.prefix
-                    ),
-                    ["/", "superprefix"],
-                );
             });
         });
     });

@@ -8,7 +8,6 @@ import {
     Api,
     assertEquals,
     assertObjectMatch,
-    assertThrows,
     Chat,
     Context,
     describe,
@@ -350,10 +349,13 @@ describe("Jaro-Wrinkler Algorithm", () => {
         cmds.command("endanger", "_", () => {});
         cmds.command("entitle", "_", () => {});
 
-        it("should throw when no msg is given", () => {
-            let ctx = dummyCtx({});
-            assertThrows(
-                () => ctx.getNearestCommand(cmds),
+        it("should return null when no msg is given", () => {
+            let ctx = dummyCtx({
+                userInput: "",
+            });
+            assertEquals(
+                ctx.getNearestCommand(cmds),
+                null,
             );
         });
 

@@ -3,20 +3,13 @@ import {
     fuzzyMatch,
     JaroWinklerDistance,
 } from "../src/jaro-winkler.ts";
-import { CommandGroup, commands, CommandsFlavor } from "../src/mod.ts";
+import { CommandGroup } from "../src/mod.ts";
 import {
-    Api,
     assertEquals,
-    assertObjectMatch,
     assertThrows,
-    Chat,
     Context,
     describe,
     it,
-    Message,
-    Update,
-    User,
-    UserFromGetMe,
 } from "./deps.test.ts";
 import { dummyCtx } from "./context.test.ts";
 

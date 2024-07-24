@@ -305,6 +305,13 @@ export class CommandGroup<C extends Context> {
     }
 }
 
+type haveCommandLike<
+    C extends Context = Context,
+    CF extends CommandsFlavor<C> = CommandsFlavor<C>,
+> = C & CF & {
+    commandSuggestion: string | null;
+};
+
 export function commandNotFound<
     CF extends CommandsFlavor<C>,
     C extends Context = Context,
@@ -314,11 +321,11 @@ export function commandNotFound<
 ) {
     return function (
         ctx: C,
-    ): ctx is C & CF & {
-        commandSuggestion: string | null;
-    } {
+    ): ctx is haveCommandLike<C, CF> {
         if (containsCommands(ctx, commands)) {
-            ctx.commandSuggestion = ctx.getNearestCommand(commands, opts);
+            (ctx as haveCommandLike<C, CF>)
+                .commandSuggestion = (ctx as haveCommandLike<C, CF>)
+                    .getNearestCommand(commands, opts);
             return true;
         }
         return false;
@@ -326,17 +333,20 @@ export function commandNotFound<
 }
 
 function containsCommands<
-    CF extends CommandsFlavor<C>,
     C extends Context,
 >(
     ctx: C,
     commands: CommandGroup<C> | CommandGroup<C>[],
-): ctx is C & CF & {
-    commandSuggestion: string | null;
-} {
-    const allPrefixes = [
-        ...new Set(ensureArray(commands).flatMap((cmds) => cmds.prefixes)),
+) {
+    let allPrefixes = [
+        ...new Set(
+            ensureArray(commands).flatMap((cmds) => cmds.prefixes),
+        ),
     ];
+    if (allPrefixes.length < 1) {
+        allPrefixes = ["/"];
+    }
+
     for (const prefix of allPrefixes) {
         const regex = getCommandsRegex(prefix);
         if (ctx.hasText(regex)) return true;

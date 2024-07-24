@@ -4,7 +4,6 @@ import { dummyCtx } from "./context.test.ts";
 import {
     assert,
     assertEquals,
-    assertRejects,
     assertThrows,
     describe,
     it,
@@ -53,10 +52,20 @@ describe("Commands", () => {
         });
     });
     describe("setMyCommands", () => {
-        it("should throw if the update has no chat property", () => {
+        it("should throw if the update has no chat property", async () => {
             const ctx = dummyCtx({ noChat: true });
             const a = new Commands();
-            assertRejects(() => ctx.setMyCommands(a));
+            assertEquals(
+                await (async () => {
+                    try {
+                        await ctx.setMyCommands(a);
+                        return "no throw";
+                    } catch (err) {
+                        return "did throw";
+                    }
+                })(),
+                "did throw",
+            );
         });
         describe("toSingleScopeArgs", () => {
             it("should omit regex commands", () => {

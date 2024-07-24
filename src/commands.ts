@@ -71,9 +71,15 @@ export class Commands<C extends Context> {
         this._commandOptions = options;
     }
 
-    private _addCommandToScope(scope: BotCommandScope, command: Command<C>) {
+    private _addCommandToScope(
+        scope: BotCommandScope,
+        command: Command<C>,
+    ) {
         const commands = this._scopes.get(JSON.stringify(scope)) ?? [];
-        this._scopes.set(JSON.stringify(scope), commands.concat([command]));
+        this._scopes.set(
+            JSON.stringify(scope),
+            commands.concat([command]),
+        );
     }
 
     private _populateMetadata() {
@@ -133,7 +139,11 @@ export class Commands<C extends Context> {
             : (handlerOrOptions as Partial<CommandOptions>) ??
                 this._commandOptions;
 
-        const command = new Command<C>(name, description, options);
+        const command = new Command<C>(
+            name,
+            description,
+            options,
+        );
         if (handler) {
             command.addToScope({ type: "default" }, handler);
         }
@@ -150,7 +160,12 @@ export class Commands<C extends Context> {
         this._populateMetadata();
         const params: SetMyCommandsParams[] = [];
 
-        for (const [scope, commands] of this._scopes.entries()) {
+        for (
+            const [
+                scope,
+                commands,
+            ] of this._scopes.entries()
+        ) {
             for (const language of this._languages) {
                 params.push({
                     scope: JSON.parse(scope),
@@ -158,13 +173,19 @@ export class Commands<C extends Context> {
                         ? undefined
                         : language,
                     commands: commands
-                        .filter((command) => typeof command.name === "string")
+                        .filter(
+                            (command) =>
+                                typeof command.name ===
+                                    "string",
+                        )
                         .map((command) => command.toObject(language)),
                 });
             }
         }
 
-        return params.filter((params) => params.commands.length > 0);
+        return params.filter(
+            (params) => params.commands.length > 0,
+        );
     }
 
     /**
@@ -181,8 +202,12 @@ export class Commands<C extends Context> {
                 scope,
                 language_code: language === "default" ? undefined : language,
                 commands: this._commands
-                    .filter((command) => command.scopes.length)
-                    .filter((command) => typeof command.name === "string")
+                    .filter(
+                        (command) => command.scopes.length,
+                    )
+                    .filter(
+                        (command) => typeof command.name === "string",
+                    )
                     .map((command) => command.toObject(language)),
             });
         }
@@ -227,7 +252,12 @@ export class Commands<C extends Context> {
             .flat()
             .flatMap((command) => {
                 const elements = [];
-                for (const [language, local] of command.languages.entries()) {
+                for (
+                    const [
+                        language,
+                        local,
+                    ] of command.languages.entries()
+                ) {
                     elements.push({
                         name: local.name instanceof RegExp
                             ? local.name.source
@@ -235,12 +265,16 @@ export class Commands<C extends Context> {
                         language,
                         prefix: command.prefix,
                         scopes: command.scopes,
-                        description: command.getLocalizedDescription(language),
+                        description: command.getLocalizedDescription(
+                            language,
+                        ),
                     });
                 }
                 if (filterLanguage) {
                     const filtered = elements.filter(
-                        (command) => command.language === filterLanguage,
+                        (command) =>
+                            command.language ===
+                                filterLanguage,
                     );
                     const defaulted = elements.filter(
                         (command) => command.language === "default",
@@ -259,7 +293,9 @@ export class Commands<C extends Context> {
 
     middleware() {
         if (this._cachedComposerInvalidated) {
-            this._cachedComposer = new Composer(...this._commands);
+            this._cachedComposer = new Composer(
+                ...this._commands,
+            );
             this._cachedComposerInvalidated = false;
         }
         return this._cachedComposer.middleware();
@@ -277,7 +313,11 @@ export class Commands<C extends Context> {
      */
     public get prefixes(): string[] {
         return [
-            ...new Set(this._commands.flatMap((command) => command.prefix)),
+            ...new Set(
+                this._commands.flatMap(
+                    (command) => command.prefix,
+                ),
+            ),
         ];
     }
 

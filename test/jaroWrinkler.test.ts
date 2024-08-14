@@ -1,11 +1,11 @@
-import { Commands } from "../src/mod.ts";
 import {
     distance,
     fuzzyMatch,
     JaroWinklerDistance,
 } from "../src/utils/jaro-winkler.ts";
+import { CommandGroup } from "../src/mod.ts";
 import { dummyCtx } from "./context.test.ts";
-import { assertEquals, Context, describe, it } from "./deps.test.ts";
+import { assertEquals, assertThrows, Context, describe, it } from "./deps.test.ts";
 
 describe("Jaro-Wrinkler Algorithm", () => {
     it("should return value 0, because the empty string was given", () => {
@@ -29,7 +29,7 @@ describe("Jaro-Wrinkler Algorithm", () => {
 
     describe("Fuzzy Matching", () => {
         it("should return the found command", () => {
-            const cmds = new Commands<Context>();
+            const cmds = new CommandGroup<Context>();
 
             cmds.command(
                 "start",
@@ -43,7 +43,7 @@ describe("Jaro-Wrinkler Algorithm", () => {
         });
 
         it("should return null because command doesn't exist", () => {
-            const cmds = new Commands<Context>();
+            const cmds = new CommandGroup<Context>();
 
             cmds.command(
                 "start",
@@ -58,7 +58,7 @@ describe("Jaro-Wrinkler Algorithm", () => {
         });
 
         it("should work for simple regex commands", () => {
-            const cmds = new Commands<Context>();
+            const cmds = new CommandGroup<Context>();
             cmds.command(
                 /magical_\d/,
                 "Magical Command",
@@ -72,7 +72,7 @@ describe("Jaro-Wrinkler Algorithm", () => {
             );
         });
         it("should work for localized regex", () => {
-            const cmds = new Commands<Context>();
+            const cmds = new CommandGroup<Context>();
             cmds.command(
                 /magical_(a|b)/,
                 "Magical Command",
@@ -93,7 +93,7 @@ describe("Jaro-Wrinkler Algorithm", () => {
     });
     describe("Serialize commands for FuzzyMatch", () => {
         describe("toNameAndPrefix", () => {
-            const cmds = new Commands<Context>();
+            const cmds = new CommandGroup<Context>();
             cmds.command("butcher", "_", () => {}, { prefix: "?" })
                 .localize("es", "carnicero", "a")
                 .localize("it", "macellaio", "b");
@@ -167,7 +167,7 @@ describe("Jaro-Wrinkler Algorithm", () => {
             });
         });
         describe("should return the command localization related to the user lang", () => {
-            const cmds = new Commands<Context>();
+            const cmds = new CommandGroup<Context>();
             cmds.command("duke", "sniper", () => {})
                 .localize("es", "duque", "_")
                 .localize("fr", "duc", "_")
@@ -257,7 +257,7 @@ describe("Jaro-Wrinkler Algorithm", () => {
             });
         });
         describe("should return the command localization related to the user lang for similar command names from different command classes", () => {
-            const cmds = new Commands<Context>();
+            const cmds = new CommandGroup<Context>();
             cmds.command("push", "push", () => {})
                 .localize("fr", "pousser", "a")
                 .localize("pt", "empurrar", "b");
@@ -321,7 +321,7 @@ describe("Jaro-Wrinkler Algorithm", () => {
         });
     });
     describe("Usage inside ctx", () => {
-        const cmds = new Commands<Context>();
+        const cmds = new CommandGroup<Context>();
         cmds.command("butcher", "_", () => {}, { prefix: "+" })
             .localize("es", "carnicero", "_")
             .localize("it", "macellaio", "_");
@@ -337,14 +337,9 @@ describe("Jaro-Wrinkler Algorithm", () => {
         cmds.command("endanger", "_", () => {});
         cmds.command("entitle", "_", () => {});
 
-        it("should return null when no msg is given", () => {
-            let ctx = dummyCtx({
-                userInput: "",
-            });
-            assertEquals(
-                ctx.getNearestCommand(cmds),
-                null,
-            );
+        it("should throw when no msg is given", () => {
+            let ctx = dummyCtx({});
+            assertThrows(() => ctx.getNearestCommand(cmds));
         });
 
         describe("should ignore localization when set to, and search trough all commands", () => {
@@ -482,12 +477,12 @@ describe("Jaro-Wrinkler Algorithm", () => {
         });
     });
     describe("Test multiple commands instances", () => {
-        const cmds = new Commands<Context>();
+        const cmds = new CommandGroup<Context>();
         cmds.command("bread", "_", () => {})
             .localize("es", "pan", "_")
             .localize("fr", "pain", "_");
 
-        const cmds2 = new Commands<Context>();
+        const cmds2 = new CommandGroup<Context>();
 
         cmds2.command("dad", "_", () => {})
             .localize("es", "papa", "_")

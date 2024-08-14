@@ -1,4 +1,4 @@
-import { Command } from "./command.ts";
+import { Command, CommandsFlavor } from "./mod.ts";
 import {
     Api,
     BotCommand,
@@ -10,11 +10,12 @@ import {
     Middleware,
 } from "./deps.deno.ts";
 import type { CommandElementals, CommandOptions } from "./types.ts";
-import { type MaybeArray } from "./utils/array.ts";
+import { type MaybeArray, ensureArray, getCommandsRegex } from "./utils/array.ts";
 import {
     setBotCommands,
     SetBotCommandsOptions,
 } from "./utils/set-bot-commands.ts";
+import { JaroWinklerOptions } from "./utils/jaro-winkler.ts"
 
 /**
  * Interface for grouping {@link BotCommand}s that might (or not)
@@ -67,14 +68,14 @@ const isMiddleware = <C extends Context>(
  *
  * @example
  * ```typescript
- * const myCommands = new Commands()
+ * const myCommands = new CommandGroup()
  * commands.command("start", "start the bot configuration", (ctx) => ctx.reply("Hello there!"))
  *
  * // Registers the commands with the bot instance.
  * bot.use(myCommands)
  * ```
  */
-export class Commands<C extends Context> {
+export class CommandGroup<C extends Context> {
     private _languages: Set<LanguageCode | "default"> = new Set();
     private _scopes: Map<string, Array<Command<C>>> = new Map();
     private _commands: Command<C>[] = [];
@@ -338,6 +339,22 @@ export class Commands<C extends Context> {
     }
 
     /**
+     * @returns all {@link Command}s contained in the instance
+     */
+    public get commands(): Command<C>[] {
+        return this._commands;
+    }
+
+    /**
+     * @returns all prefixes registered in this instance
+     */
+    public get prefixes(): string[] {
+        return [
+            ...new Set(this._commands.flatMap((command) => command.prefix)),
+        ];
+    }
+
+    /**
      * Replaces the `toString` method on Deno
      *
      * @see toString
@@ -354,4 +371,53 @@ export class Commands<C extends Context> {
     [Symbol.for("nodejs.util.inspect.custom")]() {
         return this.toString();
     }
+}
+
+type HaveCommandLike<
+    C extends Context = Context,
+    CF extends CommandsFlavor<C> = CommandsFlavor<C>,
+> = C & CF & {
+    commandSuggestion: string | null;
+};
+
+export function commandNotFound<
+    CF extends CommandsFlavor<C>,
+    C extends Context = Context,
+>(
+    commands: CommandGroup<C> | CommandGroup<C>[],
+    opts: Omit<Partial<JaroWinklerOptions>, "language"> = {},
+) {
+    return function (
+        ctx: C,
+    ): ctx is HaveCommandLike<C, CF> {
+        if (containsCommands(ctx, commands)) {
+            (ctx as HaveCommandLike<C, CF>)
+                .commandSuggestion = (ctx as HaveCommandLike<C, CF>)
+                    .getNearestCommand(commands, opts);
+            return true;
+        }
+        return false;
+    };
+}
+
+function containsCommands<
+    C extends Context,
+>(
+    ctx: C,
+    commands: CommandGroup<C> | CommandGroup<C>[],
+) {
+    let allPrefixes = [
+        ...new Set(
+            ensureArray(commands).flatMap((cmds) => cmds.prefixes),
+        ),
+    ];
+    if (allPrefixes.length < 1) {
+        allPrefixes = ["/"];
+    }
+
+    for (const prefix of allPrefixes) {
+        const regex = getCommandsRegex(prefix);
+        if (ctx.hasText(regex)) return true;
+    }
+    return false;
 }

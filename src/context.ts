@@ -1,11 +1,12 @@
-import { Commands } from "./commands.ts";
+import { CommandGroup } from "./commands.ts";
 import { BotCommandScopeChat, Context, NextFunction } from "./deps.deno.ts";
 import { SetMyCommandsParams } from "./mod.ts";
-import { ensureArray } from "./utils/array.ts";
+import { BotCommandEntity } from "./types.ts";
+import { ensureArray, getCommandsRegex } from "./utils/array.ts";
 import { fuzzyMatch, JaroWinklerOptions } from "./utils/jaro-winkler.ts";
 import {
-    setBotCommands,
-    SetBotCommandsOptions,
+  setBotCommands,
+  SetBotCommandsOptions,
 } from "./utils/set-bot-commands.ts";
 
 export interface CommandsFlavor<C extends Context = Context> extends Context {
@@ -32,7 +33,7 @@ export interface CommandsFlavor<C extends Context = Context> extends Context {
      * @returns Promise with the result of the operations
      */
     setMyCommands: (
-        commands: Commands<C> | Commands<C>[],
+        commands: CommandGroup<C> | CommandGroup<C>[],
         options?: SetBotCommandsOptions,
     ) => Promise<void>;
     /**
@@ -44,9 +45,17 @@ export interface CommandsFlavor<C extends Context = Context> extends Context {
      * @returns The nearest command or `null`
      */
     getNearestCommand: (
-        commands: Commands<C> | Commands<C>[],
+        commands: CommandGroup<C> | CommandGroup<C>[],
         options?: Omit<Partial<JaroWinklerOptions>, "language">,
     ) => string | null;
+
+    /**
+     * @param commands
+     * @returns command entities hydrated with the custom prefixes
+     */
+    getCommandEntities: (
+        commands: CommandGroup<C> | CommandGroup<C>[],
+    ) => BotCommandEntity[];
 }
 
 /**
@@ -81,11 +90,19 @@ export function commands<C extends Context>() {
         };
 
         ctx.getNearestCommand = (commands, options) => {
-            if (ctx.msg?.text) {
-                commands = ensureArray(commands);
-                const results = commands.map((commands) => {
-                    const userInput = ctx.msg!.text!.substring(1);
-                    const result = fuzzyMatch(userInput, commands, {
+            if (!ctx.has(":text")) {
+                throw new Error(
+                    "cannot call `ctx.getNearestCommand` on an update with no `text`",
+                );
+            }
+
+            const results = ensureArray(commands)
+                .map((commands) => {
+                    const firstMatch = ctx.getCommandEntities(commands)[0];
+                    const commandLike =
+                        firstMatch?.text.replace(firstMatch.prefix, "") ||
+                        "";
+                    const result = fuzzyMatch(commandLike, commands, {
                         ...options,
                         language: !options?.ignoreLocalization
                             ? ctx.from?.language_code
@@ -93,12 +110,50 @@ export function commands<C extends Context>() {
                     });
                     return result;
                 }).sort((a, b) => (b?.similarity ?? 0) - (a?.similarity ?? 0));
-                const result = results[0];
-                if (!result || !result.command) return null;
 
-                return result.command.prefix + result.command.name;
+            const result = results[0];
+
+            if (!result || !result.command) return null;
+
+            return result.command.prefix + result.command.name;
+        };
+
+        ctx.getCommandEntities = (
+            commands: CommandGroup<C> | CommandGroup<C>[],
+        ) => {
+            if (!ctx.has(":text")) {
+                throw new Error(
+                    "cannot call `ctx.commandEntities` on an update with no `text`",
+                );
             }
-            return null;
+            const text = ctx.msg.text;
+            if (!text) return [];
+            const prefixes = ensureArray(commands).flatMap((cmds) =>
+                cmds.prefixes
+            );
+
+            if (!prefixes.length) return [];
+
+            const regexes = prefixes.map(
+                (prefix) => getCommandsRegex(prefix),
+            );
+            const entities = regexes.flatMap((regex) => {
+                let match: RegExpExecArray | null;
+                const matches = [];
+                while ((match = regex.exec(text)) !== null) {
+                    const text = match[0].trim();
+                    matches.push({
+                        text,
+                        offset: match.index,
+                        prefix: match.groups!.prefix,
+                        type: "bot_command",
+                        length: text.length,
+                    });
+                }
+                return matches as BotCommandEntity[];
+            });
+
+            return entities;
         };
 
         return next();
@@ -132,7 +187,7 @@ export class MyCommandParams {
      * @returns an array of {@link SetMyCommandsParams} grouped by language
      */
     static from<C extends Context>(
-        commands: Commands<C>[],
+        commands: CommandGroup<C>[],
         chat_id: BotCommandScopeChat["chat_id"],
     ) {
         const serializedCommands = this._serialize(commands, chat_id);
@@ -151,7 +206,7 @@ export class MyCommandParams {
     }
 
     /**
-     * Serializes one or multiple {@link Commands} instances, each one into their respective
+     * Serializes one or multiple {@link CommandGroup} instances, each one into their respective
      * single scoped SetMyCommandsParams version.
      * @example
         ```ts
@@ -169,7 +224,7 @@ export class MyCommandParams {
      * @returns an array of scoped {@link SetMyCommandsParams} mapped from their respective Commands instances
      */
     static _serialize<C extends Context>(
-        commandsArr: Commands<C>[],
+        commandsArr: CommandGroup<C>[],
         chat_id: BotCommandScopeChat["chat_id"],
     ) {
         return commandsArr.map((

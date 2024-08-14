@@ -20,6 +20,7 @@ export type {
     BotCommandScopeChat,
     Chat,
     LanguageCode,
+    MessageEntity
 } from "@grammyjs/types";
 
 export { LanguageCodes } from "@grammyjs/types";

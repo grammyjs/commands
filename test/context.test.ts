@@ -51,18 +51,18 @@ describe("commands", () => {
     });
 });
 
-export function dummyCtx({ userInput, language, noChat }: {
+export function dummyCtx({ userInput, language, noMessage }: {
     userInput?: string;
     language?: string;
-    noChat?: boolean;
+    noMessage?: boolean;
 }) {
     const u = { id: 42, first_name: "yo", language_code: language } as User;
     const c = { id: 100, type: "private" } as Chat;
-    const m = {
+    const m = noMessage ? undefined : ({
         text: userInput,
         from: u,
-        chat: noChat ? undefined : c,
-    } as Message;
+        chat: c,
+    } as Message);
     const update = {
         message: m,
     } as Update;

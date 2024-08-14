@@ -15,7 +15,7 @@ import { CustomPrefixNotSupportedError } from "./utils/errors.ts";
 import {
     setBotCommands,
     SetBotCommandsOptions,
-} from "./utils/set-bot-commants.ts";
+} from "./utils/set-bot-commands.ts";
 
 /**
  * Interface for grouping {@link BotCommand}s that might (or not)

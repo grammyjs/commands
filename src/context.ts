@@ -7,7 +7,7 @@ import { fuzzyMatch, JaroWinklerOptions } from "./utils/jaro-winkler.ts";
 import {
     setBotCommands,
     SetBotCommandsOptions,
-} from "./utils/set-bot-commants.ts";
+} from "./utils/set-bot-commands.ts";
 
 export interface CommandsFlavor<C extends Context = Context> extends Context {
     /**
@@ -66,12 +66,16 @@ export function commands<C extends Context>() {
             }
 
             try {
-                const commandParams = MyCommandParams.from(
+                const currentChatCommandParams = MyCommandParams.from(
                     ensureArray(commands),
                     ctx.chat.id,
                 );
 
-                await setBotCommands(ctx.api, commandParams, options);
+                await setBotCommands(
+                    ctx.api,
+                    currentChatCommandParams,
+                    options,
+                );
             } catch (error) {
                 if (error instanceof CustomPrefixNotSupportedError) {
                     throw new Error(

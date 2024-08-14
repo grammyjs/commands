@@ -37,7 +37,7 @@ describe("commands", () => {
 
     describe("setMyCommands", () => {
         it("should throw an error if there is no chat", async () => {
-            const context = dummyCtx({ noChat: true });
+            const context = dummyCtx({ noMessage: true });
 
             const middleware = commands();
             middleware(context, async () => {});

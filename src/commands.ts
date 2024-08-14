@@ -1,19 +1,19 @@
 import { Command } from "./command.ts";
 import {
-  Api,
-  BotCommand,
-  BotCommandScope,
-  CommandContext,
-  Composer,
-  Context,
-  type LanguageCode,
-  Middleware,
+    Api,
+    BotCommand,
+    BotCommandScope,
+    CommandContext,
+    Composer,
+    Context,
+    type LanguageCode,
+    Middleware,
 } from "./deps.deno.ts";
 import type { CommandElementals, CommandOptions } from "./types.ts";
 import { type MaybeArray } from "./utils/array.ts";
 import {
-  setBotCommands,
-  SetBotCommandsOptions,
+    setBotCommands,
+    SetBotCommandsOptions,
 } from "./utils/set-bot-commands.ts";
 
 /**
@@ -21,14 +21,14 @@ import {
  * be related to each other by scope and/or language.
  */
 export interface SetMyCommandsParams {
-  /** If defined: scope on which the commands will take effect */
-  scope?: BotCommandScope;
-  /** If defined: Language on which the commands will take effect.
-   * Two letter abbreviation in ISO_639 standard: https://en.wikipedia.org/wiki/List_of_ISO_639_language_codes
-   */
-  language_code?: LanguageCode;
-  /** Commands that can be each one passed to a SetMyCommands Call */
-  commands: BotCommand[];
+    /** If defined: scope on which the commands will take effect */
+    scope?: BotCommandScope;
+    /** If defined: Language on which the commands will take effect.
+     * Two letter abbreviation in ISO_639 standard: https://en.wikipedia.org/wiki/List_of_ISO_639_language_codes
+     */
+    language_code?: LanguageCode;
+    /** Commands that can be each one passed to a SetMyCommands Call */
+    commands: BotCommand[];
 }
 
 /**
@@ -36,29 +36,29 @@ export interface SetMyCommandsParams {
  * with the Bot API
  */
 export interface UncompliantCommand {
-  /** Name of the uncompliant command */
-  name: string;
-  /** Reason why the command was considered uncompliant */
-  reason: string;
-  /** Language in which the command is uncompliant */
-  language: LanguageCode | "default";
+    /** Name of the uncompliant command */
+    name: string;
+    /** Reason why the command was considered uncompliant */
+    reason: string;
+    /** Language in which the command is uncompliant */
+    language: LanguageCode | "default";
 }
 
 const isMiddleware = <C extends Context>(
-  obj: unknown,
+    obj: unknown,
 ): obj is MaybeArray<Middleware<C>> => {
-  if (!obj) return false;
-  if (Array.isArray(obj)) return obj.every(isMiddleware);
-  const objType = typeof obj;
+    if (!obj) return false;
+    if (Array.isArray(obj)) return obj.every(isMiddleware);
+    const objType = typeof obj;
 
-  switch (objType) {
-    case "function":
-      return true;
-    case "object":
-      return Object.keys(obj).includes("middleware");
-  }
+    switch (objType) {
+        case "function":
+            return true;
+        case "object":
+            return Object.keys(obj).includes("middleware");
+    }
 
-  return false;
+    return false;
 };
 
 /**
@@ -75,275 +75,283 @@ const isMiddleware = <C extends Context>(
  * ```
  */
 export class Commands<C extends Context> {
-  private _languages: Set<LanguageCode | "default"> = new Set();
-  private _scopes: Map<string, Array<Command<C>>> = new Map();
-  private _commands: Command<C>[] = [];
+    private _languages: Set<LanguageCode | "default"> = new Set();
+    private _scopes: Map<string, Array<Command<C>>> = new Map();
+    private _commands: Command<C>[] = [];
 
-  private _cachedComposer: Composer<C> = new Composer();
-  private _cachedComposerInvalidated: boolean = false;
+    private _cachedComposer: Composer<C> = new Composer();
+    private _cachedComposerInvalidated: boolean = false;
 
-  private _commandOptions: Partial<CommandOptions> = {};
+    private _commandOptions: Partial<CommandOptions> = {};
 
-  constructor(options: Partial<CommandOptions> = {}) {
-    this._commandOptions = options;
-  }
+    constructor(options: Partial<CommandOptions> = {}) {
+        this._commandOptions = options;
+    }
 
-  private _addCommandToScope(scope: BotCommandScope, command: Command<C>) {
-    const commands = this._scopes.get(JSON.stringify(scope)) ?? [];
-    this._scopes.set(JSON.stringify(scope), commands.concat([command]));
-  }
+    private _addCommandToScope(scope: BotCommandScope, command: Command<C>) {
+        const commands = this._scopes.get(JSON.stringify(scope)) ?? [];
+        this._scopes.set(JSON.stringify(scope), commands.concat([command]));
+    }
 
-  private _populateMetadata() {
-    this._languages.clear();
-    this._scopes.clear();
+    private _populateMetadata() {
+        this._languages.clear();
+        this._scopes.clear();
 
-    this._commands.forEach((command) => {
-      for (const scope of command.scopes) {
-        this._addCommandToScope(scope, command);
-      }
+        this._commands.forEach((command) => {
+            for (const scope of command.scopes) {
+                this._addCommandToScope(scope, command);
+            }
 
-      for (const language of command.languages.keys()) {
-        this._languages.add(language);
-      }
-    });
-  }
-
-  /**
-   * Registers a new command with a default handler.
-   * @param name Default command name
-   * @param description Default command description
-   * @param handler Default command handler
-   * @param options Extra options that should apply only to this command
-   * @returns An instance of the `Command` class
-   */
-  public command(
-    name: string | RegExp,
-    description: string,
-    handler: MaybeArray<Middleware<CommandContext<C>>>,
-    options?: Partial<CommandOptions>,
-  ): Command<C>;
-  /**
-   * Registers a new command with no handlers.
-   * @param name Default command name
-   * @param description Default command description
-   * @param options Extra options that should apply only to this command
-   * @returns An instance of the `Command` class
-   */
-  public command(
-    name: string | RegExp,
-    description: string,
-    options?: Partial<CommandOptions>,
-  ): Command<C>;
-  public command(
-    name: string | RegExp,
-    description: string,
-    handlerOrOptions?:
-      | MaybeArray<Middleware<CommandContext<C>>>
-      | Partial<CommandOptions>,
-    _options?: Partial<CommandOptions>,
-  ) {
-    const handler = isMiddleware(handlerOrOptions)
-      ? handlerOrOptions
-      : undefined;
-    const options = handler
-      ? _options ?? this._commandOptions
-      : handlerOrOptions as Partial<CommandOptions> ??
-        this._commandOptions;
-
-    const command = new Command<C>(name, description, options);
-    if (handler) command.addToScope({ type: "default" }, handler);
-
-    this._commands.push(command);
-    this._cachedComposerInvalidated = true;
-    return command;
-  }
-  /**
-   * Serializes the commands into multiple objects that can each be passed to a `setMyCommands` call.
-   *
-   * @param options Options for the serialization
-   * @returns One item for each combination of command + scope + language
-   */
-  public toArgs() {
-    this._populateMetadata();
-    const scopes: SetMyCommandsParams[] = [];
-    const uncompliantCommands: UncompliantCommand[] = [];
-
-    for (const [scope, commands] of this._scopes.entries()) {
-      for (const language of this._languages) {
-        const compliantScopedCommands: Command<C>[] = [];
-
-        commands.forEach((command) => {
-          const [isApiCompliant, reason] = command.isApiCompliant(language);
-          if (isApiCompliant) return compliantScopedCommands.push(command);
-
-          uncompliantCommands.push({
-            name: command.stringName,
-            reason: reason,
-            language,
-          });
+            for (const language of command.languages.keys()) {
+                this._languages.add(language);
+            }
         });
-
-        if (compliantScopedCommands.length) {
-          scopes.push({
-            scope: JSON.parse(scope),
-            language_code: language === "default" ? undefined : language,
-            commands: compliantScopedCommands.map((command) =>
-              command.toObject(language)
-            ),
-          });
-        }
-      }
     }
 
-    return {
-      scopes,
-      uncompliantCommands,
-    };
-  }
+    /**
+     * Registers a new command with a default handler.
+     * @param name Default command name
+     * @param description Default command description
+     * @param handler Default command handler
+     * @param options Extra options that should apply only to this command
+     * @returns An instance of the `Command` class
+     */
+    public command(
+        name: string | RegExp,
+        description: string,
+        handler: MaybeArray<Middleware<CommandContext<C>>>,
+        options?: Partial<CommandOptions>,
+    ): Command<C>;
+    /**
+     * Registers a new command with no handlers.
+     * @param name Default command name
+     * @param description Default command description
+     * @param options Extra options that should apply only to this command
+     * @returns An instance of the `Command` class
+     */
+    public command(
+        name: string | RegExp,
+        description: string,
+        options?: Partial<CommandOptions>,
+    ): Command<C>;
+    public command(
+        name: string | RegExp,
+        description: string,
+        handlerOrOptions?:
+            | MaybeArray<Middleware<CommandContext<C>>>
+            | Partial<CommandOptions>,
+        _options?: Partial<CommandOptions>,
+    ) {
+        const handler = isMiddleware(handlerOrOptions)
+            ? handlerOrOptions
+            : undefined;
+        const options = handler
+            ? _options ?? this._commandOptions
+            : handlerOrOptions as Partial<CommandOptions> ??
+                this._commandOptions;
 
-  /**
-   * Serializes the commands of a single scope into objects that can each be passed to a `setMyCommands` call.
-   *
-   * @param scope Selected scope to be serialized
-   * @returns One item per command per language
-   */
-  public toSingleScopeArgs(
-    scope: BotCommandScope,
-  ) {
-    this._populateMetadata();
+        const command = new Command<C>(name, description, options);
+        if (handler) command.addToScope({ type: "default" }, handler);
 
-    const commandParams: SetMyCommandsParams[] = [];
+        this._commands.push(command);
+        this._cachedComposerInvalidated = true;
+        return command;
+    }
+    /**
+     * Serializes the commands into multiple objects that can each be passed to a `setMyCommands` call.
+     *
+     * @param options Options for the serialization
+     * @returns One item for each combination of command + scope + language
+     */
+    public toArgs() {
+        this._populateMetadata();
+        const scopes: SetMyCommandsParams[] = [];
+        const uncompliantCommands: UncompliantCommand[] = [];
 
-    const uncompliantCommands: UncompliantCommand[] = [];
-    for (const language of this._languages) {
-      const compliantCommands: Command<C>[] = [];
+        for (const [scope, commands] of this._scopes.entries()) {
+            for (const language of this._languages) {
+                const compliantScopedCommands: Command<C>[] = [];
 
-      this._commands.forEach((command) => {
-        const [isApiCompliant, reason] = command.isApiCompliant(language);
+                commands.forEach((command) => {
+                    const [isApiCompliant, reason] = command.isApiCompliant(
+                        language,
+                    );
+                    if (isApiCompliant) {
+                        return compliantScopedCommands.push(command);
+                    }
 
-        if (!isApiCompliant) {
-          return uncompliantCommands.push({
-            name: command.stringName,
-            reason: reason,
-            language,
-          });
+                    uncompliantCommands.push({
+                        name: command.stringName,
+                        reason: reason,
+                        language,
+                    });
+                });
+
+                if (compliantScopedCommands.length) {
+                    scopes.push({
+                        scope: JSON.parse(scope),
+                        language_code: language === "default"
+                            ? undefined
+                            : language,
+                        commands: compliantScopedCommands.map((command) =>
+                            command.toObject(language)
+                        ),
+                    });
+                }
+            }
         }
 
-        if (command.scopes.length) compliantCommands.push(command);
-      });
-
-      commandParams.push({
-        scope,
-        language_code: language === "default" ? undefined : language,
-        commands: compliantCommands.map((command) =>
-          command.toObject(language)
-        ),
-      });
+        return {
+            scopes,
+            uncompliantCommands,
+        };
     }
 
-    return { commandParams, uncompliantCommands };
-  }
+    /**
+     * Serializes the commands of a single scope into objects that can each be passed to a `setMyCommands` call.
+     *
+     * @param scope Selected scope to be serialized
+     * @returns One item per command per language
+     */
+    public toSingleScopeArgs(
+        scope: BotCommandScope,
+    ) {
+        this._populateMetadata();
 
-  /**
-   * Registers all commands to be displayed by clients according to their scopes and languages
-   * Calls `setMyCommands` for each language of each scope of each command.
-   *
-   * [!IMPORTANT]
-   * Calling this method with upperCased command names registered, will throw
-   * @see https://core.telegram.org/bots/api#botcommand
-   * @see https://core.telegram.org/method/bots.setBotCommands
-   *
-   * @param Instance of `bot` or { api: bot.api }
-   */
-  public async setCommands(
-    { api }: { api: Api },
-    options?: Partial<SetBotCommandsOptions>,
-  ) {
-    const { scopes, uncompliantCommands } = this.toArgs();
+        const commandParams: SetMyCommandsParams[] = [];
 
-    await setBotCommands(api, scopes, uncompliantCommands, options);
-  }
+        const uncompliantCommands: UncompliantCommand[] = [];
+        for (const language of this._languages) {
+            const compliantCommands: Command<C>[] = [];
 
-  /**
-   * Serialize all register commands into it's name, prefix and language
-   *
-   * @param filterLanguage if undefined, it returns all names
-   * else get only the locales for the given filterLanguage
-   * fallbacks to "default"
-   *
-   * @returns an array of {@link CommandElementals}
-   *
-   * Note: mainly used to serialize for {@link FuzzyMatch}
-   */
+            this._commands.forEach((command) => {
+                const [isApiCompliant, reason] = command.isApiCompliant(
+                    language,
+                );
 
-  public toElementals(
-    filterLanguage?: LanguageCode | "default",
-  ): CommandElementals[] {
-    this._populateMetadata();
+                if (!isApiCompliant) {
+                    return uncompliantCommands.push({
+                        name: command.stringName,
+                        reason: reason,
+                        language,
+                    });
+                }
 
-    return Array.from(this._scopes.values())
-      .flat()
-      .flatMap(
-        (command) => {
-          const elements = [];
-          for (
-            const [language, local] of command.languages.entries()
-          ) {
-            elements.push({
-              name: local.name instanceof RegExp
-                ? local.name.source
-                : local.name,
-              language,
-              prefix: command.prefix,
-              scopes: command.scopes,
-              description: command.getLocalizedDescription(
-                language,
-              ),
+                if (command.scopes.length) compliantCommands.push(command);
             });
-          }
-          if (filterLanguage) {
-            const filtered = elements.filter((command) =>
-              command.language === filterLanguage
-            );
-            const defaulted = elements.filter((command) =>
-              command.language === "default"
-            );
-            return filtered.length ? filtered[0] : defaulted[0];
-          } else return elements;
-        },
-      );
-  }
 
-  /**
-   * @returns A JSON serialized version of all the currently registered commands
-   */
-  public toString() {
-    return JSON.stringify(this);
-  }
+            commandParams.push({
+                scope,
+                language_code: language === "default" ? undefined : language,
+                commands: compliantCommands.map((command) =>
+                    command.toObject(language)
+                ),
+            });
+        }
 
-  middleware() {
-    if (this._cachedComposerInvalidated) {
-      this._cachedComposer = new Composer(...this._commands);
-      this._cachedComposerInvalidated = false;
+        return { commandParams, uncompliantCommands };
     }
-    return this._cachedComposer.middleware();
-  }
 
-  /**
-   * Replaces the `toString` method on Deno
-   *
-   * @see toString
-   */
-  [Symbol.for("Deno.customInspect")]() {
-    return this.toString();
-  }
+    /**
+     * Registers all commands to be displayed by clients according to their scopes and languages
+     * Calls `setMyCommands` for each language of each scope of each command.
+     *
+     * [!IMPORTANT]
+     * Calling this method with upperCased command names registered, will throw
+     * @see https://core.telegram.org/bots/api#botcommand
+     * @see https://core.telegram.org/method/bots.setBotCommands
+     *
+     * @param Instance of `bot` or { api: bot.api }
+     */
+    public async setCommands(
+        { api }: { api: Api },
+        options?: Partial<SetBotCommandsOptions>,
+    ) {
+        const { scopes, uncompliantCommands } = this.toArgs();
 
-  /**
-   * Replaces the `toString` method on Node.js
-   *
-   * @see toString
-   */
-  [Symbol.for("nodejs.util.inspect.custom")]() {
-    return this.toString();
-  }
+        await setBotCommands(api, scopes, uncompliantCommands, options);
+    }
+
+    /**
+     * Serialize all register commands into it's name, prefix and language
+     *
+     * @param filterLanguage if undefined, it returns all names
+     * else get only the locales for the given filterLanguage
+     * fallbacks to "default"
+     *
+     * @returns an array of {@link CommandElementals}
+     *
+     * Note: mainly used to serialize for {@link FuzzyMatch}
+     */
+
+    public toElementals(
+        filterLanguage?: LanguageCode | "default",
+    ): CommandElementals[] {
+        this._populateMetadata();
+
+        return Array.from(this._scopes.values())
+            .flat()
+            .flatMap(
+                (command) => {
+                    const elements = [];
+                    for (
+                        const [language, local] of command.languages.entries()
+                    ) {
+                        elements.push({
+                            name: local.name instanceof RegExp
+                                ? local.name.source
+                                : local.name,
+                            language,
+                            prefix: command.prefix,
+                            scopes: command.scopes,
+                            description: command.getLocalizedDescription(
+                                language,
+                            ),
+                        });
+                    }
+                    if (filterLanguage) {
+                        const filtered = elements.filter((command) =>
+                            command.language === filterLanguage
+                        );
+                        const defaulted = elements.filter((command) =>
+                            command.language === "default"
+                        );
+                        return filtered.length ? filtered[0] : defaulted[0];
+                    } else return elements;
+                },
+            );
+    }
+
+    /**
+     * @returns A JSON serialized version of all the currently registered commands
+     */
+    public toString() {
+        return JSON.stringify(this);
+    }
+
+    middleware() {
+        if (this._cachedComposerInvalidated) {
+            this._cachedComposer = new Composer(...this._commands);
+            this._cachedComposerInvalidated = false;
+        }
+        return this._cachedComposer.middleware();
+    }
+
+    /**
+     * Replaces the `toString` method on Deno
+     *
+     * @see toString
+     */
+    [Symbol.for("Deno.customInspect")]() {
+        return this.toString();
+    }
+
+    /**
+     * Replaces the `toString` method on Node.js
+     *
+     * @see toString
+     */
+    [Symbol.for("nodejs.util.inspect.custom")]() {
+        return this.toString();
+    }
 }

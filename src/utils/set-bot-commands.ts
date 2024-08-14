@@ -6,15 +6,15 @@ import { UncompliantCommandsError } from "./errors.ts";
  * Options for the `setBotCommands` function.
  */
 export interface SetBotCommandsOptions {
-  /**
-   * Wether to remove invalid commands from the list of calls to the Bot API.
-   *
-   * If set to `false`, the method will throw an error if any of the commands
-   * is invalid according to the {@link https://core.telegram.org/bots/api#botcommand|official Bot API documentation}.
-   *
-   * Defaults to `false`.
-   */
-  ignoreUncompliantCommands?: boolean;
+    /**
+     * Wether to remove invalid commands from the list of calls to the Bot API.
+     *
+     * If set to `false`, the method will throw an error if any of the commands
+     * is invalid according to the {@link https://core.telegram.org/bots/api#botcommand|official Bot API documentation}.
+     *
+     * Defaults to `false`.
+     */
+    ignoreUncompliantCommands?: boolean;
 }
 
 /**
@@ -25,18 +25,18 @@ export interface SetBotCommandsOptions {
  * @param options Options object`
  */
 export async function setBotCommands(
-  api: Api,
-  commandParams: SetMyCommandsParams[],
-  uncompliantCommands: UncompliantCommand[],
-  options?: Partial<SetBotCommandsOptions>,
+    api: Api,
+    commandParams: SetMyCommandsParams[],
+    uncompliantCommands: UncompliantCommand[],
+    options?: Partial<SetBotCommandsOptions>,
 ) {
-  const { ignoreUncompliantCommands = false } = options ?? {};
+    const { ignoreUncompliantCommands = false } = options ?? {};
 
-  if (uncompliantCommands.length && !ignoreUncompliantCommands) {
-    throw new UncompliantCommandsError(uncompliantCommands);
-  }
+    if (uncompliantCommands.length && !ignoreUncompliantCommands) {
+        throw new UncompliantCommandsError(uncompliantCommands);
+    }
 
-  await Promise.all(
-    commandParams.map((args) => api.raw.setMyCommands(args)),
-  );
+    await Promise.all(
+        commandParams.map((args) => api.raw.setMyCommands(args)),
+    );
 }

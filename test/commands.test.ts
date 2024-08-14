@@ -255,6 +255,7 @@ describe("Commands", () => {
       });
     });
   });
+
   describe("toArgs", () => {
     it("should return an array of SetMyCommandsParams", () => {
       const commands = new Commands();

@@ -39,6 +39,8 @@ export const matchesPattern = (
     : transformedPattern.test(transformedValue);
 };
 
+const COMMAND_NAME_REGEX = /^[0-9a-z_]+$/;
+
 /**
  * Class that represents a single command and allows you to configure it.
  */
@@ -114,6 +116,22 @@ export class Command<C extends Context = Context> implements MiddlewareObj<C> {
 
     if (name.toLowerCase() !== name) {
       return [false, "Command name has uppercase characters"];
+    }
+
+    if (name.length > 32) {
+      return [
+        false,
+        `Command name is too long (${name.length} characters). Maximum allowed is 32 characters`,
+      ];
+    }
+
+    if (!COMMAND_NAME_REGEX.test(name)) {
+      return [
+        false,
+        `Command name has special characters (${
+          name.replace(/[0-9a-z_]/g, "")
+        }). Only lowercase letters, digits and _ are allowed`,
+      ];
     }
 
     return [true];

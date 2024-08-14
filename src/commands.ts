@@ -11,7 +11,6 @@ import {
 } from "./deps.deno.ts";
 import type { CommandElementals, CommandOptions } from "./types.ts";
 import { type MaybeArray } from "./utils/array.ts";
-import { UncompliantCommandsError } from "./utils/errors.ts";
 import {
   setBotCommands,
   SetBotCommandsOptions,
@@ -21,7 +20,7 @@ import {
  * Interface for grouping {@link BotCommand}s that might (or not)
  * be related to each other by scope and/or language.
  */
-export type SetMyCommandsParams = {
+export interface SetMyCommandsParams {
   /** If defined: scope on which the commands will take effect */
   scope?: BotCommandScope;
   /** If defined: Language on which the commands will take effect.
@@ -30,20 +29,19 @@ export type SetMyCommandsParams = {
   language_code?: LanguageCode;
   /** Commands that can be each one passed to a SetMyCommands Call */
   commands: BotCommand[];
-};
+}
 
 /**
- * Options for methods that convert the commands into `setMyCommands` args.
+ * Interface to represent uncompliance of a command
+ * with the Bot API
  */
-export interface ToArgsOptions {
-  /**
-   * If true, commands that are not compliant with the bot API
-   * requirements for command names will be filtered out.
-   * Otherwise, if there are uncompliant commands, an error will be thrown
-   *
-   * @default false
-   */
-  ignoreUncompliantCommands?: boolean;
+export interface UncompliantCommand {
+  /** Name of the uncompliant command */
+  name: string;
+  /** Reason why the command was considered uncompliant */
+  reason: string;
+  /** Language in which the command is uncompliant */
+  language: LanguageCode | "default";
 }
 
 const isMiddleware = <C extends Context>(
@@ -168,9 +166,7 @@ export class Commands<C extends Context> {
   public toArgs() {
     this._populateMetadata();
     const scopes: SetMyCommandsParams[] = [];
-    const uncompliantCommands: Array<
-      { name: string; reason: string; language: LanguageCode | "default" }
-    > = [];
+    const uncompliantCommands: UncompliantCommand[] = [];
 
     for (const [scope, commands] of this._scopes.entries()) {
       for (const language of this._languages) {
@@ -218,9 +214,7 @@ export class Commands<C extends Context> {
 
     const commandParams: SetMyCommandsParams[] = [];
 
-    const uncompliantCommands: Array<
-      { name: string; reason: string; language: LanguageCode | "default" }
-    > = [];
+    const uncompliantCommands: UncompliantCommand[] = [];
     for (const language of this._languages) {
       const compliantCommands: Command<C>[] = [];
 
@@ -263,18 +257,11 @@ export class Commands<C extends Context> {
    */
   public async setCommands(
     { api }: { api: Api },
-    options?: Partial<SetBotCommandsOptions> & Partial<ToArgsOptions>,
+    options?: Partial<SetBotCommandsOptions>,
   ) {
     const { scopes, uncompliantCommands } = this.toArgs();
 
-    if (uncompliantCommands.length && !options?.ignoreUncompliantCommands) {
-      throw new UncompliantCommandsError(
-        uncompliantCommands,
-        "setCommands",
-      );
-    }
-
-    await setBotCommands(api, scopes, options);
+    await setBotCommands(api, scopes, uncompliantCommands, options);
   }
 
   /**

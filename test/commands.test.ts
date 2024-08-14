@@ -1,4 +1,4 @@
-import { CommandGroup } from "../src/commands.ts";
+import { CommandGroup } from "../src/command-group.ts";
 import { MyCommandParams } from "../src/mod.ts";
 import { dummyCtx } from "./context.test.ts";
 import {

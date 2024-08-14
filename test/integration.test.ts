@@ -2,7 +2,7 @@ import {
     assertSpyCalls,
     resolvesNext,
 } from "https://deno.land/std@0.203.0/testing/mock.ts";
-import { Commands } from "../src/commands.ts";
+import { CommandGroup } from "../src/command-group.ts";
 import { Bot } from "../src/deps.deno.ts";
 import { commands, CommandsFlavor } from "../src/mod.ts";
 import {
@@ -43,7 +43,7 @@ const getDummyUpdate = ({ userInput, language, noChat }: {
 describe("Integration", () => {
     describe("setCommands", () => {
         it("should call setMyCommands with valid commands", async () => {
-            const myCommands = new Commands();
+            const myCommands = new CommandGroup();
             myCommands.command("command", "_", (_, next) => next());
 
             const setMyCommandsSpy = spy(resolvesNext([true] as const));
@@ -67,7 +67,7 @@ describe("Integration", () => {
         });
 
         it("should error when commands have custom prefixes", async () => {
-            const myCommands = new Commands({ prefix: "!" });
+            const myCommands = new CommandGroup({ prefix: "!" });
             myCommands.command("command", "_", (_, next) => next());
 
             const setMyCommandsSpy = spy(resolvesNext([true] as const));
@@ -86,7 +86,7 @@ describe("Integration", () => {
 
     describe("ctx.setMyCommands", () => {
         it("should call setMyCommands with valid commands", async () => {
-            const myCommands = new Commands();
+            const myCommands = new CommandGroup();
             myCommands.command("command", "_", (_, next) => next());
 
             const setMyCommandsSpy = spy(resolvesNext([true] as const));
@@ -134,7 +134,7 @@ describe("Integration", () => {
         });
 
         it("should error when commands have custom prefixes", async () => {
-            const myCommands = new Commands();
+            const myCommands = new CommandGroup();
             myCommands.command("command", "_", (_, next) => next(), {
                 prefix: "!",
             });

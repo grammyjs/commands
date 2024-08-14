@@ -1,11 +1,10 @@
 import { resolvesNext } from "https://deno.land/std@0.203.0/testing/mock.ts";
-import { Commands } from "../src/commands.ts";
+import { CommandGroup } from "../src/mod.ts";
 import { setBotCommands } from "../src/utils/set-bot-commands.ts";
 import {
     Api,
     assertRejects,
     assertSpyCall,
-    assertThrows,
     describe,
     it,
     spy,
@@ -13,7 +12,7 @@ import {
 
 describe("setBotCommands", () => {
     describe("when there are invalid commands", () => {
-        const myCommands = new Commands();
+        const myCommands = new CommandGroup();
         myCommands.command("Command", "_", (_, next) => next()); // Uppercase letters
         myCommands.command("/command", "_", (_, next) => next()); // Invalid character
         myCommands.command(

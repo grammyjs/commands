@@ -5,7 +5,13 @@ import {
 } from "../src/utils/jaro-winkler.ts";
 import { CommandGroup } from "../src/mod.ts";
 import { dummyCtx } from "./context.test.ts";
-import { assertEquals, assertThrows, Context, describe, it } from "./deps.test.ts";
+import {
+    assertEquals,
+    assertThrows,
+    Context,
+    describe,
+    it,
+} from "./deps.test.ts";
 
 describe("Jaro-Wrinkler Algorithm", () => {
     it("should return value 0, because the empty string was given", () => {

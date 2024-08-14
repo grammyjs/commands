@@ -1,12 +1,12 @@
-import { CommandGroup } from "./commands.ts";
+import { CommandGroup } from "./command-group.ts";
 import { BotCommandScopeChat, Context, NextFunction } from "./deps.deno.ts";
 import { SetMyCommandsParams } from "./mod.ts";
 import { BotCommandEntity } from "./types.ts";
 import { ensureArray, getCommandsRegex } from "./utils/array.ts";
 import { fuzzyMatch, JaroWinklerOptions } from "./utils/jaro-winkler.ts";
 import {
-  setBotCommands,
-  SetBotCommandsOptions,
+    setBotCommands,
+    SetBotCommandsOptions,
 } from "./utils/set-bot-commands.ts";
 
 export interface CommandsFlavor<C extends Context = Context> extends Context {
@@ -170,8 +170,8 @@ export class MyCommandParams {
      * of commands params that can be used to set the commands menu displayed to the user.
      * @example
         ```ts
-        const adminCommands = new Commands();
-        const userCommands = new Commands();
+        const adminCommands = new CommandGroup();
+        const userCommands = new CommandGroup();
         adminCommands
             .command("do a",
                      "a description",
@@ -210,9 +210,9 @@ export class MyCommandParams {
      * single scoped SetMyCommandsParams version.
      * @example
         ```ts
-        const adminCommands = new Commands();
+        const adminCommands = new CommandGroup();
         // add to scope, localize, etc
-        const userCommands = new Commands();
+        const userCommands = new CommandGroup();
         // add to scope, localize, etc
         const [
             singleScopedAdminParams,

@@ -1,4 +1,4 @@
-import { CommandGroup } from "../commands.ts";
+import { CommandGroup } from "../command-group.ts";
 import { Context, LanguageCode, LanguageCodes } from "../deps.deno.ts";
 import type { CommandElementals } from "../types.ts";
 

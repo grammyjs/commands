@@ -1,4 +1,4 @@
-import { SetMyCommandsParams, UncompliantCommand } from "../commands.ts";
+import { SetMyCommandsParams, UncompliantCommand } from "../command-group.ts";
 import { Api } from "../deps.deno.ts";
 import { UncompliantCommandsError } from "./errors.ts";
 

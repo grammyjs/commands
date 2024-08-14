@@ -10,12 +10,16 @@ import {
     Middleware,
 } from "./deps.deno.ts";
 import type { CommandElementals, CommandOptions } from "./types.ts";
-import { type MaybeArray, ensureArray, getCommandsRegex } from "./utils/array.ts";
+import {
+    ensureArray,
+    getCommandsRegex,
+    type MaybeArray,
+} from "./utils/array.ts";
 import {
     setBotCommands,
     SetBotCommandsOptions,
 } from "./utils/set-bot-commands.ts";
-import { JaroWinklerOptions } from "./utils/jaro-winkler.ts"
+import { JaroWinklerOptions } from "./utils/jaro-winkler.ts";
 
 /**
  * Interface for grouping {@link BotCommand}s that might (or not)

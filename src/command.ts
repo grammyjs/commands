@@ -76,6 +76,43 @@ export class Command<C extends Context = Context> implements MiddlewareObj<C> {
     }
 
     /**
+     * Whether the command has a custom prefix
+     */
+    get hasCustomPrefix() {
+        return !this.prefix || this.prefix === "/";
+    }
+
+    /**
+     * Whether the command can be passed to a `setMyCommands` API call
+     * and, if not, the reason.
+     */
+    public isApiCompliant(
+        language?: LanguageCode | "default",
+    ): [result: true] | [
+        result: false,
+        reason: string,
+    ] {
+        if (this.hasCustomPrefix) {
+            return [
+                false,
+                `Command has custom prefix: ${this._options.prefix}`,
+            ];
+        }
+
+        const name = language ? this.getLocalizedName(language) : this.name;
+
+        if (typeof name !== "string") {
+            return [false, "Command has a regular expression name"];
+        }
+
+        if (name.toLowerCase() !== name) {
+            return [false, "Command name has uppercase characters"];
+        }
+
+        return [true];
+    }
+
+    /**
      * Get registered scopes for this command
      */
     get scopes() {

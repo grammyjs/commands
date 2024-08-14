@@ -2,7 +2,7 @@ import { Commands, ToArgsOptions } from "./commands.ts";
 import { BotCommandScopeChat, Context, NextFunction } from "./deps.deno.ts";
 import { SetMyCommandsParams } from "./mod.ts";
 import { ensureArray } from "./utils/array.ts";
-import { CustomPrefixNotSupportedError } from "./utils/errors.ts";
+import { UncompliantCommandsError } from "./utils/errors.ts";
 import { fuzzyMatch, JaroWinklerOptions } from "./utils/jaro-winkler.ts";
 import {
     setBotCommands,
@@ -65,26 +65,29 @@ export function commands<C extends Context>() {
                 );
             }
 
-            try {
-                const currentChatCommandParams = MyCommandParams.from(
-                    ensureArray(commands),
-                    ctx.chat.id,
-                );
+            const {
+                uncompliantCommands,
+                commandsParams: currentChatCommandParams,
+            } = MyCommandParams.from(
+                ensureArray(commands),
+                ctx.chat.id,
+            );
 
-                await setBotCommands(
-                    ctx.api,
-                    currentChatCommandParams,
-                    options,
+            if (
+                uncompliantCommands.length &&
+                !options?.ignoreUncompliantCommands
+            ) {
+                throw new UncompliantCommandsError(
+                    uncompliantCommands,
+                    "ctx.setMyCommands",
                 );
-            } catch (error) {
-                if (error instanceof CustomPrefixNotSupportedError) {
-                    throw new Error(
-                        `Tried to call setMyCommands with one or more commands that have a custom prefix, which is not supported by the Bot API. Offending command(s): ${
-                            error.offendingCommands.join(", ")
-                        }`,
-                    );
-                }
             }
+
+            await setBotCommands(
+                ctx.api,
+                currentChatCommandParams,
+                options,
+            );
         };
 
         ctx.getNearestCommand = (commands, options) => {
@@ -142,9 +145,19 @@ export class MyCommandParams {
         commands: Commands<C>[],
         chat_id: BotCommandScopeChat["chat_id"],
     ) {
-        const commandsParams = this._serialize(commands, chat_id).flat();
-        if (!commandsParams.length) return [];
-        return this.mergeByLanguage(commandsParams);
+        const serializedCommands = this._serialize(commands, chat_id);
+        const commandsParams = serializedCommands
+            .map(({ commandParams }) => commandParams)
+            .flat();
+
+        const uncompliantCommands = serializedCommands
+            .map(({ uncompliantCommands }) => uncompliantCommands)
+            .flat();
+
+        return {
+            commandsParams: this.mergeByLanguage(commandsParams),
+            uncompliantCommands,
+        };
     }
 
     /**
@@ -200,6 +213,7 @@ export class MyCommandParams {
      */
 
     private static mergeByLanguage(params: SetMyCommandsParams[]) {
+        if (!params.length) return [];
         const sorted = this._sortByLanguage(params);
         return sorted.reduce((result, current, i, arr) => {
             if (i === 0 || current.language_code !== arr[i - 1].language_code) {

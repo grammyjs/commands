@@ -13,3 +13,20 @@ export class CustomPrefixNotSupportedError extends Error {
         this.name = "CustomPrefixNotSupportedError";
     }
 }
+
+export class UncompliantCommandsError extends Error {
+    constructor(
+        commands: Array<{ name: string; reason: string; language?: string }>,
+        methodName: string,
+    ) {
+        const message = [
+            `Tried to call ${methodName} with one or more commands that do not comply with the Bot API requirements for command names. Offending command(s):`,
+            commands.map(({ name, reason, language }) =>
+                `- (language: ${language}) ${name}: ${reason}`
+            )
+                .join("\n"),
+            "If you want to filter these commands out automatically, set `ignoreUncompliantCommands` to `true`",
+        ].join("\n");
+        super(message);
+    }
+}

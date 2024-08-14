@@ -99,6 +99,8 @@ describe("Integration", () => {
                     can_read_all_group_messages: true,
                     supports_inline_queries: true,
                     first_name: "",
+                    can_connect_to_business: true,
+                    has_main_web_app: false,
                 },
             });
 
@@ -108,7 +110,10 @@ describe("Integration", () => {
                 }
                 await setMyCommandsSpy(payload);
 
-                return { ok: true, result: true as ReturnType<typeof prev> };
+                return {
+                    ok: true as const,
+                    result: true as ReturnType<typeof prev>,
+                };
             });
 
             bot.use(commands());
@@ -149,6 +154,8 @@ describe("Integration", () => {
                     can_read_all_group_messages: true,
                     supports_inline_queries: true,
                     first_name: "",
+                    can_connect_to_business: true,
+                    has_main_web_app: false,
                 },
             });
 

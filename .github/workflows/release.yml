@@ -25,5 +25,7 @@ jobs:
 
             - name: Create Release
               uses: softprops/action-gh-release@v1
+              env:
+                  HOOK: 0
               with:
                   generate_release_notes: true

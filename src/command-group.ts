@@ -165,7 +165,6 @@ export class CommandGroup<C extends Context> {
     /**
      * Serializes the commands into multiple objects that can each be passed to a `setMyCommands` call.
      *
-     * @param options Options for the serialization
      * @returns One item for each combination of command + scope + language
      */
     public toArgs() {

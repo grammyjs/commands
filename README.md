@@ -16,11 +16,11 @@ The main functionality of this plugin is to define your commands, localize them,
 
 ```typescript
 import { Bot } from "grammy";
-import { Commands } from "@grammyjs/commands";
+import { CommandGroup } from "@grammyjs/commands";
 
 const bot = new Bot("<telegram token>");
 
-const myCommands = new Commands();
+const myCommands = new CommandGroup();
 
 myCommands.command("start", "Initializes bot configuration")
   .localize("pt", "start", "Inicializa as configurações do bot")
@@ -52,7 +52,7 @@ commands flavor and the plugin itself, like so:
 
 ```typescript
 import { Bot, Context } from "grammy";
-import { Commands, commands, CommandsFlavor } from "@grammyjs/commands";
+import { CommandGroup, commands, CommandsFlavor } from "@grammyjs/commands";
 
 type BotContext = CommandsFlavor;
 
@@ -60,7 +60,7 @@ const bot = new Bot<BotContext>("<telegram_token>");
 bot.use(commands());
 
 bot.on("message", async (ctx) => {
-  const cmds = new Commands();
+  const cmds = new CommandGroup();
 
   cmds.command("start", "Initializes bot configuration")
     .localize("pt", "start", "Inicializa as configurações do bot");

@@ -7,7 +7,7 @@ import { UncompliantCommandsError } from "./errors.ts";
  */
 export interface SetBotCommandsOptions {
     /**
-     * Wether to remove invalid commands from the list of calls to the Bot API.
+     * Whether to remove invalid commands from the list of calls to the Bot API.
      *
      * If set to `false`, the method will throw an error if any of the commands
      * is invalid according to the {@link https://core.telegram.org/bots/api#botcommand|official Bot API documentation}.

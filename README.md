@@ -23,15 +23,15 @@ const bot = new Bot("<telegram token>");
 const myCommands = new Commands();
 
 myCommands.command("start", "Initializes bot configuration")
-    .localize("pt", "start", "Inicializa as configurações do bot")
-    .addToScope(
-        { type: "all_private_chats" },
-        (ctx) => ctx.reply(`Hello, ${ctx.chat.first_name}!`),
-    )
-    .addToScope(
-        { type: "all_group_chats" },
-        (ctx) => ctx.reply(`Hello, members of ${ctx.chat.title}!`),
-    );
+  .localize("pt", "start", "Inicializa as configurações do bot")
+  .addToScope(
+    { type: "all_private_chats" },
+    (ctx) => ctx.reply(`Hello, ${ctx.chat.first_name}!`),
+  )
+  .addToScope(
+    { type: "all_group_chats" },
+    (ctx) => ctx.reply(`Hello, members of ${ctx.chat.title}!`),
+  );
 
 // Calls `setMyCommands`
 await myCommands.setCommands(bot);
@@ -60,14 +60,14 @@ const bot = new Bot<BotContext>("<telegram_token>");
 bot.use(commands());
 
 bot.on("message", async (ctx) => {
-    const cmds = new Commands();
+  const cmds = new Commands();
 
-    cmds.command("start", "Initializes bot configuration")
-        .localize("pt", "start", "Inicializa as configurações do bot");
+  cmds.command("start", "Initializes bot configuration")
+    .localize("pt", "start", "Inicializa as configurações do bot");
 
-    await ctx.setMyCommands(cmds);
+  await ctx.setMyCommands(cmds);
 
-    return ctx.reply("Commands set!");
+  return ctx.reply("Commands set!");
 });
 
 bot.start();

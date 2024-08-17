@@ -10,7 +10,7 @@ import {
     it,
 } from "./deps.test.ts";
 
-describe("Commands", () => {
+describe("CommandGroup", () => {
     describe("command", () => {
         it("should create a command with no handlers", () => {
             const commands = new CommandGroup();
@@ -171,7 +171,7 @@ describe("Commands", () => {
                         {
                             name: "withcustomprefix",
                             language: "default",
-                            reason: "Command has custom prefix: !",
+                            reasons: ["Command has custom prefix: !"],
                         },
                     ],
                 });
@@ -411,7 +411,7 @@ describe("Commands", () => {
                     {
                         name: "withcustomprefix",
                         language: "default",
-                        reason: "Command has custom prefix: !",
+                        reasons: ["Command has custom prefix: !"],
                     },
                 ],
             });

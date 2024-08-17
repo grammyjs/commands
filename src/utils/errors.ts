@@ -1,3 +1,4 @@
+import { UncompliantCommand } from "../command-group.ts";
 import { BotCommandScope } from "../deps.deno.ts";
 
 export class InvalidScopeError extends Error {
@@ -16,12 +17,12 @@ export class CustomPrefixNotSupportedError extends Error {
 
 export class UncompliantCommandsError extends Error {
     constructor(
-        commands: Array<{ name: string; reason: string; language?: string }>,
+        commands: Array<UncompliantCommand>,
     ) {
         const message = [
             `Tried to set bot commands with one or more commands that do not comply with the Bot API requirements for command names. Offending command(s):`,
-            commands.map(({ name, reason, language }) =>
-                `- (language: ${language}) ${name}: ${reason}`
+            commands.map(({ name, reasons, language }) =>
+                `- (language: ${language}) ${name}: ${reasons.join(", ")}`
             )
                 .join("\n"),
             "If you want to filter these commands out automatically, set `ignoreUncompliantCommands` to `true`",

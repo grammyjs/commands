@@ -44,7 +44,7 @@ export interface UncompliantCommand {
     /** Name of the uncompliant command */
     name: string;
     /** Reason why the command was considered uncompliant */
-    reason: string;
+    reasons: string[];
     /** Language in which the command is uncompliant */
     language: LanguageCode | "default";
 }
@@ -177,16 +177,17 @@ export class CommandGroup<C extends Context> {
                 const compliantScopedCommands: Command<C>[] = [];
 
                 commands.forEach((command) => {
-                    const [isApiCompliant, reason] = command.isApiCompliant(
+                    const [isApiCompliant, ...reasons] = command.isApiCompliant(
                         language,
                     );
+
                     if (isApiCompliant) {
                         return compliantScopedCommands.push(command);
                     }
 
                     uncompliantCommands.push({
                         name: command.stringName,
-                        reason: reason,
+                        reasons: reasons,
                         language,
                     });
                 });
@@ -229,14 +230,14 @@ export class CommandGroup<C extends Context> {
             const compliantCommands: Command<C>[] = [];
 
             this._commands.forEach((command) => {
-                const [isApiCompliant, reason] = command.isApiCompliant(
+                const [isApiCompliant, ...reasons] = command.isApiCompliant(
                     language,
                 );
 
                 if (!isApiCompliant) {
                     return uncompliantCommands.push({
                         name: command.stringName,
-                        reason: reason,
+                        reasons: reasons,
                         language,
                     });
                 }

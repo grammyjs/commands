@@ -1,7 +1,12 @@
+import {
+    resolvesNext,
+    spy,
+} from "https://deno.land/std@0.203.0/testing/mock.ts";
 import { commands, type CommandsFlavor } from "../src/mod.ts";
 import {
     Api,
     assert,
+    assertRejects,
     Chat,
     Context,
     describe,
@@ -29,6 +34,21 @@ describe("commands", () => {
 
         assert(context.getNearestCommand);
     });
+
+    describe("setMyCommands", () => {
+        it("should throw an error if there is no chat", async () => {
+            const context = dummyCtx({ noMessage: true });
+
+            const middleware = commands();
+            middleware(context, async () => {});
+
+            await assertRejects(
+                () => context.setMyCommands([]),
+                Error,
+                "cannot call `ctx.setMyCommands` on an update with no `chat` property",
+            );
+        });
+    });
 });
 
 export function dummyCtx({ userInput, language, noMessage }: {
@@ -46,7 +66,9 @@ export function dummyCtx({ userInput, language, noMessage }: {
     const update = {
         message: m,
     } as Update;
-    const api = new Api("dummy-token");
+    const api = {
+        raw: { setMyCommands: spy(resolvesNext([true] as const)) },
+    } as unknown as Api;
     const me = { id: 42, username: "bot" } as UserFromGetMe;
     const ctx = new Context(update, api, me) as CommandsFlavor<Context>;
     const middleware = commands();

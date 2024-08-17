@@ -1,9 +1,13 @@
-import { CommandGroup } from "./commands.ts";
+import { CommandGroup } from "./command-group.ts";
 import { BotCommandScopeChat, Context, NextFunction } from "./deps.deno.ts";
-import { fuzzyMatch, JaroWinklerOptions } from "./jaro-winkler.ts";
 import { SetMyCommandsParams } from "./mod.ts";
 import { BotCommandEntity } from "./types.ts";
-import { ensureArray, getCommandsRegex } from "./utils.ts";
+import { ensureArray, getCommandsRegex } from "./utils/array.ts";
+import { fuzzyMatch, JaroWinklerOptions } from "./utils/jaro-winkler.ts";
+import {
+    setBotCommands,
+    SetBotCommandsOptions,
+} from "./utils/set-bot-commands.ts";
 
 export interface CommandsFlavor<C extends Context = Context> extends Context {
     /**
@@ -30,7 +34,7 @@ export interface CommandsFlavor<C extends Context = Context> extends Context {
      */
     setMyCommands: (
         commands: CommandGroup<C> | CommandGroup<C>[],
-        ...moreCommands: CommandGroup<C>[]
+        options?: SetBotCommandsOptions,
     ) => Promise<void>;
     /**
      * Returns the nearest command to the user input.
@@ -61,18 +65,27 @@ export function commands<C extends Context>() {
     return (ctx: CommandsFlavor<C>, next: NextFunction) => {
         ctx.setMyCommands = async (
             commands,
-            ...moreCommands: CommandGroup<C>[]
+            options,
         ) => {
             if (!ctx.chat) {
                 throw new Error(
                     "cannot call `ctx.setMyCommands` on an update with no `chat` property",
                 );
             }
-            commands = ensureArray(commands).concat(moreCommands);
 
-            await Promise.all(
-                MyCommandParams.from(commands, ctx.chat.id)
-                    .map((args) => ctx.api.raw.setMyCommands(args)),
+            const {
+                uncompliantCommands,
+                commandsParams: currentChatCommandParams,
+            } = MyCommandParams.from(
+                ensureArray(commands),
+                ctx.chat.id,
+            );
+
+            await setBotCommands(
+                ctx.api,
+                currentChatCommandParams,
+                uncompliantCommands,
+                options,
             );
         };
 
@@ -157,8 +170,8 @@ export class MyCommandParams {
      * of commands params that can be used to set the commands menu displayed to the user.
      * @example
         ```ts
-        const adminCommands = new Commands();
-        const userCommands = new Commands();
+        const adminCommands = new CommandGroup();
+        const userCommands = new CommandGroup();
         adminCommands
             .command("do a",
                      "a description",
@@ -177,9 +190,19 @@ export class MyCommandParams {
         commands: CommandGroup<C>[],
         chat_id: BotCommandScopeChat["chat_id"],
     ) {
-        const commandsParams = this._serialize(commands, chat_id).flat();
-        if (!commandsParams.length) return [];
-        return this.mergeByLanguage(commandsParams);
+        const serializedCommands = this._serialize(commands, chat_id);
+        const commandsParams = serializedCommands
+            .map(({ commandParams }) => commandParams)
+            .flat();
+
+        const uncompliantCommands = serializedCommands
+            .map(({ uncompliantCommands }) => uncompliantCommands)
+            .flat();
+
+        return {
+            commandsParams: this.mergeByLanguage(commandsParams),
+            uncompliantCommands,
+        };
     }
 
     /**
@@ -187,9 +210,9 @@ export class MyCommandParams {
      * single scoped SetMyCommandsParams version.
      * @example
         ```ts
-        const adminCommands = new Commands();
+        const adminCommands = new CommandGroup();
         // add to scope, localize, etc
-        const userCommands = new Commands();
+        const userCommands = new CommandGroup();
         // add to scope, localize, etc
         const [
             singleScopedAdminParams,
@@ -235,6 +258,7 @@ export class MyCommandParams {
      */
 
     private static mergeByLanguage(params: SetMyCommandsParams[]) {
+        if (!params.length) return [];
         const sorted = this._sortByLanguage(params);
         return sorted.reduce((result, current, i, arr) => {
             if (i === 0 || current.language_code !== arr[i - 1].language_code) {

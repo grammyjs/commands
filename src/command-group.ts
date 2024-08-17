@@ -10,14 +10,22 @@ import {
     Middleware,
 } from "./deps.deno.ts";
 import type { CommandElementals, CommandOptions } from "./types.ts";
-import { ensureArray, getCommandsRegex, type MaybeArray } from "./utils.ts";
-import { JaroWinklerOptions } from "./jaro-winkler.ts";
+import {
+    ensureArray,
+    getCommandsRegex,
+    type MaybeArray,
+} from "./utils/array.ts";
+import {
+    setBotCommands,
+    SetBotCommandsOptions,
+} from "./utils/set-bot-commands.ts";
+import { JaroWinklerOptions } from "./utils/jaro-winkler.ts";
 
 /**
  * Interface for grouping {@link BotCommand}s that might (or not)
  * be related to each other by scope and/or language.
  */
-export type SetMyCommandsParams = {
+export interface SetMyCommandsParams {
     /** If defined: scope on which the commands will take effect */
     scope?: BotCommandScope;
     /** If defined: Language on which the commands will take effect.
@@ -26,7 +34,20 @@ export type SetMyCommandsParams = {
     language_code?: LanguageCode;
     /** Commands that can be each one passed to a SetMyCommands Call */
     commands: BotCommand[];
-};
+}
+
+/**
+ * Interface to represent uncompliance of a command
+ * with the Bot API
+ */
+export interface UncompliantCommand {
+    /** Name of the uncompliant command */
+    name: string;
+    /** Reason why the command was considered uncompliant */
+    reasons: string[];
+    /** Language in which the command is uncompliant */
+    language: LanguageCode | "default";
+}
 
 const isMiddleware = <C extends Context>(
     obj: unknown,
@@ -143,27 +164,52 @@ export class CommandGroup<C extends Context> {
     }
     /**
      * Serializes the commands into multiple objects that can each be passed to a `setMyCommands` call.
+     *
      * @returns One item for each combination of command + scope + language
      */
     public toArgs() {
         this._populateMetadata();
-        const params: SetMyCommandsParams[] = [];
+        const scopes: SetMyCommandsParams[] = [];
+        const uncompliantCommands: UncompliantCommand[] = [];
 
         for (const [scope, commands] of this._scopes.entries()) {
             for (const language of this._languages) {
-                params.push({
-                    scope: JSON.parse(scope),
-                    language_code: language === "default"
-                        ? undefined
-                        : language,
-                    commands: commands
-                        .filter((command) => typeof command.name === "string")
-                        .map((command) => command.toObject(language)),
+                const compliantScopedCommands: Command<C>[] = [];
+
+                commands.forEach((command) => {
+                    const [isApiCompliant, ...reasons] = command.isApiCompliant(
+                        language,
+                    );
+
+                    if (isApiCompliant) {
+                        return compliantScopedCommands.push(command);
+                    }
+
+                    uncompliantCommands.push({
+                        name: command.stringName,
+                        reasons: reasons,
+                        language,
+                    });
                 });
+
+                if (compliantScopedCommands.length) {
+                    scopes.push({
+                        scope: JSON.parse(scope),
+                        language_code: language === "default"
+                            ? undefined
+                            : language,
+                        commands: compliantScopedCommands.map((command) =>
+                            command.toObject(language)
+                        ),
+                    });
+                }
             }
         }
 
-        return params.filter((params) => params.commands.length > 0);
+        return {
+            scopes,
+            uncompliantCommands,
+        };
     }
 
     /**
@@ -172,20 +218,43 @@ export class CommandGroup<C extends Context> {
      * @param scope Selected scope to be serialized
      * @returns One item per command per language
      */
-    public toSingleScopeArgs(scope: BotCommandScope) {
+    public toSingleScopeArgs(
+        scope: BotCommandScope,
+    ) {
         this._populateMetadata();
-        const params: SetMyCommandsParams[] = [];
+
+        const commandParams: SetMyCommandsParams[] = [];
+
+        const uncompliantCommands: UncompliantCommand[] = [];
         for (const language of this._languages) {
-            params.push({
+            const compliantCommands: Command<C>[] = [];
+
+            this._commands.forEach((command) => {
+                const [isApiCompliant, ...reasons] = command.isApiCompliant(
+                    language,
+                );
+
+                if (!isApiCompliant) {
+                    return uncompliantCommands.push({
+                        name: command.stringName,
+                        reasons: reasons,
+                        language,
+                    });
+                }
+
+                if (command.scopes.length) compliantCommands.push(command);
+            });
+
+            commandParams.push({
                 scope,
                 language_code: language === "default" ? undefined : language,
-                commands: this._commands
-                    .filter((command) => command.scopes.length)
-                    .filter((command) => typeof command.name === "string")
-                    .map((command) => command.toObject(language)),
+                commands: compliantCommands.map((command) =>
+                    command.toObject(language)
+                ),
             });
         }
-        return params;
+
+        return { commandParams, uncompliantCommands };
     }
 
     /**
@@ -199,10 +268,13 @@ export class CommandGroup<C extends Context> {
      *
      * @param Instance of `bot` or { api: bot.api }
      */
-    public async setCommands({ api }: { api: Api }) {
-        await Promise.all(
-            this.toArgs().map((args) => api.raw.setMyCommands(args)),
-        );
+    public async setCommands(
+        { api }: { api: Api },
+        options?: Partial<SetBotCommandsOptions>,
+    ) {
+        const { scopes, uncompliantCommands } = this.toArgs();
+
+        await setBotCommands(api, scopes, uncompliantCommands, options);
     }
 
     /**

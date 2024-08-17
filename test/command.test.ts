@@ -1,3 +1,4 @@
+import { assertEquals } from "https://deno.land/std@0.203.0/assert/assert_equals.ts";
 import { Command, matchesPattern } from "../src/command.ts";
 import { CommandOptions } from "../src/types.ts";
 import {
@@ -540,6 +541,63 @@ describe("Command", () => {
 
         it("does not match an incorrect regex pattern", () => {
             assertFalse(matchesPattern("start", /other/));
+        });
+    });
+
+    describe("isApiCompliant", () => {
+        it("returns false if there is a custom prefix", () => {
+            const command = new Command("test", "_", { prefix: "!" });
+            assertEquals(command.isApiCompliant(), [
+                false,
+                "Command has custom prefix: !",
+            ]);
+        });
+
+        it("returns false if there is name is a regex", () => {
+            const command = new Command(/test/, "_");
+            assertEquals(command.isApiCompliant(), [
+                false,
+                "Command has a regular expression name",
+            ]);
+        });
+
+        it("returns false if there are uppercase characters", () => {
+            const command = new Command("testCommand", "_");
+            assertEquals(command.isApiCompliant(), [
+                false,
+                "Command name has uppercase characters",
+            ]);
+        });
+
+        it("returns false if command name is too long", () => {
+            const command = new Command(
+                "longnamelongnamelongnamelongnamelongname",
+                "_",
+            );
+            assertEquals(command.isApiCompliant(), [
+                false,
+                "Command name is too long (40 characters). Maximum allowed is 32 characters",
+            ]);
+        });
+
+        it("returns false if command name has special characters", () => {
+            const command = new Command("*test!", "_");
+            assertEquals(command.isApiCompliant(), [
+                false,
+                "Command name has special characters (*!). Only letters, digits and _ are allowed",
+            ]);
+        });
+
+        it("is able to detect more than a problem at once", () => {
+            const command = new Command(
+                "$SUPERuncompli4ntCommand12345678",
+                "_",
+            );
+            assertEquals(command.isApiCompliant(), [
+                false,
+                "Command name has uppercase characters",
+                "Command name has special characters ($). Only letters, digits and _ are allowed",
+            ]);
         });
     });
 });

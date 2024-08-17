@@ -1,6 +1,6 @@
-import { CommandGroup } from "./commands.ts";
-import { Context, LanguageCode, LanguageCodes } from "./deps.deno.ts";
-import type { CommandElementals } from "./types.ts";
+import { CommandGroup } from "../command-group.ts";
+import { Context, LanguageCode, LanguageCodes } from "../deps.deno.ts";
+import type { CommandElementals } from "../types.ts";
 
 export function distance(s1: string, s2: string) {
     if (s1.length === 0 || s2.length === 0) {

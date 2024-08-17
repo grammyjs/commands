@@ -11,9 +11,9 @@ import {
     type Middleware,
     type MiddlewareObj,
 } from "./deps.deno.ts";
-import { InvalidScopeError } from "./errors.ts";
+import { InvalidScopeError } from "./utils/errors.ts";
 import type { CommandOptions } from "./types.ts";
-import { ensureArray, type MaybeArray } from "./utils.ts";
+import { ensureArray, type MaybeArray } from "./utils/array.ts";
 
 type BotCommandGroupsScope =
     | BotCommandScopeAllGroupChats
@@ -38,6 +38,8 @@ export const matchesPattern = (
         ? transformedValue === transformedPattern
         : transformedPattern.test(transformedValue);
 };
+
+const NOCASE_COMMAND_NAME_REGEX = /^[0-9a-z_]+$/i;
 
 /**
  * Class that represents a single command and allows you to configure it.
@@ -73,6 +75,65 @@ export class Command<C extends Context = Context> implements MiddlewareObj<C> {
         this._options = { ...this._options, ...options };
         if (this._options.prefix === "") this._options.prefix = "/";
         this._languages.set("default", { name: name, description });
+    }
+
+    /**
+     * Whether the command has a custom prefix
+     */
+    get hasCustomPrefix() {
+        return this.prefix && this.prefix !== "/";
+    }
+
+    /**
+     * Gets the command name as string
+     */
+    public get stringName() {
+        return typeof this.name === "string" ? this.name : this.name.source;
+    }
+
+    /**
+     * Whether the command can be passed to a `setMyCommands` API call
+     * and, if not, the reason.
+     */
+    public isApiCompliant(
+        language?: LanguageCode | "default",
+    ): [result: true] | [
+        result: false,
+        ...reasons: string[],
+    ] {
+        const problems: string[] = [];
+
+        if (this.hasCustomPrefix) {
+            problems.push(`Command has custom prefix: ${this._options.prefix}`);
+        }
+
+        const name = language ? this.getLocalizedName(language) : this.name;
+
+        if (typeof name !== "string") {
+            problems.push("Command has a regular expression name");
+        }
+
+        if (typeof name === "string") {
+            if (name.toLowerCase() !== name) {
+                problems.push("Command name has uppercase characters");
+            }
+
+            if (name.length > 32) {
+                problems.push(
+                    `Command name is too long (${name.length} characters). Maximum allowed is 32 characters`,
+                );
+            }
+
+            if (!NOCASE_COMMAND_NAME_REGEX.test(name)) {
+                problems.push(
+                    `Command name has special characters (${
+                        name.replace(/[0-9a-z_]/ig, "")
+                    }). Only letters, digits and _ are allowed`,
+                );
+            }
+        }
+
+        return problems.length ? [false, ...problems] : [true];
     }
 
     /**

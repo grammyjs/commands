@@ -39,7 +39,7 @@ export const matchesPattern = (
         : transformedPattern.test(transformedValue);
 };
 
-const COMMAND_NAME_REGEX = /^[0-9a-z_]+$/;
+const NOCASE_COMMAND_NAME_REGEX = /^[0-9a-z_]+$/i;
 
 /**
  * Class that represents a single command and allows you to configure it.
@@ -99,42 +99,41 @@ export class Command<C extends Context = Context> implements MiddlewareObj<C> {
         language?: LanguageCode | "default",
     ): [result: true] | [
         result: false,
-        reason: string,
+        ...reasons: string[],
     ] {
+        const problems: string[] = [];
+
         if (this.hasCustomPrefix) {
-            return [
-                false,
-                `Command has custom prefix: ${this._options.prefix}`,
-            ];
+            problems.push(`Command has custom prefix: ${this._options.prefix}`);
         }
 
         const name = language ? this.getLocalizedName(language) : this.name;
 
         if (typeof name !== "string") {
-            return [false, "Command has a regular expression name"];
+            problems.push("Command has a regular expression name");
         }
 
-        if (name.toLowerCase() !== name) {
-            return [false, "Command name has uppercase characters"];
+        if (typeof name === "string") {
+            if (name.toLowerCase() !== name) {
+                problems.push("Command name has uppercase characters");
+            }
+
+            if (name.length > 32) {
+                problems.push(
+                    `Command name is too long (${name.length} characters). Maximum allowed is 32 characters`,
+                );
+            }
+
+            if (!NOCASE_COMMAND_NAME_REGEX.test(name)) {
+                problems.push(
+                    `Command name has special characters (${
+                        name.replace(/[0-9a-z_]/ig, "")
+                    }). Only letters, digits and _ are allowed`,
+                );
+            }
         }
 
-        if (name.length > 32) {
-            return [
-                false,
-                `Command name is too long (${name.length} characters). Maximum allowed is 32 characters`,
-            ];
-        }
-
-        if (!COMMAND_NAME_REGEX.test(name)) {
-            return [
-                false,
-                `Command name has special characters (${
-                    name.replace(/[0-9a-z_]/g, "")
-                }). Only lowercase letters, digits and _ are allowed`,
-            ];
-        }
-
-        return [true];
+        return problems.length ? [false, ...problems] : [true];
     }
 
     /**

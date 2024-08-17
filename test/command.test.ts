@@ -584,7 +584,19 @@ describe("Command", () => {
             const command = new Command("*test!", "_");
             assertEquals(command.isApiCompliant(), [
                 false,
-                "Command name has special characters (*!). Only lowercase letters, digits and _ are allowed",
+                "Command name has special characters (*!). Only letters, digits and _ are allowed",
+            ]);
+        });
+
+        it("is able to detect more than a problem at once", () => {
+            const command = new Command(
+                "$SUPERuncompli4ntCommand12345678",
+                "_",
+            );
+            assertEquals(command.isApiCompliant(), [
+                false,
+                "Command name has uppercase characters",
+                "Command name has special characters ($). Only letters, digits and _ are allowed",
             ]);
         });
     });

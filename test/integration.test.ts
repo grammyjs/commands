@@ -19,7 +19,20 @@ import {
   User,
 } from "./deps.test.ts";
 
-const bot = new Bot("dummy_token");
+const getBot = () =>
+  new Bot<Context & CommandsFlavor>("dummy_token", {
+    botInfo: {
+      id: 1,
+      is_bot: true,
+      username: "",
+      can_join_groups: true,
+      can_read_all_group_messages: true,
+      supports_inline_queries: true,
+      first_name: "",
+      can_connect_to_business: true,
+      has_main_web_app: false,
+    },
+  });
 
 const getDummyUpdate = ({ userInput, language, noChat }: {
   userInput?: string;
@@ -90,19 +103,7 @@ describe("Integration", () => {
       myCommands.command("command", "_", (_, next) => next());
 
       const setMyCommandsSpy = spy(resolvesNext([true] as const));
-      const bot = new Bot<Context & CommandsFlavor>("dummy_token", {
-        botInfo: {
-          id: 1,
-          is_bot: true,
-          username: "",
-          can_join_groups: true,
-          can_read_all_group_messages: true,
-          supports_inline_queries: true,
-          first_name: "",
-          can_connect_to_business: true,
-          has_main_web_app: false,
-        },
-      });
+      const bot = getBot();
 
       bot.api.config.use(async (prev, method, payload, signal) => {
         if (method !== "setMyCommands") {
@@ -145,19 +146,7 @@ describe("Integration", () => {
       });
 
       const setMyCommandsSpy = spy(resolvesNext([true] as const));
-      const bot = new Bot<Context & CommandsFlavor>("dummy_token", {
-        botInfo: {
-          id: 1,
-          is_bot: true,
-          username: "",
-          can_join_groups: true,
-          can_read_all_group_messages: true,
-          supports_inline_queries: true,
-          first_name: "",
-          can_connect_to_business: true,
-          has_main_web_app: false,
-        },
-      });
+      const bot = getBot();
 
       bot.api.config.use(async (prev, method, payload, signal) => {
         if (method !== "setMyCommands") {
@@ -165,7 +154,7 @@ describe("Integration", () => {
         }
         await setMyCommandsSpy(payload);
 
-        return { ok: true, result: true as ReturnType<typeof prev> };
+        return { ok: true as const, result: true as ReturnType<typeof prev> };
       });
 
       bot.use(commands());
@@ -178,6 +167,25 @@ describe("Integration", () => {
       await bot.handleUpdate(getDummyUpdate());
 
       assertSpyCalls(setMyCommandsSpy, 0);
+    });
+  });
+
+  describe("CommandGroup", () => {
+    describe("command", () => {
+      it.only("should add a command with a default handler", async () => {
+        const handler = spy(() => {});
+
+        const commandGroup = new CommandGroup({ prefix: "!" });
+        commandGroup.command("command", "_", handler);
+
+        const bot = getBot();
+        bot.use(commands());
+        bot.use(commandGroup);
+
+        await bot.handleUpdate(getDummyUpdate({ userInput: "!command" }));
+
+        assertSpyCalls(handler, 1);
+      });
     });
   });
 });

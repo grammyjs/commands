@@ -172,7 +172,7 @@ describe("Integration", () => {
 
   describe("CommandGroup", () => {
     describe("command", () => {
-      it.only("should add a command with a default handler", async () => {
+      it("should add a command with a default handler", async () => {
         const handler = spy(() => {});
 
         const commandGroup = new CommandGroup({ prefix: "!" });

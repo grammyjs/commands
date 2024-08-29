@@ -5,6 +5,7 @@ import {
   type BotCommandScopeAllGroupChats,
   type BotCommandScopeAllPrivateChats,
   type ChatTypeMiddleware,
+  CommandContext,
   Composer,
   type Context,
   type LanguageCode,
@@ -14,7 +15,12 @@ import {
 import { InvalidScopeError } from "./utils/errors.ts";
 import type { CommandOptions } from "./types.ts";
 import { ensureArray, type MaybeArray } from "./utils/array.ts";
-import { isAdmin, isMiddleware, matchesPattern } from "./utils/checks.ts";
+import {
+  isAdmin,
+  isCommandOptions,
+  isMiddleware,
+  matchesPattern,
+} from "./utils/checks.ts";
 
 type BotCommandGroupsScope =
   | BotCommandScopeAllGroupChats
@@ -40,22 +46,83 @@ export class Command<C extends Context = Context> implements MiddlewareObj<C> {
   };
 
   /**
-   * Constructor for the `Command` class.
-   * Do not call this directly. Instead, use the `command` method from the `Commands` class
+   * Initialize a new command with a default handler.
+   *
+   * [!IMPORTANT] This class by its own does nothing. It needs to be imported into a commandGroup
+   * via the `add` method.
+   *
+   * @example
+   * ```ts
+   *    const sayHi = new Command("hi","say hi", (ctx) => ctx.reply("hi"))
+   *    const myCmds = new CommandGroup().add(sayHi)
+   * ```
    *
    * @param name Default command name
    * @param description Default command description
-   * @param options Options object that should apply to this command only
-   * @access package
+   * @param handler Default command handler
+   * @param options Extra options that should apply only to this command
+   * @returns An instance of the `Command` class
+   */
+
+  constructor(
+    name: string | RegExp,
+    description: string,
+    handler: MaybeArray<Middleware<CommandContext<C>>>,
+    options?: Partial<CommandOptions>,
+  );
+  /**
+   * Initialize a new command with no handlers.
+   *
+   * [!IMPORTANT] This class by its own does nothing. It needs to be imported into a commandGroup
+   * via the `add` method
+   *
+   * @example
+   * ```ts
+   *    const sayHi = new Command("hi","say hi", (ctx) => ctx.reply("hi") )
+   *    const myCmds = new CommandGroup().add(sayHi)
+   * ```
+   *
+   * @param name Default command name
+   * @param description Default command description
+   * @param options Extra options that should apply only to this command
+   * @returns An instance of the `Command` class
    */
   constructor(
     name: string | RegExp,
     description: string,
-    options: Partial<CommandOptions> = {},
+    options?: Partial<CommandOptions>,
+  );
+  constructor(
+    name: string | RegExp,
+    description: string,
+    handlerOrOptions?:
+      | MaybeArray<Middleware<CommandContext<C>>>
+      | Partial<CommandOptions>,
+    options?: Partial<CommandOptions>,
+  );
+  constructor(
+    name: string | RegExp,
+    description: string,
+    handlerOrOptions?:
+      | MaybeArray<Middleware<CommandContext<C>>>
+      | Partial<CommandOptions>,
+    options?: Partial<CommandOptions>,
   ) {
+    const handler = isMiddleware(handlerOrOptions)
+      ? handlerOrOptions
+      : undefined;
+
+    options = !handler && isCommandOptions(handlerOrOptions)
+      ? handlerOrOptions
+      : options;
+
     this._options = { ...this._options, ...options };
-    if (this._options.prefix === "") this._options.prefix = "/";
+    if (this._options.prefix.trim() === "") this._options.prefix = "/";
     this._languages.set("default", { name: name, description });
+    if (handler) {
+      this.addToScope({ type: "default" }, handler);
+    }
+    return this;
   }
 
   /**

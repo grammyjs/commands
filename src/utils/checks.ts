@@ -1,4 +1,5 @@
 import { Context, Middleware } from "../deps.deno.ts";
+import { CommandOptions } from "../types.ts";
 import { MaybeArray } from "./array.ts";
 
 export function isAdmin(ctx: Context) {
@@ -20,6 +21,21 @@ export function isMiddleware<C extends Context = Context>(
     case "object":
       return Object.keys(obj).includes("middleware");
   }
+
+  return false;
+}
+export function isCommandOptions(obj: unknown): obj is Partial<CommandOptions> {
+  if (typeof obj !== "object" && !!obj) return false;
+  const { prefix, matchOnlyAtStart, targetedCommands, ignoreCase } =
+    obj as Partial<CommandOptions>;
+
+  if (typeof prefix === "string") return true;
+  if (typeof matchOnlyAtStart === "boolean") return true;
+  if (
+    targetedCommands &&
+    ["ignored", "optional", "required"].includes(targetedCommands)
+  ) return true;
+  if (typeof ignoreCase === "boolean") return true;
 
   return false;
 }

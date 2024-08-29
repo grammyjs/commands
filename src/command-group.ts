@@ -20,7 +20,7 @@ import {
   SetBotCommandsOptions,
 } from "./utils/set-bot-commands.ts";
 import { JaroWinklerOptions } from "./utils/jaro-winkler.ts";
-import { isMiddleware } from "./utils/checks.ts";
+import { isCommandOptions, isMiddleware } from "./utils/checks.ts";
 
 /**
  * Interface for grouping {@link BotCommand}s that might (or not)
@@ -134,18 +134,31 @@ export class CommandGroup<C extends Context> {
     const handler = isMiddleware(handlerOrOptions)
       ? handlerOrOptions
       : undefined;
-    const options = handler
-      ? _options ?? this._commandOptions
-      : handlerOrOptions as Partial<CommandOptions> ??
-        this._commandOptions;
 
-    const command = new Command<C>(name, description, options);
+    const options = !handler && isCommandOptions(handlerOrOptions)
+      ? { ...this._commandOptions, ...handlerOrOptions }
+      : { ...this._commandOptions, ..._options };
+
+    const command = new Command<C>(name, description, handler, options);
     if (handler) command.addToScope({ type: "default" }, handler);
 
     this._commands.push(command);
     this._cachedComposerInvalidated = true;
+
     return command;
   }
+
+  /**
+   * Registers a Command that was created by it's own.
+   *
+   * @param command the command or list of commands being added to the group
+   */
+  public add(command: Command<C> | Command<C>[]) {
+    this._commands.push(...ensureArray(command));
+    this._cachedComposerInvalidated = true;
+    return this;
+  }
+
   /**
    * Serializes the commands into multiple objects that can each be passed to a `setMyCommands` call.
    *

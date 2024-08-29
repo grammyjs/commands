@@ -75,6 +75,9 @@ export class CommandGroup<C extends Context> {
 
   constructor(options: Partial<CommandOptions> = {}) {
     this._commandOptions = options;
+    if (this._commandOptions.prefix?.trim() === "") {
+      this._commandOptions.prefix = "/";
+    }
   }
 
   private _addCommandToScope(scope: BotCommandScope, command: Command<C>) {

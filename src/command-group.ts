@@ -140,7 +140,6 @@ export class CommandGroup<C extends Context> {
       : { ...this._commandOptions, ..._options };
 
     const command = new Command<C>(name, description, handler, options);
-    if (handler) command.addToScope({ type: "default" }, handler);
 
     this._commands.push(command);
     this._cachedComposerInvalidated = true;

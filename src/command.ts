@@ -117,7 +117,7 @@ export class Command<C extends Context = Context> implements MiddlewareObj<C> {
       : options;
 
     this._options = { ...this._options, ...options };
-    if (this._options.prefix.trim() === "") this._options.prefix = "/";
+    if (this._options.prefix?.trim() === "") this._options.prefix = "/";
     this._languages.set("default", { name: name, description });
     if (handler) {
       this.addToScope({ type: "default" }, handler);

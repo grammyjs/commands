@@ -1,6 +1,7 @@
 import { assertEquals } from "https://deno.land/std@0.203.0/assert/assert_equals.ts";
-import { Command, matchesPattern } from "../src/command.ts";
+import { Command } from "../src/command.ts";
 import { CommandOptions } from "../src/types.ts";
+import { matchesPattern } from "../src/utils/checks.ts";
 import {
   Api,
   assert,

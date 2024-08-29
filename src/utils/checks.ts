@@ -25,7 +25,7 @@ export function isMiddleware<C extends Context = Context>(
   return false;
 }
 export function isCommandOptions(obj: unknown): obj is Partial<CommandOptions> {
-  if (typeof obj !== "object" && !!obj) return false;
+  if (typeof obj !== "object" || !obj) return false;
   const { prefix, matchOnlyAtStart, targetedCommands, ignoreCase } =
     obj as Partial<CommandOptions>;
 

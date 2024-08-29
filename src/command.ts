@@ -14,30 +14,11 @@ import {
 import { InvalidScopeError } from "./utils/errors.ts";
 import type { CommandOptions } from "./types.ts";
 import { ensureArray, type MaybeArray } from "./utils/array.ts";
+import { isAdmin, isMiddleware, matchesPattern } from "./utils/checks.ts";
 
 type BotCommandGroupsScope =
   | BotCommandScopeAllGroupChats
   | BotCommandScopeAllChatAdministrators;
-
-const isAdmin = (ctx: Context) =>
-  ctx
-    .getAuthor()
-    .then((author) => ["administrator", "creator"].includes(author.status));
-
-export const matchesPattern = (
-  value: string,
-  pattern: string | RegExp,
-  ignoreCase = false,
-) => {
-  const transformedValue = ignoreCase ? value.toLowerCase() : value;
-  const transformedPattern =
-    pattern instanceof RegExp && ignoreCase && !pattern.flags.includes("i")
-      ? new RegExp(pattern, pattern.flags + "i")
-      : pattern;
-  return typeof transformedPattern === "string"
-    ? transformedValue === transformedPattern
-    : transformedPattern.test(transformedValue);
-};
 
 const NOCASE_COMMAND_NAME_REGEX = /^[0-9a-z_]+$/i;
 

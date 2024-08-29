@@ -20,6 +20,7 @@ import {
   SetBotCommandsOptions,
 } from "./utils/set-bot-commands.ts";
 import { JaroWinklerOptions } from "./utils/jaro-winkler.ts";
+import { isMiddleware } from "./utils/checks.ts";
 
 /**
  * Interface for grouping {@link BotCommand}s that might (or not)
@@ -48,23 +49,6 @@ export interface UncompliantCommand {
   /** Language in which the command is uncompliant */
   language: LanguageCode | "default";
 }
-
-const isMiddleware = <C extends Context>(
-  obj: unknown,
-): obj is MaybeArray<Middleware<C>> => {
-  if (!obj) return false;
-  if (Array.isArray(obj)) return obj.every(isMiddleware);
-  const objType = typeof obj;
-
-  switch (objType) {
-    case "function":
-      return true;
-    case "object":
-      return Object.keys(obj).includes("middleware");
-  }
-
-  return false;
-};
 
 /**
  * Central class that manages all registered commands.

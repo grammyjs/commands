@@ -48,7 +48,7 @@ export class Command<C extends Context = Context> implements MiddlewareObj<C> {
   /**
    * Initialize a new command with a default handler.
    *
-   * [!IMPORTANT] This class by its own does nothing. It needs to be imported into a commandGroup
+   * [!IMPORTANT] This class by its own does nothing. It needs to be imported into a `CommandGroup`
    * via the `add` method.
    *
    * @example
@@ -73,7 +73,7 @@ export class Command<C extends Context = Context> implements MiddlewareObj<C> {
   /**
    * Initialize a new command with no handlers.
    *
-   * [!IMPORTANT] This class by its own does nothing. It needs to be imported into a commandGroup
+   * [!IMPORTANT] This class by its own does nothing. It needs to be imported into a `CommandGroup`
    * via the `add` method
    *
    * @example

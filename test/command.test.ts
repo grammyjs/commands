@@ -1,6 +1,7 @@
 import { assertEquals } from "https://deno.land/std@0.203.0/assert/assert_equals.ts";
-import { Command, matchesPattern } from "../src/command.ts";
+import { Command } from "../src/command.ts";
 import { CommandOptions } from "../src/types.ts";
+import { matchesPattern } from "../src/utils/checks.ts";
 import {
   Api,
   assert,
@@ -14,6 +15,7 @@ import {
   type User,
   type UserFromGetMe,
 } from "./deps.test.ts";
+import { isCommandOptions } from "../src/utils/checks.ts";
 
 describe("Command", () => {
   const u = { id: 42, first_name: "bot", is_bot: true } as User;
@@ -598,6 +600,38 @@ describe("Command", () => {
         "Command name has uppercase characters",
         "Command name has special characters ($). Only letters, digits and _ are allowed",
       ]);
+    });
+  });
+  describe("isCommandOptions", () => {
+    it("true when an object contains valid CommandOptions properties", () => {
+      let partialOpts: Partial<CommandOptions> = { prefix: "!" };
+      assert(isCommandOptions(partialOpts));
+      partialOpts = { matchOnlyAtStart: true };
+      assert(isCommandOptions(partialOpts));
+      partialOpts = { matchOnlyAtStart: false };
+      assert(isCommandOptions(partialOpts));
+      partialOpts = { targetedCommands: "ignored" };
+      assert(isCommandOptions(partialOpts));
+      partialOpts = { targetedCommands: "optional" };
+      assert(isCommandOptions(partialOpts));
+      partialOpts = { targetedCommands: "required" };
+      assert(isCommandOptions(partialOpts));
+      partialOpts = { ignoreCase: true };
+      assert(isCommandOptions(partialOpts));
+    });
+    it("should return false when an object contains invalid types for valid CommandOptions properties", () => {
+      let partialOpts: any = { prefix: true };
+      assertFalse(isCommandOptions(partialOpts));
+      partialOpts = { ignoreCase: "false" };
+      assertFalse(isCommandOptions(partialOpts));
+      partialOpts = { targetedCommands: "requirred" };
+      assertFalse(isCommandOptions(partialOpts));
+      partialOpts = { ignoreCase: 1 };
+      assertFalse(isCommandOptions(partialOpts));
+    });
+    it("should return false when an object does not contain any CommandOption property", () => {
+      let partialOpts: any = { papi: true };
+      assertFalse(isCommandOptions(partialOpts));
     });
   });
 });

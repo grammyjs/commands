@@ -20,6 +20,7 @@ import {
   SetBotCommandsOptions,
 } from "./utils/set-bot-commands.ts";
 import { JaroWinklerOptions } from "./utils/jaro-winkler.ts";
+import { isCommandOptions, isMiddleware } from "./utils/checks.ts";
 
 /**
  * Interface for grouping {@link BotCommand}s that might (or not)
@@ -49,23 +50,6 @@ export interface UncompliantCommand {
   language: LanguageCode | "default";
 }
 
-const isMiddleware = <C extends Context>(
-  obj: unknown,
-): obj is MaybeArray<Middleware<C>> => {
-  if (!obj) return false;
-  if (Array.isArray(obj)) return obj.every(isMiddleware);
-  const objType = typeof obj;
-
-  switch (objType) {
-    case "function":
-      return true;
-    case "object":
-      return Object.keys(obj).includes("middleware");
-  }
-
-  return false;
-};
-
 /**
  * Central class that manages all registered commands.
  * This is the starting point for the plugin, and this is what you should pass to `bot.use` so your commands get properly registered.
@@ -91,6 +75,9 @@ export class CommandGroup<C extends Context> {
 
   constructor(options: Partial<CommandOptions> = {}) {
     this._commandOptions = options;
+    if (this._commandOptions.prefix?.trim() === "") {
+      this._commandOptions.prefix = "/";
+    }
   }
 
   private _addCommandToScope(scope: BotCommandScope, command: Command<C>) {
@@ -150,18 +137,30 @@ export class CommandGroup<C extends Context> {
     const handler = isMiddleware(handlerOrOptions)
       ? handlerOrOptions
       : undefined;
-    const options = handler
-      ? _options ?? this._commandOptions
-      : handlerOrOptions as Partial<CommandOptions> ??
-        this._commandOptions;
 
-    const command = new Command<C>(name, description, options);
-    if (handler) command.addToScope({ type: "default" }, handler);
+    const options = !handler && isCommandOptions(handlerOrOptions)
+      ? { ...this._commandOptions, ...handlerOrOptions }
+      : { ...this._commandOptions, ..._options };
+
+    const command = new Command<C>(name, description, handler, options);
 
     this._commands.push(command);
     this._cachedComposerInvalidated = true;
+
     return command;
   }
+
+  /**
+   * Registers a Command that was created by it's own.
+   *
+   * @param command the command or list of commands being added to the group
+   */
+  public add(command: Command<C> | Command<C>[]) {
+    this._commands.push(...ensureArray(command));
+    this._cachedComposerInvalidated = true;
+    return this;
+  }
+
   /**
    * Serializes the commands into multiple objects that can each be passed to a `setMyCommands` call.
    *

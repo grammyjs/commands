@@ -4,7 +4,7 @@ import {
 } from "https://deno.land/std@0.203.0/testing/mock.ts";
 import { CommandGroup } from "../src/command-group.ts";
 import { Bot } from "../src/deps.deno.ts";
-import { commands, CommandsFlavor } from "../src/mod.ts";
+import { Command, commands, CommandsFlavor } from "../src/mod.ts";
 import {
   Api,
   assertRejects,
@@ -175,8 +175,25 @@ describe("Integration", () => {
       it("should add a command with a default handler", async () => {
         const handler = spy(() => {});
 
-        const commandGroup = new CommandGroup({ prefix: "!" });
-        commandGroup.command("command", "_", handler);
+        const commandGroup = new CommandGroup();
+        commandGroup.command("command", "_", handler, { prefix: "!" });
+
+        const bot = getBot();
+        bot.use(commands());
+        bot.use(commandGroup);
+
+        await bot.handleUpdate(getDummyUpdate({ userInput: "!command" }));
+
+        assertSpyCalls(handler, 1);
+      });
+    });
+    describe("add", () => {
+      it("should add a command that was statically created", async () => {
+        const handler = spy(() => {});
+
+        const commandGroup = new CommandGroup();
+        const cmd = new Command("command", "_", handler, { prefix: "!" });
+        commandGroup.add(cmd);
 
         const bot = getBot();
         bot.use(commands());

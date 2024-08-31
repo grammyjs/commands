@@ -202,72 +202,74 @@ export class Command<C extends Context = Context> implements MiddlewareObj<C> {
    */
   public addToScope(
     scope: BotCommandGroupsScope,
-    middleware: MaybeArray<ChatTypeMiddleware<C, "group" | "supergroup">>,
+    middleware?: MaybeArray<ChatTypeMiddleware<C, "group" | "supergroup">>,
     options?: Partial<CommandOptions>,
   ): this;
   public addToScope(
     scope: BotCommandScopeAllPrivateChats,
-    middleware: MaybeArray<ChatTypeMiddleware<C, "private">>,
+    middleware?: MaybeArray<ChatTypeMiddleware<C, "private">>,
     options?: Partial<CommandOptions>,
   ): this;
   public addToScope(
     scope: BotCommandScope,
-    middleware: MaybeArray<Middleware<C>>,
+    middleware?: MaybeArray<Middleware<C>>,
     options?: Partial<CommandOptions>,
   ): this;
   public addToScope(
     scope: BotCommandScope,
-    middleware: MaybeArray<Middleware<C>>,
+    middleware?: MaybeArray<Middleware<C>>,
     options: Partial<CommandOptions> = this._options,
   ): this {
-    const middlewareArray = ensureArray(middleware);
+    const middlewareArray = middleware ? ensureArray(middleware) : undefined;
     const optionsObject = { ...this._options, ...options };
 
-    switch (scope.type) {
-      case "default":
-        this._composer
-          .filter(Command.hasCommand(this.names, optionsObject))
-          .use(...middlewareArray);
-        break;
-      case "all_chat_administrators":
-        this._composer
-          .filter(Command.hasCommand(this.names, optionsObject))
-          .filter(isAdmin)
-          .use(...middlewareArray);
-        break;
-      case "all_private_chats":
-        this._composer
-          .filter(Command.hasCommand(this.names, optionsObject))
-          .chatType("private")
-          .use(...middlewareArray);
-        break;
-      case "all_group_chats":
-        this._composer
-          .filter(Command.hasCommand(this.names, optionsObject))
-          .chatType(["group", "supergroup"])
-          .use(...middlewareArray);
-        break;
-      case "chat":
-      case "chat_administrators":
-        if (scope.chat_id) {
+    if (middlewareArray) {
+      switch (scope.type) {
+        case "default":
           this._composer
             .filter(Command.hasCommand(this.names, optionsObject))
-            .filter((ctx) => ctx.chat?.id === scope.chat_id)
+            .use(...middlewareArray);
+          break;
+        case "all_chat_administrators":
+          this._composer
+            .filter(Command.hasCommand(this.names, optionsObject))
             .filter(isAdmin)
             .use(...middlewareArray);
-        }
-        break;
-      case "chat_member":
-        if (scope.chat_id && scope.user_id) {
+          break;
+        case "all_private_chats":
           this._composer
             .filter(Command.hasCommand(this.names, optionsObject))
-            .filter((ctx) => ctx.chat?.id === scope.chat_id)
-            .filter((ctx) => ctx.from?.id === scope.user_id)
+            .chatType("private")
             .use(...middlewareArray);
-        }
-        break;
-      default:
-        throw new InvalidScopeError(scope);
+          break;
+        case "all_group_chats":
+          this._composer
+            .filter(Command.hasCommand(this.names, optionsObject))
+            .chatType(["group", "supergroup"])
+            .use(...middlewareArray);
+          break;
+        case "chat":
+        case "chat_administrators":
+          if (scope.chat_id) {
+            this._composer
+              .filter(Command.hasCommand(this.names, optionsObject))
+              .filter((ctx) => ctx.chat?.id === scope.chat_id)
+              .filter(isAdmin)
+              .use(...middlewareArray);
+          }
+          break;
+        case "chat_member":
+          if (scope.chat_id && scope.user_id) {
+            this._composer
+              .filter(Command.hasCommand(this.names, optionsObject))
+              .filter((ctx) => ctx.chat?.id === scope.chat_id)
+              .filter((ctx) => ctx.from?.id === scope.user_id)
+              .use(...middlewareArray);
+          }
+          break;
+        default:
+          throw new InvalidScopeError(scope);
+      }
     }
 
     this._scopes.push(scope);

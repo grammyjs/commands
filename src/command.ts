@@ -446,11 +446,7 @@ export class Command<C extends Context = Context> implements MiddlewareObj<C> {
   }
 
   middleware() {
-    const finalComposer = new Composer<C>()
-      .use(this._composer);
-    finalComposer
-      .use(this._defaultScopeComposer);
-    return finalComposer
+    return new Composer(this._composer, this._defaultScopeComposer)
       .middleware();
   }
 }

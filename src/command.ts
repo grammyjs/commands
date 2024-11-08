@@ -38,6 +38,7 @@ export class Command<C extends Context = Context> implements MiddlewareObj<C> {
     { name: string | RegExp; description: string }
   > = new Map();
   private _composer: Composer<C> = new Composer<C>();
+  private _defaultScopeComposer = new Composer<C>();
   private _options: CommandOptions = {
     prefix: "/",
     matchOnlyAtStart: true,
@@ -274,7 +275,7 @@ export class Command<C extends Context = Context> implements MiddlewareObj<C> {
     if (middlewareArray) {
       switch (scope.type) {
         case "default":
-          this._composer
+          this._defaultScopeComposer
             .filter(Command.hasCommand(this.names, optionsObject))
             .use(...middlewareArray);
           break;
@@ -445,6 +446,7 @@ export class Command<C extends Context = Context> implements MiddlewareObj<C> {
   }
 
   middleware() {
-    return this._composer.middleware();
+    return new Composer(this._composer, this._defaultScopeComposer)
+      .middleware();
   }
 }

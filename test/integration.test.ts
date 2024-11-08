@@ -34,13 +34,14 @@ const getBot = () =>
     },
   });
 
-const getDummyUpdate = ({ userInput, language, noChat }: {
+const getDummyUpdate = ({ userInput, language, noChat, chatType = "private" }: {
   userInput?: string;
   language?: string;
   noChat?: boolean;
+  chatType?: Chat["type"];
 } = {}) => {
   const u = { id: 42, first_name: "yo", language_code: language } as User;
-  const c = { id: 100, type: "private" } as Chat;
+  const c = { id: 100, type: chatType } as Chat;
   const m = {
     text: userInput,
     from: u,
@@ -185,6 +186,27 @@ describe("Integration", () => {
         await bot.handleUpdate(getDummyUpdate({ userInput: "!command" }));
 
         assertSpyCalls(handler, 1);
+      });
+      it("should prioritize manually added scopes over the default handler ", async () => {
+        const defaultHandler = spy(() => {});
+        const specificHandler = spy(() => {});
+
+        const commandGroup = new CommandGroup();
+        commandGroup.command("command", "_", defaultHandler, { prefix: "!" })
+          .addToScope({ type: "all_group_chats" }, specificHandler);
+
+        const bot = getBot();
+        bot.use(commands());
+        bot.use(commandGroup);
+
+        await bot.handleUpdate(
+          getDummyUpdate({
+            chatType: "group",
+            userInput: "!command",
+          }),
+        );
+        assertSpyCalls(defaultHandler, 0);
+        assertSpyCalls(specificHandler, 1);
       });
     });
     describe("add", () => {

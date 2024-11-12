@@ -15,7 +15,7 @@
   ],
   "author": "Roz <roz@rjmunhoz.me>",
   "license": "MIT",
-  "homepage": "https://grammy.dev/plugins/commands.html",
+  "homepage": "https://grammy.dev/plugins/commands",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/grammyjs/commands.git"

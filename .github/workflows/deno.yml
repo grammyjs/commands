@@ -1,71 +1,71 @@
 name: ci
 
 on:
-    push:
-        branches: 
-        - main
-        - next
-    pull_request:
-        branches: 
-        - main
-        - next
+  push:
+    branches:
+      - main
+      - next
+  pull_request:
+    branches:
+      - main
+      - next
 
 jobs:
-    backport:
-        runs-on: ubuntu-latest
-        steps:
-            - uses: actions/checkout@v4
-              with:
-                  fetch-depth: 0
+  backport:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-            - uses: denoland/setup-deno@v1
+      - uses: denoland/setup-deno@v1
 
-            - run: npm install --ignore-scripts
+      - run: npm install --ignore-scripts
 
-            - run: npm run backport
+      - run: npm run backport
 
-    fmt-lint:
-        runs-on: ubuntu-latest
-        steps:
-            - uses: actions/checkout@v4
-              with:
-                  fetch-depth: 0
+  fmt-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-            - uses: denoland/setup-deno@v1
+      - uses: denoland/setup-deno@v1
 
-            - run: deno fmt --check
+      - run: deno fmt --check
 
-            - run: deno lint
+      - run: deno lint
 
-    test:
-        runs-on: ${{ matrix.os }} # runs a test on Ubuntu, Windows and macOS
+  test:
+    runs-on: ${{ matrix.os }} # runs a test on Ubuntu, Windows and macOS
 
-        strategy:
-            matrix:
-                os: [macOS-latest, windows-latest, ubuntu-latest]
+    strategy:
+      matrix:
+        os: [macOS-latest, windows-latest, ubuntu-latest]
 
-        steps:
-            - uses: actions/checkout@v4
-              with:
-                  fetch-depth: 0
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-            - uses: denoland/setup-deno@v1
+      - uses: denoland/setup-deno@v1
 
-            - run: deno cache src/mod.ts
+      - run: deno cache src/mod.ts
 
-            - run: deno task test
+      - run: deno task test
 
-    coverage:
-        runs-on: ubuntu-latest
-        steps:
-            - uses: actions/checkout@v4
-              with:
-                  fetch-depth: 0
+  coverage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-            - uses: denoland/setup-deno@v1
+      - uses: denoland/setup-deno@v1
 
-            - run: deno task coverage
+      - run: deno task coverage
 
-            - uses: codecov/codecov-action@v1.0.10 # upload the report on Codecov
-              with:
-                  file: ./coverage.lcov
+      - uses: codecov/codecov-action@v1.0.10 # upload the report on Codecov
+        with:
+          file: ./coverage.lcov

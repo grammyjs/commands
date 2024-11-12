@@ -23,7 +23,7 @@
   "bugs": {
     "url": "https://github.com/grammyjs/commands/issues"
   },
-  "dependencies": {
+  "peerDependencies": {
     "grammy": "^1.17.1"
   },
   "devDependencies": {

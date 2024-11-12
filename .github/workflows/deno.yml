@@ -18,7 +18,9 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: denoland/setup-deno@v1
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: 2.x
 
       - run: npm install --ignore-scripts
 
@@ -31,7 +33,9 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: denoland/setup-deno@v1
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: 2.x
 
       - run: deno fmt --check
 
@@ -49,7 +53,9 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: denoland/setup-deno@v1
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: 2.x
 
       - run: deno cache src/mod.ts
 
@@ -62,7 +68,9 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: denoland/setup-deno@v1
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: 2.x
 
       - run: deno task coverage
 

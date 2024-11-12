@@ -57,7 +57,7 @@ jobs:
         with:
           deno-version: 2.x
 
-      - run: deno cache src/mod.ts
+      - run: deno cache -I src/mod.ts
 
       - run: deno task test
 

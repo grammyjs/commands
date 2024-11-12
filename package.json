@@ -15,8 +15,15 @@
   ],
   "author": "Roz <roz@rjmunhoz.me>",
   "license": "MIT",
+  "homepage": "https://grammy.dev/plugins/commands.html",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/grammyjs/commands.git"
+  },
+  "bugs": {
+    "url": "https://github.com/grammyjs/commands/issues"
+  },
   "dependencies": {
-    "@grammyjs/types": "^3.8.1",
     "grammy": "^1.17.1",
     "ts-pattern": "^5.0.1"
   },

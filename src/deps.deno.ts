@@ -21,7 +21,7 @@ export type {
   Chat,
   LanguageCode,
   MessageEntity,
-} from "https://lib.deno.dev/x/grammy_types@^v3.8.1/mod.ts";
+} from "https://lib.deno.dev/x/grammy@1/types.ts";
 export {
   LanguageCodes,
-} from "https://lib.deno.dev/x/grammy_types@^v3.8.1/mod.ts";
+} from "https://lib.deno.dev/x/grammy@1/types.ts";

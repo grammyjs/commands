@@ -1,7 +1,7 @@
-## grammY Commands Plugin
+# grammY commands
 
-This plugin provides a convenient way to define and manage commands for your grammY bot. It simplifies the process of
-setting up commands with scopes and localization.
+This plugin provides a convenient way to define and manage commands for your grammY bot.
+It simplifies the process of setting up commands with scopes and localization.
 
 ## Installation
 
@@ -14,7 +14,7 @@ npm i @grammyjs/commands
 The main functionality of this plugin is to define your commands, localize them, and give them handlers for each
 [scope](https://core.telegram.org/bots/api#botcommandscope), like so:
 
-```typescript
+```ts
 import { Bot } from "grammy";
 import { CommandGroup } from "@grammyjs/commands";
 
@@ -50,7 +50,7 @@ will not be registered, and your bot will not respond to those commands.
 This plugin provides a shortcut for setting the commands for the current chat. To use it, you need to install the
 commands flavor and the plugin itself, like so:
 
-```typescript
+```ts
 import { Bot, Context } from "grammy";
 import { CommandGroup, commands, CommandsFlavor } from "@grammyjs/commands";
 

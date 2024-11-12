@@ -21,6 +21,5 @@ export type {
     Chat,
     LanguageCode,
     MessageEntity
-} from "@grammyjs/types";
-
-export { LanguageCodes } from "@grammyjs/types";
+} from "grammy/types";
+export { LanguageCodes } from "grammy/types";

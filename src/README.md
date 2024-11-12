@@ -2,7 +2,7 @@
 
 This commands plugin for [grammY](https://grammy.dev) provides a convenient way to define and manage commands for your grammY bot.
 It simplifies the process of setting up commands with scopes and localization.
-Please confer the [official documentation](https://grammy.dev/plugins/commands) for this plugin to learn more about this plugin.
+Please confer the [official documentation](https://grammy.dev/plugins/commands) for this plugin to learn more about it.
 
 Here is a quickstart to get you up and running, though.
 

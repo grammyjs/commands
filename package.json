@@ -24,8 +24,7 @@
     "url": "https://github.com/grammyjs/commands/issues"
   },
   "dependencies": {
-    "grammy": "^1.17.1",
-    "ts-pattern": "^5.0.1"
+    "grammy": "^1.17.1"
   },
   "devDependencies": {
     "deno-bin": "^1.45.2",

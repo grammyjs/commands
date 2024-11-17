@@ -19,7 +19,7 @@
   "lock": false,
   "tasks": {
     "backport": "rm -rf out && deno run --no-prompt --allow-read=. --allow-write=. https://deno.land/x/deno2node@v1.9.0/src/cli.ts",
-    "check": "deno lint && deno fmt --check && deno check src/mod.ts",
+    "check": "deno lint && deno fmt --check && deno check --allow-import src/mod.ts",
     "fix": "deno lint --fix && deno fmt",
     "test": "deno test --allow-import --seed=123456 --parallel ./test/",
     "coverage": "rm -rf ./test/cov_profile && deno task test --coverage=./test/cov_profile && deno coverage --lcov --output=./coverage.lcov ./test/cov_profile",

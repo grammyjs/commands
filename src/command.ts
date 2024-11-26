@@ -364,10 +364,11 @@ export class Command<C extends Context = Context> implements MiddlewareObj<C> {
         if (targetedCommands === "ignored" && username) continue;
         if (targetedCommands === "required" && !username) continue;
         if (username && username !== ctx.me.username) continue;
+        console.log(command.replace(prefix, ""));
         if (
           commandNames.some((name) =>
             matchesPattern(
-              command.replace(prefix, ""),
+              command.replace(prefix, "").split(" ")[0],
               name,
               options.ignoreCase,
             )

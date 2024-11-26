@@ -208,6 +208,20 @@ describe("Integration", () => {
         assertSpyCalls(defaultHandler, 0);
         assertSpyCalls(specificHandler, 1);
       });
+      it("custom prefixed command with extra text", async () => {
+        const handler = spy(() => {});
+
+        const commandGroup = new CommandGroup();
+        commandGroup.command("kick", "_", handler, { prefix: "!" });
+
+        const bot = getBot();
+        bot.use(commands());
+        bot.use(commandGroup);
+
+        await bot.handleUpdate(getDummyUpdate({ userInput: "!kick 12345" }));
+
+        assertSpyCalls(handler, 1);
+      });
     });
     describe("add", () => {
       it("should add a command that was statically created", async () => {

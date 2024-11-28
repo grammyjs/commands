@@ -22,3 +22,5 @@ export type {
   LanguageCode,
   MessageEntity,
 } from "https://lib.deno.dev/x/grammy@1/types.ts";
+// TODO: bring this back once the types are available on the "web" runtimes
+// export { LanguageCodes } from "https://lib.deno.dev/x/grammy@1/types.ts";

@@ -22,3 +22,5 @@ export type {
     LanguageCode,
     MessageEntity
 } from "grammy/types";
+// TODO: bring this back once the types are available on the "web" runtimes
+// export { LanguageCodes } from "grammy/types";

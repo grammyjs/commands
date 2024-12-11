@@ -1,3 +1,4 @@
+import { CommandsFlavor } from "./context.ts";
 import {
   type BotCommand,
   type BotCommandScope,
@@ -12,7 +13,6 @@ import {
   type Middleware,
   type MiddlewareObj,
 } from "./deps.deno.ts";
-import { InvalidScopeError } from "./utils/errors.ts";
 import type { CommandOptions } from "./types.ts";
 import { ensureArray, type MaybeArray } from "./utils/array.ts";
 import {
@@ -21,7 +21,7 @@ import {
   isMiddleware,
   matchesPattern,
 } from "./utils/checks.ts";
-import { CommandsFlavor } from "./context.ts";
+import { InvalidScopeError } from "./utils/errors.ts";
 
 type BotCommandGroupsScope =
   | BotCommandScopeAllGroupChats
@@ -371,36 +371,46 @@ export class Command<C extends Context = Context> implements MiddlewareObj<C> {
     }
 
     const commandNames = ensureArray(command);
-    const commands = ctx.msg.text.split(prefix).map((text) => ({ text }));
+    const escapedPrefix = prefix.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const commandRegex = new RegExp(
+      `${escapedPrefix}(?<command>[^@ ]+)(?:@(?<username>[^\\s]*))?(?<rest>.*)`,
+      "g",
+    );
 
-    for (const { text } of commands) {
-      const [command, username] = text.split("@");
-      if (targetedCommands === "ignored" && username) continue;
-      if (targetedCommands === "required" && !username) continue;
-      if (username && username !== ctx.me.username) continue;
-      const [issuedCommand, ...rest] = command.replace(prefix, "").split(" ");
-      const matchingCommand = commandNames.find((name) =>
-        matchesPattern(
-          issuedCommand,
-          name,
-          options.ignoreCase,
-        )
+    const firstCommand = commandRegex.exec(ctx.msg.text)?.groups;
+
+    if (!firstCommand) return null;
+
+    if (!firstCommand.username && targetedCommands === "required") return null;
+    if (firstCommand.username && firstCommand.username !== ctx.me.username) {
+      return null;
+    }
+    if (firstCommand.username && targetedCommands === "ignored") return null;
+
+    const matchingCommand = commandNames.find((name) => {
+      const matches = matchesPattern(
+        name instanceof RegExp
+          ? firstCommand.command + firstCommand.rest
+          : firstCommand.command,
+        name,
+        options.ignoreCase,
       );
+      return matches;
+    });
 
-      if (matchingCommand instanceof RegExp) {
-        return {
-          command: matchingCommand,
-          rest: rest.join(" "),
-          match: matchingCommand.exec(ctx.msg.text),
-        };
-      }
+    if (matchingCommand instanceof RegExp) {
+      return {
+        command: matchingCommand,
+        rest: firstCommand.rest.trim(),
+        match: matchingCommand.exec(ctx.msg.text),
+      };
+    }
 
-      if (matchingCommand) {
-        return {
-          command: matchingCommand,
-          rest: rest.join(" "),
-        };
-      }
+    if (matchingCommand) {
+      return {
+        command: matchingCommand,
+        rest: firstCommand.rest.trim(),
+      };
     }
 
     return null;

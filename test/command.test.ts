@@ -1,7 +1,8 @@
 import { assertEquals } from "https://deno.land/std@0.203.0/assert/assert_equals.ts";
+import { assertExists } from "https://deno.land/std@0.203.0/assert/assert_exists.ts";
 import { Command } from "../src/command.ts";
 import { CommandOptions } from "../src/types.ts";
-import { matchesPattern } from "../src/utils/checks.ts";
+import { isCommandOptions, matchesPattern } from "../src/utils/checks.ts";
 import {
   Api,
   assert,
@@ -15,7 +16,19 @@ import {
   type User,
   type UserFromGetMe,
 } from "./deps.test.ts";
-import { isCommandOptions } from "../src/utils/checks.ts";
+
+function createRegexpMatchArray(
+  match: string[],
+  groups?: Record<string, string>,
+  index?: number,
+  input?: string,
+) {
+  const result = [...match];
+  (result as any).groups = groups;
+  (result as any).index = index;
+  (result as any).input = input;
+  return result as unknown as RegExpExecArray;
+}
 
 describe("Command", () => {
   const u = { id: 42, first_name: "bot", is_bot: true } as User;
@@ -75,13 +88,19 @@ describe("Command", () => {
         m.entities = [{ type: "bot_command", offset: 0, length: 10 }];
         const ctx = new Context(update, api, me);
         assert(Command.hasCommand("start", options)(ctx));
+      });
 
+      it("should not match a regular targeted command in the middle of the message", () => {
         m.text = "blabla /start@bot";
         m.entities = [{ type: "bot_command", offset: 7, length: 10 }];
+        const ctx = new Context(update, api, me);
         assertFalse(Command.hasCommand("start", options)(ctx));
+      });
 
+      it("should not match a regular targeted command with a different username", () => {
         m.text = "/start@otherbot";
         m.entities = [{ type: "bot_command", offset: 0, length: 13 }];
+        const ctx = new Context(update, api, me);
         assertFalse(Command.hasCommand("start", options)(ctx));
       });
 
@@ -632,6 +651,129 @@ describe("Command", () => {
     it("should return false when an object does not contain any CommandOption property", () => {
       let partialOpts: any = { papi: true };
       assertFalse(isCommandOptions(partialOpts));
+    });
+  });
+
+  describe("findMatchingCommand", () => {
+    it("should return null if the message does not contain a text", () => {
+      m.text = undefined;
+      const ctx = new Context(update, api, me);
+      assert(Command.findMatchingCommand("start", options, ctx) === null);
+    });
+
+    it("should return null if the message does not start with the prefix and matchOnlyAtStart is true", () => {
+      m.text = "/start";
+      const ctx = new Context(update, api, me);
+      assertEquals(
+        Command.findMatchingCommand("start", {
+          ...options,
+          prefix: "NOPE",
+          matchOnlyAtStart: true,
+        }, ctx),
+        null,
+      );
+    });
+
+    it("should correctly handle a targeted command", () => {
+      m.text = "/start@bot";
+      const ctx = new Context(update, api, me);
+      assertEquals(
+        Command.findMatchingCommand("start", options, ctx),
+        {
+          command: "start",
+          rest: "",
+        },
+      );
+    });
+
+    it("should correctly handle a non-targeted command", () => {
+      m.text = "/start";
+      const ctx = new Context(update, api, me);
+      assertEquals(
+        Command.findMatchingCommand("start", options, ctx),
+        {
+          command: "start",
+          rest: "",
+        },
+      );
+    });
+
+    it("should correctly handle a regex command with no args", () => {
+      m.text = "/start_123";
+      const ctx = new Context(update, api, me);
+      assertEquals(
+        Command.findMatchingCommand(/start_(\d{3})/, options, ctx),
+        {
+          command: /start_(\d{3})/,
+          rest: "",
+          match: createRegexpMatchArray(
+            ["start_123", "123"],
+            undefined,
+            1,
+            "/start_123",
+          ),
+        },
+      );
+    });
+
+    it("should correctly handle a regex command with args", () => {
+      m.text = "/start blabla";
+      const ctx = new Context(update, api, me);
+      const result = Command.findMatchingCommand(/start (.*)/, {
+        ...options,
+        targetedCommands: "optional",
+      }, ctx);
+
+      assertExists(result);
+      assertEquals(
+        result,
+        {
+          command: /start (.*)/,
+          rest: "blabla",
+          match: createRegexpMatchArray(
+            ["start blabla", "blabla"],
+            undefined,
+            1,
+            "/start blabla",
+          ),
+        },
+      );
+    });
+
+    it("should handle a targeted command with a param that contains an @", () => {
+      m.text = "/start@bot john@doe.com";
+      const ctx = new Context(update, api, me);
+      assertEquals(
+        Command.findMatchingCommand("start", options, ctx),
+        {
+          command: "start",
+          rest: "john@doe.com",
+        },
+      );
+    });
+
+    it("should handle a non-targeted command with a param that contains an @", () => {
+      m.text = "/start john@doe.com";
+      const ctx = new Context(update, api, me);
+      assertEquals(Command.findMatchingCommand("start", options, ctx), {
+        command: "start",
+        rest: "john@doe.com",
+      });
+    });
+
+    it("should handle a command after an occurence of @", () => {
+      m.text = "john@doe.com /start@bot test";
+      const ctx = new Context(update, api, me);
+      assertEquals(
+        Command.findMatchingCommand("start", {
+          ...options,
+          matchOnlyAtStart: false,
+        }, ctx),
+        {
+          command: "start",
+          rest: "test",
+        },
+      );
     });
   });
 });

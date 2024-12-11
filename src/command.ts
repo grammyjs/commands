@@ -1,3 +1,4 @@
+import { CommandsFlavor } from "./context.ts";
 import {
   type BotCommand,
   type BotCommandScope,
@@ -12,7 +13,6 @@ import {
   type Middleware,
   type MiddlewareObj,
 } from "./deps.deno.ts";
-import { InvalidScopeError } from "./utils/errors.ts";
 import type { CommandOptions } from "./types.ts";
 import { ensureArray, type MaybeArray } from "./utils/array.ts";
 import {
@@ -21,10 +21,31 @@ import {
   isMiddleware,
   matchesPattern,
 } from "./utils/checks.ts";
+import { InvalidScopeError } from "./utils/errors.ts";
 
 type BotCommandGroupsScope =
   | BotCommandScopeAllGroupChats
   | BotCommandScopeAllChatAdministrators;
+
+/**
+ * Represents a matched command, the result of the RegExp match, and the rest of the input.
+ */
+export interface CommandMatch {
+  /**
+   * The matched command.
+   */
+  command: string | RegExp;
+  /**
+   * The rest of the input after the command.
+   */
+  rest: string;
+  /**
+   * The result of the RegExp match.
+   *
+   * Only defined if the command is a RegExp.
+   */
+  match?: RegExpExecArray | null;
+}
 
 const NOCASE_COMMAND_NAME_REGEX = /^[0-9a-z_]+$/i;
 
@@ -327,6 +348,75 @@ export class Command<C extends Context = Context> implements MiddlewareObj<C> {
   }
 
   /**
+   * Finds the matching command in the given context
+   *
+   * @example
+   * ```ts
+   * // ctx.msg.text = "/delete_123 something"
+   * const match = Command.findMatchingCommand(/delete_(.*)/, { prefix: "/", ignoreCase: true }, ctx)
+   * // match is { command: /delete_(.*)/, rest: ["something"], match: ["delete_123"] }
+   * ```
+   */
+  public static findMatchingCommand(
+    command: MaybeArray<string | RegExp>,
+    options: CommandOptions,
+    ctx: Context,
+  ): CommandMatch | null {
+    const { matchOnlyAtStart, prefix, targetedCommands } = options;
+
+    if (!ctx.has(":text")) return null;
+
+    if (matchOnlyAtStart && !ctx.msg.text.startsWith(prefix)) {
+      return null;
+    }
+
+    const commandNames = ensureArray(command);
+    const escapedPrefix = prefix.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const commandRegex = new RegExp(
+      `${escapedPrefix}(?<command>[^@ ]+)(?:@(?<username>[^\\s]*))?(?<rest>.*)`,
+      "g",
+    );
+
+    const firstCommand = commandRegex.exec(ctx.msg.text)?.groups;
+
+    if (!firstCommand) return null;
+
+    if (!firstCommand.username && targetedCommands === "required") return null;
+    if (firstCommand.username && firstCommand.username !== ctx.me.username) {
+      return null;
+    }
+    if (firstCommand.username && targetedCommands === "ignored") return null;
+
+    const matchingCommand = commandNames.find((name) => {
+      const matches = matchesPattern(
+        name instanceof RegExp
+          ? firstCommand.command + firstCommand.rest
+          : firstCommand.command,
+        name,
+        options.ignoreCase,
+      );
+      return matches;
+    });
+
+    if (matchingCommand instanceof RegExp) {
+      return {
+        command: matchingCommand,
+        rest: firstCommand.rest.trim(),
+        match: matchingCommand.exec(ctx.msg.text),
+      };
+    }
+
+    if (matchingCommand) {
+      return {
+        command: matchingCommand,
+        rest: firstCommand.rest.trim(),
+      };
+    }
+
+    return null;
+  }
+
+  /**
    * Creates a matcher for the given command that can be used in filtering operations
    *
    * @example
@@ -346,38 +436,20 @@ export class Command<C extends Context = Context> implements MiddlewareObj<C> {
     command: MaybeArray<string | RegExp>,
     options: CommandOptions,
   ) {
-    const { matchOnlyAtStart, prefix, targetedCommands } = options;
-
     return (ctx: Context) => {
-      if (!ctx.has(":text")) return false;
-      if (matchOnlyAtStart && !ctx.msg.text.startsWith(prefix)) {
-        return false;
-      }
+      const matchingCommand = Command.findMatchingCommand(
+        command,
+        options,
+        ctx,
+      );
 
-      const commandNames = ensureArray(command);
-      const commands = prefix === "/"
-        ? ctx.entities("bot_command")
-        : ctx.msg.text.split(prefix).map((text) => ({ text }));
+      if (!matchingCommand) return false;
 
-      for (const { text } of commands) {
-        const [command, username] = text.split("@");
-        if (targetedCommands === "ignored" && username) continue;
-        if (targetedCommands === "required" && !username) continue;
-        if (username && username !== ctx.me.username) continue;
-        if (
-          commandNames.some((name) =>
-            matchesPattern(
-              command.replace(prefix, "").split(" ")[0],
-              name,
-              options.ignoreCase,
-            )
-          )
-        ) {
-          return true;
-        }
-      }
+      ctx.match = matchingCommand.rest;
+      // TODO: Clean this up. But how to do it without requiring the user to install the commands flavor?
+      (ctx as Context & CommandsFlavor).commandMatch = matchingCommand;
 
-      return false;
+      return true;
     };
   }
 

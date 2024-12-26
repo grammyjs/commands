@@ -96,20 +96,20 @@ describe("Integration", () => {
 
       assertSpyCalls(setMyCommandsSpy, 0);
     });
-    // it("should be hable to set commands with no handler", async () => {
-    //   const myCommands = new CommandGroup({ prefix: "!" });
-    //   myCommands.command("command", "super description");
+    it("should be hable to set commands with no handler", async () => {
+      const myCommands = new CommandGroup();
+      myCommands.command("command", "super description");
 
-    //   const setMyCommandsSpy = spy(resolvesNext([true] as const));
+      const setMyCommandsSpy = spy(resolvesNext([true] as const));
 
-    //   await myCommands.setCommands({
-    //     api: {
-    //       raw: { setMyCommands: setMyCommandsSpy },
-    //     } as unknown as Api,
-    //   });
+      await myCommands.setCommands({
+        api: {
+          raw: { setMyCommands: setMyCommandsSpy },
+        } as unknown as Api,
+      });
 
-    //   assertSpyCalls(setMyCommandsSpy, 1);
-    // });
+      assertSpyCalls(setMyCommandsSpy, 1);
+    });
   });
 
   describe("ctx.setMyCommands", () => {

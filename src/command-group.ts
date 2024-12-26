@@ -34,7 +34,7 @@ export interface SetMyCommandsParams {
    */
   language_code?: LanguageCode;
   /** Commands that can be each one passed to a SetMyCommands Call */
-  commands: BotCommand[];
+  commands: (BotCommand & { noHandler?: boolean })[];
 }
 
 /**
@@ -309,6 +309,7 @@ export class CommandGroup<C extends Context> {
               description: command.getLocalizedDescription(
                 language,
               ),
+              ...(command.noHandler ? { noHandler: true } : {}),
             });
           }
           if (filterLanguage) {

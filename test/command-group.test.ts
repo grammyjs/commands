@@ -4,6 +4,7 @@ import { dummyCtx } from "./context.test.ts";
 import {
   assert,
   assertEquals,
+  assertObjectMatch,
   assertRejects,
   assertThrows,
   describe,
@@ -16,7 +17,15 @@ describe("CommandGroup", () => {
       const commands = new CommandGroup();
       commands.command("test", "no handler");
 
-      assertEquals(commands.toArgs().scopes, []);
+      assertObjectMatch(commands.toArgs().scopes[0], {
+        commands: [
+          {
+            command: "test",
+            description: "no handler",
+            noHandler: true,
+          },
+        ],
+      });
     });
 
     it("should create a command with a default handler", () => {
@@ -125,10 +134,10 @@ describe("CommandGroup", () => {
           },
         ]);
       });
-      it("should omit commands with no handler", () => {
+      it("should mark commands with no handler", () => {
         const commands = new CommandGroup();
         commands.command("test", "handler", (_) => _);
-        commands.command("omitme", "nohandler");
+        commands.command("markme", "nohandler");
         const params = commands.toSingleScopeArgs({
           type: "chat",
           chat_id: 10,
@@ -139,6 +148,11 @@ describe("CommandGroup", () => {
             language_code: undefined,
             commands: [
               { command: "test", description: "handler" },
+              {
+                command: "markme",
+                description: "nohandler",
+                noHandler: true,
+              },
             ],
           },
         ]);

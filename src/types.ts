@@ -40,6 +40,7 @@ export interface CommandElementals {
   language: LanguageCode | "default";
   scopes: BotCommandScope[];
   description: string;
+  noHandler?: boolean;
 }
 
 /** represents a bot__command entity inside a text message */

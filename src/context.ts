@@ -1,4 +1,5 @@
 import { CommandGroup } from "./command-group.ts";
+import { CommandMatch } from "./command.ts";
 import { BotCommandScopeChat, Context, NextFunction } from "./deps.deno.ts";
 import { SetMyCommandsParams } from "./mod.ts";
 import { BotCommandEntity } from "./types.ts";
@@ -36,6 +37,7 @@ export interface CommandsFlavor<C extends Context = Context> extends Context {
     commands: CommandGroup<C> | CommandGroup<C>[],
     options?: SetBotCommandsOptions,
   ) => Promise<void>;
+
   /**
    * Returns the nearest command to the user input.
    * If no command is found, returns `null`.
@@ -56,6 +58,13 @@ export interface CommandsFlavor<C extends Context = Context> extends Context {
   getCommandEntities: (
     commands: CommandGroup<C> | CommandGroup<C>[],
   ) => BotCommandEntity[];
+
+  /**
+   * The matched command and the rest of the input.
+   *
+   * When matched command is a RegExp, a `match` property exposes the result of the RegExp match.
+   */
+  commandMatch: CommandMatch;
 }
 
 /**

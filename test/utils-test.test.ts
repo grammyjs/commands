@@ -18,5 +18,10 @@ describe("Utils tests", () => {
       const composer = new Composer();
       assert(isMiddleware(composer));
     });
+    it("Composer[]", () => {
+      const a = new Composer();
+      const b = new Composer();
+      assert(isMiddleware([a, b]));
+    });
   });
 });

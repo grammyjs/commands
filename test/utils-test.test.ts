@@ -14,7 +14,7 @@ import { Composer } from "../src/deps.deno.ts";
 
 describe("Utils tests", () => {
   describe("isMiddleware", () => {
-    it("recognize Composer as a valid middleware", () => {
+    it("Composer", () => {
       const composer = new Composer();
       assert(isMiddleware(composer));
     });

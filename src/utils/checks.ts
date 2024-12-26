@@ -1,4 +1,4 @@
-import { Context, Middleware } from "../deps.deno.ts";
+import { Composer, Context, Middleware } from "../deps.deno.ts";
 import { CommandOptions } from "../types.ts";
 import { MaybeArray } from "./array.ts";
 
@@ -12,6 +12,7 @@ export function isMiddleware<C extends Context = Context>(
   obj: unknown,
 ): obj is MaybeArray<Middleware<C>> {
   if (!obj) return false;
+  if (obj instanceof Composer) return true;
   if (Array.isArray(obj)) return obj.every(isMiddleware);
   const objType = typeof obj;
 

@@ -12,7 +12,7 @@ import {
   type LanguageCode,
   type Middleware,
   type MiddlewareObj,
-  NextFunction,
+  type NextFunction,
 } from "./deps.deno.ts";
 import type { CommandOptions } from "./types.ts";
 import { ensureArray, type MaybeArray } from "./utils/array.ts";

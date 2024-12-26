@@ -22,5 +22,7 @@ export type {
   LanguageCode,
   MessageEntity,
 } from "https://lib.deno.dev/x/grammy@1/types.ts";
+import SuperExpressive from "npm:super-expressive";
+export { SuperExpressive };
 // TODO: bring this back once the types are available on the "web" runtimes
 // export { LanguageCodes } from "https://lib.deno.dev/x/grammy@1/types.ts";

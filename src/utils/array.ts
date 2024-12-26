@@ -1,3 +1,5 @@
+import { SuperExpressive } from "../deps.deno.ts";
+
 export type MaybeArray<T> = T | T[];
 export const ensureArray = <T>(value: MaybeArray<T>): T[] =>
   Array.isArray(value) ? value : [value];
@@ -14,8 +16,18 @@ export function escapeSpecial(str: string) {
   );
 }
 export function getCommandsRegex(prefix: string) {
-  return new RegExp(
-    `(\?\<\!\\S)(\?<prefix>${escapeSpecial(prefix)})\\S+(\\s|$)`,
-    "g",
-  );
+  return SuperExpressive()
+    .assertNotBehind
+    .nonWhitespaceChar
+    .end()
+    .namedCapture("prefix")
+    .string(`${prefix}`)
+    .end()
+    .oneOrMore
+    .nonWhitespaceChar
+    .anyOf
+    .whitespaceChar
+    .endOfInput
+    .end()
+    .toRegex();
 }

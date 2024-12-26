@@ -26,6 +26,9 @@
   "peerDependencies": {
     "grammy": "^1.17.1"
   },
+  "dependencies": {
+    "super-expressive": "^2.0.0"
+  },
   "devDependencies": {
     "deno2node": "^1.14.0",
     "typescript": "^5.6.3"

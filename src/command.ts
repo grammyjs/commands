@@ -1,6 +1,5 @@
 import { CommandsFlavor } from "./context.ts";
 import {
-  type BotCommand,
   type BotCommandScope,
   type BotCommandScopeAllChatAdministrators,
   type BotCommandScopeAllGroupChats,

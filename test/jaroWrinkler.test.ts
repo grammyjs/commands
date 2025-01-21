@@ -43,7 +43,7 @@ describe("Jaro-Wrinkler Algorithm", () => {
         () => {},
       );
       assertEquals(
-        fuzzyMatch("strt", cmds, { language: "fr" })?.command?.name,
+        fuzzyMatch("strt", cmds, { language: "fr" })?.command?.command,
         "start",
       );
     });
@@ -73,7 +73,7 @@ describe("Jaro-Wrinkler Algorithm", () => {
         (ctx) => ctx.reply(`Hello, ${ctx.chat.first_name}!`),
       );
       assertEquals(
-        fuzzyMatch("magcal", cmds, { language: "fr" })?.command?.name,
+        fuzzyMatch("magcal", cmds, { language: "fr" })?.command?.command,
         "magical_\\d",
       );
     });
@@ -88,11 +88,11 @@ describe("Jaro-Wrinkler Algorithm", () => {
       ).localize("es", /magico_(c|d)/, "Comando Mágico");
 
       assertEquals(
-        fuzzyMatch("magici_c", cmds, { language: "es" })?.command?.name,
+        fuzzyMatch("magici_c", cmds, { language: "es" })?.command?.command,
         "magico_(c|d)",
       );
       assertEquals(
-        fuzzyMatch("magici_a", cmds, { language: "fr" })?.command?.name,
+        fuzzyMatch("magici_a", cmds, { language: "fr" })?.command?.command,
         "magical_(a|b)",
       );
     });
@@ -114,56 +114,56 @@ describe("Jaro-Wrinkler Algorithm", () => {
         const json = cmds.toElementals();
         assertEquals(json, [
           {
-            name: "butcher",
+            command: "butcher",
             language: "default",
             prefix: "?",
             scopes: [{ type: "default" }],
             description: "_",
           },
           {
-            name: "carnicero",
+            command: "carnicero",
             language: "es",
             prefix: "?",
             scopes: [{ type: "default" }],
             description: "a",
           },
           {
-            name: "macellaio",
+            command: "macellaio",
             language: "it",
             prefix: "?",
             scopes: [{ type: "default" }],
             description: "b",
           },
           {
-            name: "duke",
+            command: "duke",
             language: "default",
             prefix: "/",
             scopes: [{ type: "default" }],
             description: "_",
           },
           {
-            name: "duque",
+            command: "duque",
             language: "es",
             prefix: "/",
             scopes: [{ type: "default" }],
             description: "c",
           },
           {
-            name: "duc",
+            command: "duc",
             language: "fr",
             prefix: "/",
             scopes: [{ type: "default" }],
             description: "d",
           },
           {
-            name: "dad_(.*)",
+            command: "dad_(.*)",
             language: "default",
             prefix: "/",
             scopes: [{ type: "default" }],
             description: "dad",
           },
           {
-            name: "papa_(.*)",
+            command: "papa_(.*)",
             language: "es",
             prefix: "/",
             scopes: [{ type: "default" }],
@@ -188,36 +188,36 @@ describe("Jaro-Wrinkler Algorithm", () => {
       it("sv", () => {
         assertEquals(
           fuzzyMatch("hertog", cmds, { language: "sv" })?.command
-            ?.name,
+            ?.command,
           "hertig",
         );
       });
       it("da", () => {
         assertEquals(
           fuzzyMatch("hertog", cmds, { language: "da" })?.command
-            ?.name,
+            ?.command,
           "hertug",
         );
       });
       describe("default", () => {
         it("duke", () =>
           assertEquals(
-            fuzzyMatch("duk", cmds, {})?.command?.name,
+            fuzzyMatch("duk", cmds, {})?.command?.command,
             "duke",
           ));
         it("duke", () =>
           assertEquals(
-            fuzzyMatch("due", cmds, {})?.command?.name,
+            fuzzyMatch("due", cmds, {})?.command?.command,
             "duke",
           ));
         it("duke", () =>
           assertEquals(
-            fuzzyMatch("dule", cmds, {})?.command?.name,
+            fuzzyMatch("dule", cmds, {})?.command?.command,
             "duke",
           ));
         it("duke", () =>
           assertEquals(
-            fuzzyMatch("duje", cmds, {})?.command?.name,
+            fuzzyMatch("duje", cmds, {})?.command?.command,
             "duke",
           ));
       });
@@ -225,19 +225,19 @@ describe("Jaro-Wrinkler Algorithm", () => {
         it("duque", () =>
           assertEquals(
             fuzzyMatch("duquw", cmds, { language: "es" })?.command
-              ?.name,
+              ?.command,
             "duque",
           ));
         it("duque", () =>
           assertEquals(
             fuzzyMatch("duqe", cmds, { language: "es" })?.command
-              ?.name,
+              ?.command,
             "duque",
           ));
         it("duque", () =>
           assertEquals(
             fuzzyMatch("duwue", cmds, { language: "es" })?.command
-              ?.name,
+              ?.command,
             "duque",
           ));
       });
@@ -245,19 +245,19 @@ describe("Jaro-Wrinkler Algorithm", () => {
         it("duc", () =>
           assertEquals(
             fuzzyMatch("duk", cmds, { language: "fr" })?.command
-              ?.name,
+              ?.command,
             "duc",
           ));
         it("duc", () =>
           assertEquals(
             fuzzyMatch("duce", cmds, { language: "fr" })?.command
-              ?.name,
+              ?.command,
             "duc",
           ));
         it("duc", () =>
           assertEquals(
             fuzzyMatch("ducñ", cmds, { language: "fr" })?.command
-              ?.name,
+              ?.command,
             "duc",
           ));
       });
@@ -276,25 +276,25 @@ describe("Jaro-Wrinkler Algorithm", () => {
         it("poussar", () =>
           assertEquals(
             fuzzyMatch("pousssr", cmds, { language: "pt" })?.command
-              ?.name,
+              ?.command,
             "poussar",
           ));
         it("poussar", () =>
           assertEquals(
             fuzzyMatch("pousar", cmds, { language: "pt" })?.command
-              ?.name,
+              ?.command,
             "poussar",
           ));
         it("poussar", () =>
           assertEquals(
             fuzzyMatch("poussqr", cmds, { language: "pt" })?.command
-              ?.name,
+              ?.command,
             "poussar",
           ));
         it("poussar", () =>
           assertEquals(
             fuzzyMatch("poussrr", cmds, { language: "pt" })?.command
-              ?.name,
+              ?.command,
             "poussar",
           ));
       });
@@ -302,25 +302,25 @@ describe("Jaro-Wrinkler Algorithm", () => {
         it("pousser", () =>
           assertEquals(
             fuzzyMatch("pousssr", cmds, { language: "fr" })?.command
-              ?.name,
+              ?.command,
             "pousser",
           ));
         it("pousser", () =>
           assertEquals(
             fuzzyMatch("pouser", cmds, { language: "fr" })?.command
-              ?.name,
+              ?.command,
             "pousser",
           ));
         it("pousser", () =>
           assertEquals(
             fuzzyMatch("pousrr", cmds, { language: "fr" })?.command
-              ?.name,
+              ?.command,
             "pousser",
           ));
         it("pousser", () =>
           assertEquals(
             fuzzyMatch("poussrr", cmds, { language: "fr" })?.command
-              ?.name,
+              ?.command,
             "pousser",
           ));
       });

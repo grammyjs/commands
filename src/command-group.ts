@@ -9,7 +9,7 @@ import {
   type LanguageCode,
   Middleware,
 } from "./deps.deno.ts";
-import type { CommandElementals, CommandOptions } from "./types.ts";
+import type { BotCommandX, CommandOptions } from "./types.ts";
 import {
   ensureArray,
   getCommandsRegex,
@@ -288,7 +288,7 @@ export class CommandGroup<C extends Context> {
 
   public toElementals(
     filterLanguage?: LanguageCode | "default",
-  ): CommandElementals[] {
+  ): BotCommandX[] {
     this._populateMetadata();
 
     return Array.from(this._scopes.values())
@@ -300,7 +300,7 @@ export class CommandGroup<C extends Context> {
             const [language, local] of command.languages.entries()
           ) {
             elements.push({
-              name: local.name instanceof RegExp
+              command: local.name instanceof RegExp
                 ? local.name.source
                 : local.name,
               language,

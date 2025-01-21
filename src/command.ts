@@ -14,7 +14,7 @@ import {
   type MiddlewareObj,
   type NextFunction,
 } from "./deps.deno.ts";
-import type { CommandOptions } from "./types.ts";
+import type { BotCommandX, CommandOptions } from "./types.ts";
 import { ensureArray, type MaybeArray } from "./utils/array.ts";
 import {
   isAdmin,
@@ -520,7 +520,7 @@ export class Command<C extends Context = Context> implements MiddlewareObj<C> {
    */
   public toObject(
     languageCode: LanguageCode | "default" = "default",
-  ): BotCommand & { noHandler?: boolean } {
+  ): Pick<BotCommandX, "command" | "description" | "noHandler"> {
     const localizedName = this.getLocalizedName(languageCode);
     return {
       command: localizedName instanceof RegExp

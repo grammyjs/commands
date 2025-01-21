@@ -1,4 +1,5 @@
 import type {
+  BotCommand,
   BotCommandScope,
   LanguageCode,
   MessageEntity,
@@ -34,12 +35,10 @@ export interface CommandOptions {
   ignoreCase: boolean;
 }
 
-export interface CommandElementals {
-  name: string;
+export interface BotCommandX extends BotCommand {
   prefix: string;
   language: LanguageCode | "default";
   scopes: BotCommandScope[];
-  description: string;
   noHandler?: boolean;
 }
 

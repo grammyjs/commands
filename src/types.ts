@@ -35,10 +35,23 @@ export interface CommandOptions {
   ignoreCase: boolean;
 }
 
+/**
+ * BotCommand representation with more information about it.
+ * Specially in regards to the plugin manipulation of it
+ */
 export interface BotCommandX extends BotCommand {
   prefix: string;
+  /**
+   * Language in which this command is localize
+   */
   language: LanguageCode | "default";
+  /**
+   * Scopes in which this command is registered
+   */
   scopes: BotCommandScope[];
+  /**
+   * True if this command has middleware attach to it. False if not.
+   */
   noHandler?: boolean;
 }
 

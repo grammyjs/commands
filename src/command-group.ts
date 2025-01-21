@@ -275,13 +275,14 @@ export class CommandGroup<C extends Context> {
   }
 
   /**
-   * Serialize all register commands into it's name, prefix and language
+   * Serialize all register commands into a more detailed object
+   * including it's name, prefix and language, and more data
    *
    * @param filterLanguage if undefined, it returns all names
    * else get only the locales for the given filterLanguage
    * fallbacks to "default"
    *
-   * @returns an array of {@link CommandElementals}
+   * @returns an array of {@link BotCommandX}
    *
    * Note: mainly used to serialize for {@link FuzzyMatch}
    */

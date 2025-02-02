@@ -1,6 +1,6 @@
 import { CommandGroup } from "../command-group.ts";
 import { Context, LanguageCode } from "../deps.deno.ts";
-import type { CommandElementals } from "../types.ts";
+import type { BotCommandX } from "../types.ts";
 import { LanguageCodes } from "../language-codes.ts";
 
 export function distance(s1: string, s2: string) {
@@ -79,7 +79,7 @@ export type JaroWinklerOptions = {
 };
 
 type CommandSimilarity = {
-  command: CommandElementals | null;
+  command: BotCommandX | null;
   similarity: number;
 };
 
@@ -142,7 +142,7 @@ export function fuzzyMatch<C extends Context>(
 
   const bestMatch = cmds.reduce(
     (best: CommandSimilarity, command) => {
-      const similarity = JaroWinklerDistance(userInput, command.name, {
+      const similarity = JaroWinklerDistance(userInput, command.command, {
         ...options,
       });
       return similarity > best.similarity ? { command, similarity } : best;

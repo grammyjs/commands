@@ -123,7 +123,7 @@ export function commands<C extends Context>() {
 
       if (!result || !result.command) return null;
 
-      return result.command.prefix + result.command.name;
+      return result.command.prefix + result.command.command;
     };
 
     ctx.getCommandEntities = (

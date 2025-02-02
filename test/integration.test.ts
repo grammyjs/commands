@@ -96,7 +96,7 @@ describe("Integration", () => {
 
       assertSpyCalls(setMyCommandsSpy, 0);
     });
-    it("should be hable to set commands with no handler", async () => {
+    it("should be able to set commands with no handler", async () => {
       const myCommands = new CommandGroup();
       myCommands.command("command", "super description");
 

@@ -60,6 +60,16 @@ const NOCASE_COMMAND_NAME_REGEX = SuperExpressive()
   .endOfInput
   .toRegex();
 
+const SPECIAL_CHARS_REGEX = SuperExpressive()
+  .caseInsensitive
+  .allowMultipleMatches
+  .anyOf
+  .range("0", "9")
+  .range("a", "z")
+  .char("_")
+  .end()
+  .toRegex();
+
 /**
  * Class that represents a single command and allows you to configure it.
  */
@@ -208,18 +218,7 @@ export class Command<C extends Context = Context> implements MiddlewareObj<C> {
       if (!NOCASE_COMMAND_NAME_REGEX.test(name)) {
         problems.push(
           `Command name has special characters (${
-            name.replace(
-              SuperExpressive()
-                .caseInsensitive
-                .allowMultipleMatches
-                .anyOf
-                .range("0", "9")
-                .range("a", "z")
-                .char("_")
-                .end()
-                .toRegex(),
-              "",
-            )
+            name.replace(SPECIAL_CHARS_REGEX, "")
           }). Only letters, digits and _ are allowed`,
         );
       }
@@ -394,11 +393,16 @@ export class Command<C extends Context = Context> implements MiddlewareObj<C> {
 
     const commandNames = ensureArray(command);
 
-    const commandRegex = SuperExpressive().string(`${prefix}`)
-      .namedCapture("command")
-      .oneOrMore
-      .anythingButChars("@ ")
-      .end()
+    // THIS DROPS PERFORMANCE AS FK, it's recompiling the thing every function call
+    const commandRegex = SuperExpressive()
+      .string(`prefix`)
+      .subexpression(
+        SuperExpressive()
+          .namedCapture("command")
+          .oneOrMore
+          .anythingButChars("@ ")
+          .end(),
+      )
       .optional.group
       .char("@")
       .subexpression(

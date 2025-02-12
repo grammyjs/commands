@@ -393,11 +393,30 @@ export class Command<C extends Context = Context> implements MiddlewareObj<C> {
     }
 
     const commandNames = ensureArray(command);
-    const escapedPrefix = prefix.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    const commandRegex = new RegExp(
-      `${escapedPrefix}(?<command>[^@ ]+)(?:@(?<username>[^\\s]*))?(?<rest>.*)`,
-      "g",
-    );
+
+    const commandRegex = SuperExpressive().string(`${prefix}`)
+      .namedCapture("command")
+      .oneOrMore
+      .anythingButChars("@ ")
+      .end()
+      .optional.group
+      .char("@")
+      .subexpression(
+        SuperExpressive()
+          .namedCapture("username")
+          .zeroOrMore
+          .nonWhitespaceChar
+          .end(),
+      )
+      .end()
+      .subexpression(
+        SuperExpressive()
+          .namedCapture("rest")
+          .zeroOrMore
+          .anyChar
+          .end(),
+      )
+      .toRegex();
 
     const firstCommand = commandRegex.exec(ctx.msg.text)?.groups;
 

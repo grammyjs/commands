@@ -12,7 +12,6 @@ import {
   type LanguageCode,
   type Middleware,
   type MiddlewareObj,
-  SuperExpressive,
 } from "./deps.deno.ts";
 import type { CommandOptions } from "./types.ts";
 import { ensureArray, type MaybeArray } from "./utils/array.ts";
@@ -23,6 +22,11 @@ import {
   matchesPattern,
 } from "./utils/checks.ts";
 import { InvalidScopeError } from "./utils/errors.ts";
+import {
+  DISALLOWED_SPECIAL_CHARACTERS,
+  escapeEspecial,
+  NO_PREFIX_COMMAND_MATCHER,
+} from "./utils/regex.ts";
 
 type BotCommandGroupsScope =
   | BotCommandScopeAllGroupChats
@@ -47,28 +51,6 @@ export interface CommandMatch {
    */
   match?: RegExpExecArray | null;
 }
-
-const NOCASE_COMMAND_NAME_REGEX = SuperExpressive()
-  .caseInsensitive
-  .oneOrMore
-  .startOfInput
-  .anyOf
-  .range("0", "9")
-  .range("a", "z")
-  .char("_")
-  .end()
-  .endOfInput
-  .toRegex();
-
-const SPECIAL_CHARS_REGEX = SuperExpressive()
-  .caseInsensitive
-  .allowMultipleMatches
-  .anyOf
-  .range("0", "9")
-  .range("a", "z")
-  .char("_")
-  .end()
-  .toRegex();
 
 /**
  * Class that represents a single command and allows you to configure it.
@@ -215,10 +197,10 @@ export class Command<C extends Context = Context> implements MiddlewareObj<C> {
         );
       }
 
-      if (!NOCASE_COMMAND_NAME_REGEX.test(name)) {
+      if (DISALLOWED_SPECIAL_CHARACTERS.test(name)) {
         problems.push(
           `Command name has special characters (${
-            name.replace(SPECIAL_CHARS_REGEX, "")
+            name.match(DISALLOWED_SPECIAL_CHARACTERS)?.join("")
           }). Only letters, digits and _ are allowed`,
         );
       }
@@ -393,34 +375,12 @@ export class Command<C extends Context = Context> implements MiddlewareObj<C> {
 
     const commandNames = ensureArray(command);
 
-    // THIS DROPS PERFORMANCE AS FK, it's recompiling the thing every function call
-    const commandRegex = SuperExpressive()
-      .string(`prefix`)
-      .subexpression(
-        SuperExpressive()
-          .namedCapture("command")
-          .oneOrMore
-          .anythingButChars("@ ")
-          .end(),
-      )
-      .optional.group
-      .char("@")
-      .subexpression(
-        SuperExpressive()
-          .namedCapture("username")
-          .zeroOrMore
-          .nonWhitespaceChar
-          .end(),
-      )
-      .end()
-      .subexpression(
-        SuperExpressive()
-          .namedCapture("rest")
-          .zeroOrMore
-          .anyChar
-          .end(),
-      )
-      .toRegex();
+    const escapedPrefix = escapeEspecial(prefix);
+
+    const commandRegex = new RegExp(
+      escapedPrefix + NO_PREFIX_COMMAND_MATCHER.source,
+      "g",
+    );
 
     const firstCommand = commandRegex.exec(ctx.msg.text)?.groups;
 

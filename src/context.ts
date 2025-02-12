@@ -3,7 +3,8 @@ import { CommandMatch } from "./command.ts";
 import { BotCommandScopeChat, Context, NextFunction } from "./deps.deno.ts";
 import { SetMyCommandsParams } from "./mod.ts";
 import { BotCommandEntity } from "./types.ts";
-import { ensureArray, getCommandsRegex } from "./utils/array.ts";
+import { ensureArray } from "./utils/array.ts";
+import { getCommandsLikeRegex } from "./utils/regex.ts";
 import { fuzzyMatch, JaroWinklerOptions } from "./utils/jaro-winkler.ts";
 import {
   setBotCommands,
@@ -141,7 +142,7 @@ export function commands<C extends Context>() {
       if (!prefixes.length) return [];
 
       const regexes = prefixes.map(
-        (prefix) => getCommandsRegex(prefix),
+        (prefix) => getCommandsLikeRegex(prefix),
       );
       const entities = regexes.flatMap((regex) => {
         let match: RegExpExecArray | null;

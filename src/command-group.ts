@@ -10,11 +10,8 @@ import {
   Middleware,
 } from "./deps.deno.ts";
 import type { CommandElementals, CommandOptions } from "./types.ts";
-import {
-  ensureArray,
-  getCommandsRegex,
-  type MaybeArray,
-} from "./utils/array.ts";
+import { ensureArray, type MaybeArray } from "./utils/array.ts";
+import { getCommandsLikeRegex } from "./utils/regex.ts";
 import {
   setBotCommands,
   SetBotCommandsOptions,
@@ -417,7 +414,7 @@ function containsCommands<
   }
 
   for (const prefix of allPrefixes) {
-    const regex = getCommandsRegex(prefix);
+    const regex = getCommandsLikeRegex(prefix);
     if (ctx.hasText(regex)) return true;
   }
   return false;

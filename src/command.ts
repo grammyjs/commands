@@ -12,6 +12,7 @@ import {
   type LanguageCode,
   type Middleware,
   type MiddlewareObj,
+  SuperExpressive,
 } from "./deps.deno.ts";
 import type { CommandOptions } from "./types.ts";
 import { ensureArray, type MaybeArray } from "./utils/array.ts";
@@ -47,7 +48,17 @@ export interface CommandMatch {
   match?: RegExpExecArray | null;
 }
 
-const NOCASE_COMMAND_NAME_REGEX = /^[0-9a-z_]+$/i;
+const NOCASE_COMMAND_NAME_REGEX = SuperExpressive()
+  .caseInsensitive
+  .oneOrMore
+  .startOfInput
+  .anyOf
+  .range("0", "9")
+  .range("a", "z")
+  .char("_")
+  .end()
+  .endOfInput
+  .toRegex();
 
 /**
  * Class that represents a single command and allows you to configure it.
@@ -197,7 +208,18 @@ export class Command<C extends Context = Context> implements MiddlewareObj<C> {
       if (!NOCASE_COMMAND_NAME_REGEX.test(name)) {
         problems.push(
           `Command name has special characters (${
-            name.replace(/[0-9a-z_]/ig, "")
+            name.replace(
+              SuperExpressive()
+                .caseInsensitive
+                .allowMultipleMatches
+                .anyOf
+                .range("0", "9")
+                .range("a", "z")
+                .char("_")
+                .end()
+                .toRegex(),
+              "",
+            )
           }). Only letters, digits and _ are allowed`,
         );
       }

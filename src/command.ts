@@ -199,9 +199,9 @@ export class Command<C extends Context = Context> implements MiddlewareObj<C> {
 
       if (DISALLOWED_SPECIAL_CHARACTERS.test(name)) {
         problems.push(
-          `Command name has special characters (${
+          `Command name contains the following disallowed special characters: ${
             name.match(DISALLOWED_SPECIAL_CHARACTERS)?.join("")
-          }). Only letters, digits and _ are allowed`,
+          }\nOnly letters, digits and _ are allowed`,
         );
       }
     }

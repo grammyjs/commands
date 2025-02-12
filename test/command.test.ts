@@ -605,7 +605,7 @@ describe("Command", () => {
       const command = new Command("*test!", "_");
       assertEquals(command.isApiCompliant(), [
         false,
-        "Command name has special characters (*!). Only letters, digits and _ are allowed",
+        "Command name contains the following disallowed special characters: *!\nOnly letters, digits and _ are allowed",
       ]);
     });
 
@@ -617,7 +617,7 @@ describe("Command", () => {
       assertEquals(command.isApiCompliant(), [
         false,
         "Command name has uppercase characters",
-        "Command name has special characters ($). Only letters, digits and _ are allowed",
+        "Command name contains the following disallowed special characters: $\nOnly letters, digits and _ are allowed",
       ]);
     });
   });

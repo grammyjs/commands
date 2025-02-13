@@ -3,56 +3,16 @@ import {
   resolvesNext,
 } from "https://deno.land/std@0.203.0/testing/mock.ts";
 import { CommandGroup } from "../src/command-group.ts";
-import { Bot } from "../src/deps.deno.ts";
-import { Command, commands, CommandsFlavor } from "../src/mod.ts";
+import { Command, commands } from "../src/mod.ts";
 import {
   Api,
   assertRejects,
   assertSpyCall,
-  Chat,
-  Context,
   describe,
   it,
-  Message,
   spy,
-  Update,
-  User,
 } from "./deps.test.ts";
-
-const getBot = () =>
-  new Bot<Context & CommandsFlavor>("dummy_token", {
-    botInfo: {
-      id: 1,
-      is_bot: true,
-      username: "",
-      can_join_groups: true,
-      can_read_all_group_messages: true,
-      supports_inline_queries: true,
-      first_name: "",
-      can_connect_to_business: true,
-      has_main_web_app: false,
-    },
-  });
-
-const getDummyUpdate = ({ userInput, language, noChat, chatType = "private" }: {
-  userInput?: string;
-  language?: string;
-  noChat?: boolean;
-  chatType?: Chat["type"];
-} = {}) => {
-  const u = { id: 42, first_name: "yo", language_code: language } as User;
-  const c = { id: 100, type: chatType } as Chat;
-  const m = {
-    text: userInput,
-    from: u,
-    chat: noChat ? undefined : c,
-  } as Message;
-  const update = {
-    message: m,
-  } as Update;
-
-  return update;
-};
+import { getBot, getDummyUpdate } from "./utils.ts";
 
 describe("Integration", () => {
   describe("setCommands", () => {

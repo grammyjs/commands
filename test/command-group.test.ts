@@ -1,6 +1,6 @@
 import { CommandGroup } from "../src/command-group.ts";
 import { MyCommandParams } from "../src/mod.ts";
-import { dummyCtx } from "./context.test.ts";
+import { getDummyCtx } from "./utils.ts";
 import {
   assert,
   assertEquals,
@@ -54,7 +54,7 @@ describe("CommandGroup", () => {
   });
   describe("setMyCommands", () => {
     it("should throw if the update has no chat property", () => {
-      const ctx = dummyCtx({ noMessage: true });
+      const ctx = getDummyCtx({ noMessage: true });
       const a = new CommandGroup();
       assertRejects(() => ctx.setMyCommands(a));
     });
@@ -294,7 +294,7 @@ describe("CommandGroup", () => {
 
       it("should only consider as entities prefixes registered in the command instance", () => {
         const text = "/papi hola papacito como estamos /papi /ecco";
-        let ctx = dummyCtx({
+        let ctx = getDummyCtx({
           userInput: text,
         });
         const entities = ctx.getCommandEntities(a);
@@ -310,7 +310,7 @@ describe("CommandGroup", () => {
         }
       });
       it("should get command entities for custom prefixes", () => {
-        let ctx = dummyCtx({
+        let ctx = getDummyCtx({
           userInput: "/hi ?momi abcdfghi",
         });
         const entities = ctx.getCommandEntities(a);
@@ -339,15 +339,15 @@ describe("CommandGroup", () => {
         ]);
       });
       it("should throw if you call getCommandEntities on an update with no text", () => {
-        const ctx = dummyCtx({});
+        const ctx = getDummyCtx({});
         assertThrows(() => ctx.getCommandEntities([a, b, c]));
       });
       it("should return an empty array if the Commands classes to check against do not have any command register", () => {
-        const ctx = dummyCtx({ userInput: "/papi" });
+        const ctx = getDummyCtx({ userInput: "/papi" });
         assertEquals(ctx.getCommandEntities(c), []);
       });
       it("should work across multiple Commands instances", () => {
-        const ctx = dummyCtx({ userInput: "/papi superprefixmami" });
+        const ctx = getDummyCtx({ userInput: "/papi superprefixmami" });
         assertEquals(
           ctx.getCommandEntities([a, b]).map((entity) => entity.prefix),
           ["/", "superprefix"],

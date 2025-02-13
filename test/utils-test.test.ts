@@ -1,7 +1,7 @@
 import { isMiddleware } from "../src/utils/checks.ts";
 import { CommandsFlavor } from "../src/context.ts";
 import { CommandGroup, commandNotFound } from "../src/mod.ts";
-import { dummyCtx } from "./context.test.ts";
+import { getDummyCtx } from "./utils.ts";
 import {
   assert,
   assertEquals,

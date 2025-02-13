@@ -1,6 +1,6 @@
 import { CommandsFlavor } from "../src/context.ts";
 import { CommandGroup, commandNotFound } from "../src/mod.ts";
-import { dummyCtx } from "./context.test.ts";
+import { getDummyCtx } from "./utils.ts";
 import {
   assert,
   assertEquals,
@@ -12,7 +12,7 @@ import {
 
 describe("commandNotFound", () => {
   describe("for inputs containing '/' commands", () => {
-    const ctx = dummyCtx({ userInput: "/papacin /papazote" });
+    const ctx = getDummyCtx({ userInput: "/papacin /papazote" });
     it("should return true  when no commands are registered", () => {
       const cmds = new CommandGroup();
       const predicate = commandNotFound(cmds);
@@ -32,7 +32,7 @@ describe("commandNotFound", () => {
     });
   });
   describe("for inputs containing custom prefixed commands", () => {
-    const ctx = dummyCtx({ userInput: "?papacin +papazote" });
+    const ctx = getDummyCtx({ userInput: "?papacin +papazote" });
 
     it("should return false if only '/' commands are registered", () => {
       const cmds = new CommandGroup();
@@ -72,12 +72,12 @@ describe("commandNotFound", () => {
     const predicate = commandNotFound(cmds);
 
     it("should contain the proper suggestion ", () => {
-      const ctx = dummyCtx({ userInput: "/papacin" }) as withSuggestion;
+      const ctx = getDummyCtx({ userInput: "/papacin" }) as withSuggestion;
       predicate(ctx);
       assertEquals(ctx.commandSuggestion, "+papacin");
     });
     it("should be null when the input does not match a suggestion", () => {
-      const ctx = dummyCtx({
+      const ctx = getDummyCtx({
         userInput: "/nonadapapi",
       }) as withSuggestion;
       predicate(ctx);

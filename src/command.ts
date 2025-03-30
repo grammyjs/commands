@@ -319,6 +319,13 @@ export class Command<C extends Context = Context> implements MiddlewareObj<C> {
             .use(...middlewareArray);
           break;
         case "chat":
+          if (scope.chat_id) {
+            this._composer
+              .filter(Command.hasCommand(this.names, optionsObject))
+              .filter((ctx) => ctx.chat?.id === scope.chat_id)
+              .use(...middlewareArray);
+          }
+          break;
         case "chat_administrators":
           if (scope.chat_id) {
             this._composer

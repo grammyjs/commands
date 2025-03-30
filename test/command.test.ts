@@ -787,6 +787,12 @@ describe("Command", () => {
     const command = new Command("a", "Test command");
     const mw = (ctx: Context) =>
       command.middleware()(ctx, () => Promise.resolve());
+    const makeContext = (message: Message) => {
+      const update = (message.chat.type === "channel")
+        ? { channel_post: message as any, update_id: 1 }
+        : { message: message as any, update_id: 1 };
+      return new Context(update, api, me);
+    };
 
     const chatMemberSpy = spy();
     command.addToScope(
@@ -833,19 +839,11 @@ describe("Command", () => {
 
     it("should call chatMember", async () => {
       assertSpyCalls(chatMemberSpy, 0);
-      await mw(
-        new Context(
-          {
-            message: {
-              chat: { id: -123, type: "group" },
-              from: { id: 456 },
-              text: "/a",
-            },
-          } as Update,
-          api,
-          me,
-        ),
-      );
+      await mw(makeContext({
+        chat: { id: -123, type: "group" },
+        from: { id: 456 },
+        text: "/a",
+      } as Message));
       assertSpyCalls(chatMemberSpy, 1);
     });
 
@@ -853,55 +851,31 @@ describe("Command", () => {
       chatMember = { status: "administrator" } as ChatMember;
 
       assertSpyCalls(chatAdministratorsSpy, 0);
-      await mw(
-        new Context(
-          {
-            message: {
-              chat: { id: -123, type: "group" },
-              from: { id: 789 },
-              text: "/a",
-            },
-          } as Update,
-          api,
-          me,
-        ),
-      );
+      await mw(makeContext({
+        chat: { id: -123, type: "group" },
+        from: { id: 789 },
+        text: "/a",
+      } as Message));
       assertSpyCalls(chatAdministratorsSpy, 1);
     });
 
     it("should call chat", async () => {
       assertSpyCalls(chatSpy, 0);
-      await mw(
-        new Context(
-          {
-            message: {
-              chat: { id: -123, type: "group" },
-              from: { id: 789 },
-              text: "/a",
-            },
-          } as Update,
-          api,
-          me,
-        ),
-      );
+      await mw(makeContext({
+        chat: { id: -123, type: "group" },
+        from: { id: 789 },
+        text: "/a",
+      } as Message));
       assertSpyCalls(chatSpy, 1);
     });
 
     it("should call chat for a private chat", async () => {
       assertSpyCalls(privateChatSpy, 0);
-      await mw(
-        new Context(
-          {
-            message: {
-              chat: { id: 456, type: "private" },
-              from: { id: 456 },
-              text: "/a",
-            },
-          } as Update,
-          api,
-          me,
-        ),
-      );
+      await mw(makeContext({
+        chat: { id: 456, type: "private" },
+        from: { id: 456 },
+        text: "/a",
+      } as Message));
       assertSpyCalls(privateChatSpy, 1);
     });
 
@@ -909,19 +883,11 @@ describe("Command", () => {
       chatMember = { status: "administrator" } as ChatMember;
 
       assertSpyCalls(allChatAdministratorsSpy, 0);
-      await mw(
-        new Context(
-          {
-            message: {
-              chat: { id: -124, type: "group" },
-              from: { id: 789 },
-              text: "/a",
-            },
-          } as Update,
-          api,
-          me,
-        ),
-      );
+      await mw(makeContext({
+        chat: { id: -124, type: "group" },
+        from: { id: 789 },
+        text: "/a",
+      } as Message));
       assertSpyCalls(allChatAdministratorsSpy, 1);
     });
 
@@ -929,55 +895,31 @@ describe("Command", () => {
       chatMember = { status: "member" } as ChatMember;
 
       assertSpyCalls(allGroupChatsSpy, 0);
-      await mw(
-        new Context(
-          {
-            message: {
-              chat: { id: -124, type: "group" },
-              from: { id: 789 },
-              text: "/a",
-            },
-          } as Update,
-          api,
-          me,
-        ),
-      );
+      await mw(makeContext({
+        chat: { id: -124, type: "group" },
+        from: { id: 789 },
+        text: "/a",
+      } as Message));
       assertSpyCalls(allGroupChatsSpy, 1);
     });
 
     it("should call allPrivateChats", async () => {
       assertSpyCalls(allPrivateChatsSpy, 0);
-      await mw(
-        new Context(
-          {
-            message: {
-              chat: { id: 789, type: "private" },
-              from: { id: 789 },
-              text: "/a",
-            },
-          } as Update,
-          api,
-          me,
-        ),
-      );
+      await mw(makeContext({
+        chat: { id: 789, type: "private" },
+        from: { id: 789 },
+        text: "/a",
+      } as Message));
       assertSpyCalls(allPrivateChatsSpy, 1);
     });
 
     it("should call default", async () => {
       assertSpyCalls(defaultSpy, 0);
-      await mw(
-        new Context(
-          {
-            message: {
-              chat: { id: -124, type: "channel" },
-              from: { id: 789 },
-              text: "/a",
-            },
-          } as Update,
-          api,
-          me,
-        ),
-      );
+      await mw(makeContext({
+        chat: { id: -124, type: "channel" },
+        from: { id: 789 },
+        text: "/a",
+      } as Message));
       assertSpyCalls(defaultSpy, 1);
     });
   });

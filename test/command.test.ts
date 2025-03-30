@@ -1,17 +1,21 @@
-import { assertEquals } from "https://deno.land/std@0.203.0/assert/assert_equals.ts";
-import { assertExists } from "https://deno.land/std@0.203.0/assert/assert_exists.ts";
 import { Command } from "../src/command.ts";
 import { CommandOptions } from "../src/types.ts";
 import { isCommandOptions, matchesPattern } from "../src/utils/checks.ts";
 import {
   Api,
   assert,
+  assertEquals,
+  assertExists,
   assertFalse,
+  assertSpyCalls,
+  beforeEach,
   type Chat,
+  type ChatMember,
   Context,
   describe,
   it,
   type Message,
+  spy,
   type Update,
   type User,
   type UserFromGetMe,
@@ -774,6 +778,186 @@ describe("Command", () => {
           rest: "test",
         },
       );
+    });
+  });
+
+  describe("addToScope", () => {
+    // NOTE: currently the scopes need to be added in a priority order for the
+    // narrowest function to be called
+    const command = new Command("a", "Test command");
+    const mw = (ctx: Context) =>
+      command.middleware()(ctx, () => Promise.resolve());
+
+    const chatMemberSpy = spy();
+    command.addToScope(
+      { type: "chat_member", chat_id: -123, user_id: 456 },
+      chatMemberSpy,
+    );
+
+    const chatAdministratorsSpy = spy();
+    command.addToScope(
+      { type: "chat_administrators", chat_id: -123 },
+      chatAdministratorsSpy,
+    );
+
+    const chatSpy = spy();
+    command.addToScope({ type: "chat", chat_id: -123 }, chatSpy);
+
+    const allChatAdministratorsSpy = spy();
+    command.addToScope(
+      { type: "all_chat_administrators" },
+      allChatAdministratorsSpy,
+    );
+
+    const allGroupChatsSpy = spy();
+    command.addToScope({ type: "all_group_chats" }, allGroupChatsSpy);
+
+    const allPrivateChatsSpy = spy();
+    command.addToScope({ type: "all_private_chats" }, allPrivateChatsSpy);
+
+    const defaultSpy = spy();
+    command.addToScope({ type: "default" }, defaultSpy);
+
+    let chatMember: ChatMember | null = null;
+    const api = {
+      getChatMember: spy(() => {
+        return Promise.resolve(chatMember);
+      }),
+    } as unknown as Api;
+    beforeEach(() => {
+      chatMember = { status: "member" } as ChatMember;
+    });
+
+    it("should call chatMember", async () => {
+      assertSpyCalls(chatMemberSpy, 0);
+      await mw(
+        new Context(
+          {
+            message: {
+              chat: { id: -123, type: "group" },
+              from: { id: 456 },
+              text: "/a",
+            },
+          } as Update,
+          api,
+          me,
+        ),
+      );
+      assertSpyCalls(chatMemberSpy, 1);
+    });
+
+    it("should call chatAdministrators", async () => {
+      chatMember = { status: "administrator" } as ChatMember;
+
+      assertSpyCalls(chatAdministratorsSpy, 0);
+      await mw(
+        new Context(
+          {
+            message: {
+              chat: { id: -123, type: "group" },
+              from: { id: 789 },
+              text: "/a",
+            },
+          } as Update,
+          api,
+          me,
+        ),
+      );
+      assertSpyCalls(chatAdministratorsSpy, 1);
+    });
+
+    it("should call chat", async () => {
+      assertSpyCalls(chatSpy, 0);
+      await mw(
+        new Context(
+          {
+            message: {
+              chat: { id: -123, type: "group" },
+              from: { id: 789 },
+              text: "/a",
+            },
+          } as Update,
+          api,
+          me,
+        ),
+      );
+      assertSpyCalls(chatSpy, 1);
+    });
+
+    it("should call allChatAdministrators", async () => {
+      chatMember = { status: "administrator" } as ChatMember;
+
+      assertSpyCalls(allChatAdministratorsSpy, 0);
+      await mw(
+        new Context(
+          {
+            message: {
+              chat: { id: -124, type: "group" },
+              from: { id: 789 },
+              text: "/a",
+            },
+          } as Update,
+          api,
+          me,
+        ),
+      );
+      assertSpyCalls(allChatAdministratorsSpy, 1);
+    });
+
+    it("should call allGroupChats", async () => {
+      chatMember = { status: "member" } as ChatMember;
+
+      assertSpyCalls(allGroupChatsSpy, 0);
+      await mw(
+        new Context(
+          {
+            message: {
+              chat: { id: -124, type: "group" },
+              from: { id: 789 },
+              text: "/a",
+            },
+          } as Update,
+          api,
+          me,
+        ),
+      );
+      assertSpyCalls(allGroupChatsSpy, 1);
+    });
+
+    it("should call allPrivateChats", async () => {
+      assertSpyCalls(allPrivateChatsSpy, 0);
+      await mw(
+        new Context(
+          {
+            message: {
+              chat: { id: 789, type: "private" },
+              from: { id: 789 },
+              text: "/a",
+            },
+          } as Update,
+          api,
+          me,
+        ),
+      );
+      assertSpyCalls(allPrivateChatsSpy, 1);
+    });
+
+    it("should call default", async () => {
+      assertSpyCalls(defaultSpy, 0);
+      await mw(
+        new Context(
+          {
+            message: {
+              chat: { id: -124, type: "channel" },
+              from: { id: 789 },
+              text: "/a",
+            },
+          } as Update,
+          api,
+          me,
+        ),
+      );
+      assertSpyCalls(defaultSpy, 1);
     });
   });
 });

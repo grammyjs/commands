@@ -22,7 +22,7 @@ export type {
     LanguageCode,
     MessageEntity
 } from "grammy/types";
-import SuperExpressive from "npm:super-expressive";
+import SuperExpressive from "super-expressive";
 export { SuperExpressive };
 // TODO: bring this back once the types are available on the "web" runtimes
 // export { LanguageCodes } from "grammy/types";

@@ -803,6 +803,9 @@ describe("Command", () => {
     const chatSpy = spy();
     command.addToScope({ type: "chat", chat_id: -123 }, chatSpy);
 
+    const privateChatSpy = spy();
+    command.addToScope({ type: "chat", chat_id: 456 }, privateChatSpy);
+
     const allChatAdministratorsSpy = spy();
     command.addToScope(
       { type: "all_chat_administrators" },
@@ -882,6 +885,24 @@ describe("Command", () => {
         ),
       );
       assertSpyCalls(chatSpy, 1);
+    });
+
+    it("should call chat for a private chat", async () => {
+      assertSpyCalls(privateChatSpy, 0);
+      await mw(
+        new Context(
+          {
+            message: {
+              chat: { id: 456, type: "private" },
+              from: { id: 456 },
+              text: "/a",
+            },
+          } as Update,
+          api,
+          me,
+        ),
+      );
+      assertSpyCalls(privateChatSpy, 1);
     });
 
     it("should call allChatAdministrators", async () => {

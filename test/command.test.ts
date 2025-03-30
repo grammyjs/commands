@@ -7,6 +7,7 @@ import {
   Api,
   assert,
   assertFalse,
+  beforeEach,
   type Chat,
   Context,
   describe,
@@ -33,7 +34,13 @@ function createRegexpMatchArray(
 describe("Command", () => {
   const u = { id: 42, first_name: "bot", is_bot: true } as User;
   const c = { id: 100, type: "private" } as Chat;
-  const m = { text: "a", from: u, chat: c, sender_chat: c } as Message;
+  const m = {
+    text: "a",
+    caption: undefined,
+    from: u,
+    chat: c,
+    sender_chat: c,
+  } as Message;
   const update = {
     message: m,
     edited_message: m,
@@ -69,6 +76,10 @@ describe("Command", () => {
     targetedCommands: "optional",
     ignoreCase: false,
   };
+
+  beforeEach(() => {
+    m.caption = undefined;
+  });
 
   describe("hasCommand", () => {
     describe("default behavior", () => {
@@ -655,7 +666,14 @@ describe("Command", () => {
   });
 
   describe("findMatchingCommand", () => {
-    it("should return null if the message does not contain a text", () => {
+    it("should match a command in a caption", () => {
+      m.text = undefined;
+      m.caption = "/start";
+      const ctx = new Context(update, api, me);
+      assert(Command.findMatchingCommand("start", options, ctx) !== null);
+    });
+
+    it("should return null if the message does not contain a text or caption", () => {
       m.text = undefined;
       const ctx = new Context(update, api, me);
       assert(Command.findMatchingCommand("start", options, ctx) === null);

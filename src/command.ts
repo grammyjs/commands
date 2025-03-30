@@ -364,9 +364,10 @@ export class Command<C extends Context = Context> implements MiddlewareObj<C> {
   ): CommandMatch | null {
     const { matchOnlyAtStart, prefix, targetedCommands } = options;
 
-    if (!ctx.has(":text")) return null;
+    if (!ctx.has([":text", ":caption"])) return null;
+    const txt = ctx.msg.text ?? ctx.msg.caption;
 
-    if (matchOnlyAtStart && !ctx.msg.text.startsWith(prefix)) {
+    if (matchOnlyAtStart && !txt.startsWith(prefix)) {
       return null;
     }
 
@@ -377,7 +378,7 @@ export class Command<C extends Context = Context> implements MiddlewareObj<C> {
       "g",
     );
 
-    const firstCommand = commandRegex.exec(ctx.msg.text)?.groups;
+    const firstCommand = commandRegex.exec(txt)?.groups;
 
     if (!firstCommand) return null;
 
@@ -402,7 +403,7 @@ export class Command<C extends Context = Context> implements MiddlewareObj<C> {
       return {
         command: matchingCommand,
         rest: firstCommand.rest.trim(),
-        match: matchingCommand.exec(ctx.msg.text),
+        match: matchingCommand.exec(txt),
       };
     }
 

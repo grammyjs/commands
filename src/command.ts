@@ -322,7 +322,7 @@ export class Command<C extends Context = Context> implements MiddlewareObj<C> {
           if (scope.chat_id) {
             this._composer
               .filter(Command.hasCommand(this.names, optionsObject))
-              .filter((ctx) => ctx.chat?.id === scope.chat_id)
+              .filter((ctx) => ctx.chatId === scope.chat_id)
               .use(...middlewareArray);
           }
           break;
@@ -330,7 +330,7 @@ export class Command<C extends Context = Context> implements MiddlewareObj<C> {
           if (scope.chat_id) {
             this._composer
               .filter(Command.hasCommand(this.names, optionsObject))
-              .filter((ctx) => ctx.chat?.id === scope.chat_id)
+              .filter((ctx) => ctx.chatId === scope.chat_id)
               .filter(isAdmin)
               .use(...middlewareArray);
           }
@@ -339,7 +339,7 @@ export class Command<C extends Context = Context> implements MiddlewareObj<C> {
           if (scope.chat_id && scope.user_id) {
             this._composer
               .filter(Command.hasCommand(this.names, optionsObject))
-              .filter((ctx) => ctx.chat?.id === scope.chat_id)
+              .filter((ctx) => ctx.chatId === scope.chat_id)
               .filter((ctx) => ctx.from?.id === scope.user_id)
               .use(...middlewareArray);
           }

@@ -1,6 +1,7 @@
 export {
   assert,
   assertEquals,
+  assertExists,
   assertFalse,
   assertInstanceOf,
   assertNotStrictEquals,
@@ -17,6 +18,7 @@ export {
 } from "https://deno.land/std@0.203.0/testing/bdd.ts";
 export {
   assertSpyCall,
+  assertSpyCalls,
   type Spy,
   spy,
   type Stub,
@@ -25,6 +27,7 @@ export {
 export { Api, Context } from "https://lib.deno.dev/x/grammy@1/mod.ts";
 export type {
   Chat,
+  ChatMember,
   Message,
   Update,
   User,

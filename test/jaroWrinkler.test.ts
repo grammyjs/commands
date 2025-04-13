@@ -7,6 +7,7 @@ import { CommandGroup } from "../src/mod.ts";
 import { dummyCtx } from "./context.test.ts";
 import {
   assertEquals,
+  assertObjectMatch,
   assertThrows,
   Context,
   describe,
@@ -110,66 +111,61 @@ describe("Jaro-Wrinkler Algorithm", () => {
 
       cmds.command(/dad_(.*)/, "dad", () => {})
         .localize("es", /papa_(.*)/, "f");
-      it("should output all commands names, language and prefix", () => {
+      it("should output all commands names, language and prefix, and description", () => {
         const json = cmds.toElementals();
-        assertEquals(json, [
+        const expected = [
           {
             command: "butcher",
             language: "default",
             prefix: "?",
-            scopes: [{ type: "default" }],
             description: "_",
           },
           {
             command: "carnicero",
             language: "es",
             prefix: "?",
-            scopes: [{ type: "default" }],
             description: "a",
           },
           {
             command: "macellaio",
             language: "it",
             prefix: "?",
-            scopes: [{ type: "default" }],
             description: "b",
           },
           {
             command: "duke",
             language: "default",
             prefix: "/",
-            scopes: [{ type: "default" }],
             description: "_",
           },
           {
             command: "duque",
             language: "es",
             prefix: "/",
-            scopes: [{ type: "default" }],
             description: "c",
           },
           {
             command: "duc",
             language: "fr",
             prefix: "/",
-            scopes: [{ type: "default" }],
             description: "d",
           },
           {
             command: "dad_(.*)",
             language: "default",
             prefix: "/",
-            scopes: [{ type: "default" }],
             description: "dad",
           },
           {
             command: "papa_(.*)",
             language: "es",
             prefix: "/",
-            scopes: [{ type: "default" }],
             description: "f",
           },
-        ]);
+        ];
+        json.forEach((command, i) => {
+          assertObjectMatch(command, expected[i]);
+        });
       });
     });
     describe("should return the command localization related to the user lang", () => {

@@ -71,7 +71,11 @@ describe("Integration", () => {
       assertSpyCalls(setMyCommandsSpy, 1);
       assertSpyCall(setMyCommandsSpy, 0, {
         args: [{
-          commands: [{ command: "command", description: "_" }],
+          commands: [{
+            command: "command",
+            description: "_",
+            hasHandler: true,
+          }],
           language_code: undefined,
           scope: {
             type: "default",
@@ -144,7 +148,11 @@ describe("Integration", () => {
       assertSpyCalls(setMyCommandsSpy, 1);
       assertSpyCall(setMyCommandsSpy, 0, {
         args: [{
-          commands: [{ command: "command", description: "_" }],
+          commands: [{
+            command: "command",
+            description: "_",
+            hasHandler: true,
+          }],
           language_code: undefined,
           scope: {
             type: "chat",

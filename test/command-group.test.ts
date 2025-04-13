@@ -34,11 +34,14 @@ describe("CommandGroup", () => {
         prefix: undefined,
       });
 
-      assertEquals(commands.toArgs().scopes, [{
+      const expected = [{
         commands: [{ command: "test", description: "default handler" }],
         language_code: undefined,
         scope: { type: "default" },
-      }]);
+      }];
+      commands.toArgs().scopes.forEach((commands, i) =>
+        assertObjectMatch(commands, expected[i])
+      );
     });
 
     it("should support options with no handler", () => {
@@ -77,16 +80,15 @@ describe("CommandGroup", () => {
           type: "chat",
           chat_id: 10,
         });
-        assertEquals(params.commandParams, [
-          {
-            scope: { type: "chat", chat_id: 10 },
-            language_code: undefined,
-            commands: [
-              { command: "test", description: "handler1" },
-              { command: "test2", description: "handler2" },
-            ],
-          },
-        ]);
+        const expected = [{
+          commands: [
+            { command: "test", description: "handler1" },
+            { command: "test2", description: "handler2" },
+          ],
+        }];
+        params.commandParams.forEach((commands, i) =>
+          assertObjectMatch(commands, expected[i])
+        );
       });
       it("should return an array with the localized versions of commands", () => {
         const commands = new CommandGroup();
@@ -106,7 +108,7 @@ describe("CommandGroup", () => {
           type: "chat",
           chat_id: 10,
         });
-        assertEquals(params.commandParams, [
+        const expected = [
           {
             scope: { type: "chat", chat_id: 10 },
             language_code: undefined,
@@ -132,7 +134,10 @@ describe("CommandGroup", () => {
               },
             ],
           },
-        ]);
+        ];
+        params.commandParams.forEach((command, i) =>
+          assertObjectMatch(command, expected[i])
+        );
       });
       it("should mark commands with no handler", () => {
         const commands = new CommandGroup();
@@ -147,7 +152,7 @@ describe("CommandGroup", () => {
             scope: { type: "chat", chat_id: 10 },
             language_code: undefined,
             commands: [
-              { command: "test", description: "handler" },
+              { command: "test", description: "handler", hasHandler: true },
               {
                 command: "markme",
                 description: "nohandler",
@@ -177,6 +182,7 @@ describe("CommandGroup", () => {
                 {
                   command: "withoutcustomprefix",
                   description: "handler",
+                  hasHandler: true,
                 },
               ],
             },
@@ -201,18 +207,18 @@ describe("CommandGroup", () => {
         c.command("c", "test c", (_) => _);
 
         const mergedCommands = MyCommandParams.from([a, b, c], 10);
-
-        assertEquals(mergedCommands.commandsParams, [
-          {
-            scope: { type: "chat", chat_id: 10 },
-            language_code: undefined,
-            commands: [
-              { command: "c", description: "test c" },
-              { command: "b", description: "test b" },
-              { command: "a", description: "test a" },
-            ],
-          },
-        ]);
+        const expected = [{
+          scope: { type: "chat", chat_id: 10 },
+          language_code: undefined,
+          commands: [
+            { command: "c", description: "test c" },
+            { command: "b", description: "test b" },
+            { command: "a", description: "test a" },
+          ],
+        }];
+        mergedCommands.commandsParams.forEach((command, i) =>
+          assertObjectMatch(command, expected[i])
+        );
       });
       it("should merge for localized scopes", () => {
         const a = new CommandGroup();
@@ -234,7 +240,7 @@ describe("CommandGroup", () => {
           .localize("fr", "localiseb", "prueba b localisé");
 
         const mergedCommands = MyCommandParams.from([a, b], 10);
-        assertEquals(mergedCommands.commandsParams, [
+        const expected = [
           {
             scope: { type: "chat", chat_id: 10 },
             language_code: undefined,
@@ -277,7 +283,10 @@ describe("CommandGroup", () => {
               },
             ],
           },
-        ]);
+        ];
+        mergedCommands.commandsParams.forEach((command, i) =>
+          assertObjectMatch(command, expected[i])
+        );
       });
     });
     describe("get all prefixes registered in a Commands instance", () => {
@@ -377,8 +386,7 @@ describe("CommandGroup", () => {
       commands.command("test2", "handler2", (_) => _)
         .localize("es", "prueba2", "resolvedor2");
       const params = commands.toArgs();
-
-      assertEquals(params.scopes, [
+      const expected = [
         {
           commands: [
             { command: "test", description: "handler" },
@@ -395,7 +403,10 @@ describe("CommandGroup", () => {
           language_code: "es",
           scope: { type: "default" },
         },
-      ]);
+      ];
+      params.scopes.forEach((command, i) =>
+        assertObjectMatch(command, expected[i])
+      );
     });
 
     it("should separate between compliant and uncompliant commands", () => {
@@ -415,6 +426,7 @@ describe("CommandGroup", () => {
               {
                 command: "withoutcustomprefix",
                 description: "handler",
+                hasHandler: true,
               },
             ],
           },

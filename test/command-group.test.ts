@@ -22,7 +22,7 @@ describe("CommandGroup", () => {
           {
             command: "test",
             description: "no handler",
-            noHandler: true,
+            hasHandler: false,
           },
         ],
       });
@@ -151,7 +151,7 @@ describe("CommandGroup", () => {
               {
                 command: "markme",
                 description: "nohandler",
-                noHandler: true,
+                hasHandler: false,
               },
             ],
           },

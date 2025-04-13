@@ -66,7 +66,7 @@ export class Command<C extends Context = Context> implements MiddlewareObj<C> {
     targetedCommands: "optional",
     ignoreCase: false,
   };
-  private _noHandler: boolean;
+  private _hasHandler: boolean;
 
   /**
    * Initialize a new command with a default handler.
@@ -139,8 +139,8 @@ export class Command<C extends Context = Context> implements MiddlewareObj<C> {
 
     if (!handler) {
       handler = async (_ctx: Context, next: NextFunction) => await next();
-      this._noHandler = true;
-    } else this._noHandler = false;
+      this._hasHandler = false;
+    } else this._hasHandler = true;
 
     this._options = { ...this._options, ...options };
     if (this._options.prefix?.trim() === "") this._options.prefix = "/";
@@ -256,8 +256,8 @@ export class Command<C extends Context = Context> implements MiddlewareObj<C> {
    * Get if this command has a handler
    */
 
-  get noHandler(): boolean {
-    return this._noHandler;
+  get hasHandler(): boolean {
+    return this._hasHandler;
   }
 
   /**
@@ -519,14 +519,14 @@ export class Command<C extends Context = Context> implements MiddlewareObj<C> {
    */
   public toObject(
     languageCode: LanguageCode | "default" = "default",
-  ): Pick<BotCommandX, "command" | "description" | "noHandler"> {
+  ): Pick<BotCommandX, "command" | "description" | "hasHandler"> {
     const localizedName = this.getLocalizedName(languageCode);
     return {
       command: localizedName instanceof RegExp
         ? localizedName.source
         : localizedName,
       description: this.getLocalizedDescription(languageCode),
-      ...(this.noHandler ? { noHandler: true } : {}),
+      ...(this.hasHandler ? { hasHandler: true } : { hasHandler: false }),
     };
   }
 

@@ -50,9 +50,9 @@ export interface BotCommandX extends BotCommand {
    */
   scopes: BotCommandScope[];
   /**
-   * True if this command has no middleware attach to it. False if it has.
+   * True if this command has middleware attach to it. False if not.
    */
-  noHandler?: boolean;
+  hasHandler?: boolean;
 }
 
 /** represents a bot__command entity inside a text message */

@@ -52,7 +52,7 @@ export interface BotCommandX extends BotCommand {
   /**
    * True if this command has middleware attach to it. False if not.
    */
-  hasHandler?: boolean;
+  hasHandler: boolean;
 }
 
 /** represents a bot__command entity inside a text message */

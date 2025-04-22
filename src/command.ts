@@ -315,6 +315,7 @@ export class Command<C extends Context = Context> implements MiddlewareObj<C> {
         case "all_chat_administrators":
           this._composer
             .filter(Command.hasCommand(this.names, optionsObject))
+            .chatType(["group", "supergroup"])
             .filter(isAdmin)
             .use(...middlewareArray);
           break;
@@ -331,11 +332,20 @@ export class Command<C extends Context = Context> implements MiddlewareObj<C> {
             .use(...middlewareArray);
           break;
         case "chat":
+          if (scope.chat_id) {
+            this._composer
+              .filter(Command.hasCommand(this.names, optionsObject))
+              .chatType(["group", "supergroup", "private"])
+              .filter((ctx) => ctx.chatId === scope.chat_id)
+              .use(...middlewareArray);
+          }
+          break;
         case "chat_administrators":
           if (scope.chat_id) {
             this._composer
               .filter(Command.hasCommand(this.names, optionsObject))
-              .filter((ctx) => ctx.chat?.id === scope.chat_id)
+              .chatType(["group", "supergroup"])
+              .filter((ctx) => ctx.chatId === scope.chat_id)
               .filter(isAdmin)
               .use(...middlewareArray);
           }
@@ -344,7 +354,8 @@ export class Command<C extends Context = Context> implements MiddlewareObj<C> {
           if (scope.chat_id && scope.user_id) {
             this._composer
               .filter(Command.hasCommand(this.names, optionsObject))
-              .filter((ctx) => ctx.chat?.id === scope.chat_id)
+              .chatType(["group", "supergroup"])
+              .filter((ctx) => ctx.chatId === scope.chat_id)
               .filter((ctx) => ctx.from?.id === scope.user_id)
               .use(...middlewareArray);
           }
@@ -376,9 +387,10 @@ export class Command<C extends Context = Context> implements MiddlewareObj<C> {
   ): CommandMatch | null {
     const { matchOnlyAtStart, prefix, targetedCommands } = options;
 
-    if (!ctx.has(":text")) return null;
+    if (!ctx.has([":text", ":caption"])) return null;
+    const txt = ctx.msg.text ?? ctx.msg.caption;
 
-    if (matchOnlyAtStart && !ctx.msg.text.startsWith(prefix)) {
+    if (matchOnlyAtStart && !txt.startsWith(prefix)) {
       return null;
     }
 
@@ -389,7 +401,7 @@ export class Command<C extends Context = Context> implements MiddlewareObj<C> {
       "g",
     );
 
-    const firstCommand = commandRegex.exec(ctx.msg.text)?.groups;
+    const firstCommand = commandRegex.exec(txt)?.groups;
 
     if (!firstCommand) return null;
 
@@ -414,7 +426,7 @@ export class Command<C extends Context = Context> implements MiddlewareObj<C> {
       return {
         command: matchingCommand,
         rest: firstCommand.rest.trim(),
-        match: matchingCommand.exec(ctx.msg.text),
+        match: matchingCommand.exec(txt),
       };
     }
 

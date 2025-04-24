@@ -255,7 +255,6 @@ export class Command<C extends Context = Context> implements MiddlewareObj<C> {
   /**
    * Get if this command has a handler
    */
-
   get hasHandler(): boolean {
     return this._hasHandler;
   }

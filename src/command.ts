@@ -1,6 +1,5 @@
 import { CommandsFlavor } from "./context.ts";
 import {
-  type BotCommand,
   type BotCommandScope,
   type BotCommandScopeAllChatAdministrators,
   type BotCommandScopeAllGroupChats,
@@ -12,8 +11,9 @@ import {
   type LanguageCode,
   type Middleware,
   type MiddlewareObj,
+  type NextFunction,
 } from "./deps.deno.ts";
-import type { CommandOptions } from "./types.ts";
+import type { BotCommandX, CommandOptions } from "./types.ts";
 import { ensureArray, type MaybeArray } from "./utils/array.ts";
 import {
   isAdmin,
@@ -66,6 +66,7 @@ export class Command<C extends Context = Context> implements MiddlewareObj<C> {
     targetedCommands: "optional",
     ignoreCase: false,
   };
+  private _hasHandler: boolean;
 
   /**
    * Initialize a new command with a default handler.
@@ -130,13 +131,16 @@ export class Command<C extends Context = Context> implements MiddlewareObj<C> {
       | Partial<CommandOptions>,
     options?: Partial<CommandOptions>,
   ) {
-    const handler = isMiddleware(handlerOrOptions)
-      ? handlerOrOptions
-      : undefined;
+    let handler = isMiddleware(handlerOrOptions) ? handlerOrOptions : undefined;
 
     options = !handler && isCommandOptions(handlerOrOptions)
       ? handlerOrOptions
       : options;
+
+    if (!handler) {
+      handler = async (_ctx: Context, next: NextFunction) => await next();
+      this._hasHandler = false;
+    } else this._hasHandler = true;
 
     this._options = { ...this._options, ...options };
     if (this._options.prefix?.trim() === "") this._options.prefix = "/";
@@ -246,6 +250,13 @@ export class Command<C extends Context = Context> implements MiddlewareObj<C> {
    */
   get prefix() {
     return this._options.prefix;
+  }
+
+  /**
+   * Get if this command has a handler
+   */
+  get hasHandler(): boolean {
+    return this._hasHandler;
   }
 
   /**
@@ -519,13 +530,14 @@ export class Command<C extends Context = Context> implements MiddlewareObj<C> {
    */
   public toObject(
     languageCode: LanguageCode | "default" = "default",
-  ): BotCommand {
+  ): Pick<BotCommandX, "command" | "description" | "hasHandler"> {
     const localizedName = this.getLocalizedName(languageCode);
     return {
       command: localizedName instanceof RegExp
         ? localizedName.source
         : localizedName,
       description: this.getLocalizedDescription(languageCode),
+      ...(this.hasHandler ? { hasHandler: true } : { hasHandler: false }),
     };
   }
 

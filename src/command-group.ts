@@ -9,7 +9,7 @@ import {
   type LanguageCode,
   Middleware,
 } from "./deps.deno.ts";
-import type { CommandElementals, CommandOptions } from "./types.ts";
+import type { BotCommandX, CommandOptions } from "./types.ts";
 import {
   ensureArray,
   getCommandsRegex,
@@ -34,7 +34,7 @@ export interface SetMyCommandsParams {
    */
   language_code?: LanguageCode;
   /** Commands that can be each one passed to a SetMyCommands Call */
-  commands: BotCommand[];
+  commands: (BotCommand & { hasHandler?: boolean })[];
 }
 
 /**
@@ -275,20 +275,21 @@ export class CommandGroup<C extends Context> {
   }
 
   /**
-   * Serialize all register commands into it's name, prefix and language
+   * Serialize all register commands into a more detailed object
+   * including it's name, prefix and language, and more data
    *
    * @param filterLanguage if undefined, it returns all names
    * else get only the locales for the given filterLanguage
    * fallbacks to "default"
    *
-   * @returns an array of {@link CommandElementals}
+   * @returns an array of {@link BotCommandX}
    *
    * Note: mainly used to serialize for {@link FuzzyMatch}
    */
 
   public toElementals(
     filterLanguage?: LanguageCode | "default",
-  ): CommandElementals[] {
+  ): BotCommandX[] {
     this._populateMetadata();
 
     return Array.from(this._scopes.values())
@@ -300,7 +301,7 @@ export class CommandGroup<C extends Context> {
             const [language, local] of command.languages.entries()
           ) {
             elements.push({
-              name: local.name instanceof RegExp
+              command: local.name instanceof RegExp
                 ? local.name.source
                 : local.name,
               language,
@@ -309,6 +310,9 @@ export class CommandGroup<C extends Context> {
               description: command.getLocalizedDescription(
                 language,
               ),
+              ...(command.hasHandler
+                ? { hasHandler: true }
+                : { hasHandler: false }),
             });
           }
           if (filterLanguage) {

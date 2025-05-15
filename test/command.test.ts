@@ -19,7 +19,6 @@ import {
 } from "./deps.test.ts";
 import { Composer } from "../src/deps.deno.ts";
 import { LanguageCodes } from "../src/language-codes.ts";
-import { Filter } from "https://deno.land/x/grammy@v1.34.1/mod.ts";
 
 function createRegexpMatchArray(
   match: string[],

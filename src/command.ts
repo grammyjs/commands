@@ -27,6 +27,11 @@ type BotCommandGroupsScope =
   | BotCommandScopeAllGroupChats
   | BotCommandScopeAllChatAdministrators;
 
+type ScopeHandlerTuple<C extends Context> = [
+  CommandOptions,
+  Middleware<C>[] | undefined,
+];
+
 /**
  * Represents a matched command, the result of the RegExp match, and the rest of the input.
  */
@@ -67,7 +72,7 @@ export class Command<C extends Context = Context> implements MiddlewareObj<C> {
   };
   private _scopeHandlers = new Map<
     BotCommandScope,
-    [CommandOptions, Middleware<C>[] | undefined]
+    ScopeHandlerTuple<C>
   >();
   private _cachedComposer: Composer<C> = new Composer<C>();
   private _cachedComposerInvalidated: boolean = false;
@@ -478,63 +483,67 @@ export class Command<C extends Context = Context> implements MiddlewareObj<C> {
     };
   }
 
-  middleware() {
-    if (this._cachedComposerInvalidated) {
-      const entries = this._scopeHandlers.entries();
+  private registerScopeHandlers() {
+    const entries = this._scopeHandlers.entries();
 
-      for (const [scope, [optionsObject, middlewareArray]] of entries) {
-        if (middlewareArray) {
-          switch (scope.type) {
-            case "default":
-              this._defaultScopeComposer
-                .filter(Command.hasCommand(this.names, optionsObject))
-                .use(...middlewareArray);
-              break;
-            case "all_chat_administrators":
+    for (const [scope, [optionsObject, middlewareArray]] of entries) {
+      if (middlewareArray) {
+        switch (scope.type) {
+          case "default":
+            this._defaultScopeComposer
+              .filter(Command.hasCommand(this.names, optionsObject))
+              .use(...middlewareArray);
+            break;
+          case "all_chat_administrators":
+            this._cachedComposer
+              .filter(Command.hasCommand(this.names, optionsObject))
+              .filter(isAdmin)
+              .use(...middlewareArray);
+            break;
+          case "all_private_chats":
+            this._cachedComposer
+              .filter(Command.hasCommand(this.names, optionsObject))
+              .chatType("private")
+              .use(...middlewareArray);
+            break;
+          case "all_group_chats":
+            this._cachedComposer
+              .filter(Command.hasCommand(this.names, optionsObject))
+              .chatType(["group", "supergroup"])
+              .use(...middlewareArray);
+            break;
+          case "chat":
+          case "chat_administrators":
+            if (scope.chat_id) {
               this._cachedComposer
                 .filter(Command.hasCommand(this.names, optionsObject))
+                .filter((ctx) => ctx.chat?.id === scope.chat_id)
                 .filter(isAdmin)
                 .use(...middlewareArray);
-              break;
-            case "all_private_chats":
+            }
+            break;
+          case "chat_member":
+            if (scope.chat_id && scope.user_id) {
               this._cachedComposer
                 .filter(Command.hasCommand(this.names, optionsObject))
-                .chatType("private")
+                .filter((ctx) => ctx.chat?.id === scope.chat_id)
+                .filter((ctx) => ctx.from?.id === scope.user_id)
                 .use(...middlewareArray);
-              break;
-            case "all_group_chats":
-              this._cachedComposer
-                .filter(Command.hasCommand(this.names, optionsObject))
-                .chatType(["group", "supergroup"])
-                .use(...middlewareArray);
-              break;
-            case "chat":
-            case "chat_administrators":
-              if (scope.chat_id) {
-                this._cachedComposer
-                  .filter(Command.hasCommand(this.names, optionsObject))
-                  .filter((ctx) => ctx.chat?.id === scope.chat_id)
-                  .filter(isAdmin)
-                  .use(...middlewareArray);
-              }
-              break;
-            case "chat_member":
-              if (scope.chat_id && scope.user_id) {
-                this._cachedComposer
-                  .filter(Command.hasCommand(this.names, optionsObject))
-                  .filter((ctx) => ctx.chat?.id === scope.chat_id)
-                  .filter((ctx) => ctx.from?.id === scope.user_id)
-                  .use(...middlewareArray);
-              }
-              break;
-            default:
-              throw new InvalidScopeError(scope);
-          }
+            }
+            break;
+          default:
+            throw new InvalidScopeError(scope);
         }
       }
+    }
 
-      this._cachedComposer.use(this._defaultScopeComposer);
-      this._cachedComposerInvalidated = false;
+    this._cachedComposer.use(this._defaultScopeComposer);
+    this._cachedComposerInvalidated = false;
+  }
+
+  middleware() {
+    if (this._cachedComposerInvalidated) {
+      this.registerScopeHandlers();
     }
 
     return this._cachedComposer.middleware();

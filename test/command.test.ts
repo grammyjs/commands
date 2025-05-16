@@ -853,7 +853,7 @@ describe("Command", () => {
       assertEquals(handler.calls.length, 2);
     });
   });
-  
+
   describe("addToScope", () => {
     // NOTE: currently the scopes need to be added in a priority order for the
     // narrowest function to be called

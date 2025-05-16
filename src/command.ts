@@ -79,7 +79,6 @@ export class Command<C extends Context = Context> implements MiddlewareObj<C> {
   private _cachedComposerInvalidated: boolean = false;
   private _hasHandler: boolean;
 
-
   /**
    * Initialize a new command with a default handler.
    *

@@ -71,7 +71,11 @@ describe("Integration", () => {
       assertSpyCalls(setMyCommandsSpy, 1);
       assertSpyCall(setMyCommandsSpy, 0, {
         args: [{
-          commands: [{ command: "command", description: "_" }],
+          commands: [{
+            command: "command",
+            description: "_",
+            hasHandler: true,
+          }],
           language_code: undefined,
           scope: {
             type: "default",
@@ -95,6 +99,20 @@ describe("Integration", () => {
       );
 
       assertSpyCalls(setMyCommandsSpy, 0);
+    });
+    it("should be able to set commands with no handler", async () => {
+      const myCommands = new CommandGroup();
+      myCommands.command("command", "super description");
+
+      const setMyCommandsSpy = spy(resolvesNext([true] as const));
+
+      await myCommands.setCommands({
+        api: {
+          raw: { setMyCommands: setMyCommandsSpy },
+        } as unknown as Api,
+      });
+
+      assertSpyCalls(setMyCommandsSpy, 1);
     });
   });
 
@@ -130,7 +148,11 @@ describe("Integration", () => {
       assertSpyCalls(setMyCommandsSpy, 1);
       assertSpyCall(setMyCommandsSpy, 0, {
         args: [{
-          commands: [{ command: "command", description: "_" }],
+          commands: [{
+            command: "command",
+            description: "_",
+            hasHandler: true,
+          }],
           language_code: undefined,
           scope: {
             type: "chat",

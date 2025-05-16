@@ -1,6 +1,5 @@
 import { CommandsFlavor } from "./context.ts";
 import {
-  type BotCommand,
   type BotCommandScope,
   type BotCommandScopeAllChatAdministrators,
   type BotCommandScopeAllGroupChats,
@@ -12,8 +11,9 @@ import {
   type LanguageCode,
   type Middleware,
   type MiddlewareObj,
+  type NextFunction,
 } from "./deps.deno.ts";
-import type { CommandOptions } from "./types.ts";
+import type { BotCommandX, CommandOptions } from "./types.ts";
 import { ensureArray, type MaybeArray } from "./utils/array.ts";
 import {
   isAdmin,
@@ -70,12 +70,15 @@ export class Command<C extends Context = Context> implements MiddlewareObj<C> {
     targetedCommands: "optional",
     ignoreCase: false,
   };
+
   private _scopeHandlers = new Map<
     BotCommandScope,
     ScopeHandlerTuple<C>
   >();
   private _cachedComposer: Composer<C> = new Composer<C>();
   private _cachedComposerInvalidated: boolean = false;
+  private _hasHandler: boolean;
+
 
   /**
    * Initialize a new command with a default handler.
@@ -140,13 +143,16 @@ export class Command<C extends Context = Context> implements MiddlewareObj<C> {
       | Partial<CommandOptions>,
     options?: Partial<CommandOptions>,
   ) {
-    const handler = isMiddleware(handlerOrOptions)
-      ? handlerOrOptions
-      : undefined;
+    let handler = isMiddleware(handlerOrOptions) ? handlerOrOptions : undefined;
 
     options = !handler && isCommandOptions(handlerOrOptions)
       ? handlerOrOptions
       : options;
+
+    if (!handler) {
+      handler = async (_ctx: Context, next: NextFunction) => await next();
+      this._hasHandler = false;
+    } else this._hasHandler = true;
 
     this._options = { ...this._options, ...options };
     if (this._options.prefix?.trim() === "") this._options.prefix = "/";
@@ -259,6 +265,13 @@ export class Command<C extends Context = Context> implements MiddlewareObj<C> {
   }
 
   /**
+   * Get if this command has a handler
+   */
+  get hasHandler(): boolean {
+    return this._hasHandler;
+  }
+
+  /**
    * Registers the command to a scope to allow it to be handled and used with `setMyCommands`.
    * This will automatically apply filtering middlewares for you, so the handler only runs on the specified scope.
    *
@@ -329,9 +342,10 @@ export class Command<C extends Context = Context> implements MiddlewareObj<C> {
   ): CommandMatch | null {
     const { matchOnlyAtStart, prefix, targetedCommands } = options;
 
-    if (!ctx.has(":text")) return null;
+    if (!ctx.has([":text", ":caption"])) return null;
+    const txt = ctx.msg.text ?? ctx.msg.caption;
 
-    if (matchOnlyAtStart && !ctx.msg.text.startsWith(prefix)) {
+    if (matchOnlyAtStart && !txt.startsWith(prefix)) {
       return null;
     }
 
@@ -342,7 +356,7 @@ export class Command<C extends Context = Context> implements MiddlewareObj<C> {
       "g",
     );
 
-    const firstCommand = commandRegex.exec(ctx.msg.text)?.groups;
+    const firstCommand = commandRegex.exec(txt)?.groups;
 
     if (!firstCommand) return null;
 
@@ -367,7 +381,7 @@ export class Command<C extends Context = Context> implements MiddlewareObj<C> {
       return {
         command: matchingCommand,
         rest: firstCommand.rest.trim(),
-        match: matchingCommand.exec(ctx.msg.text),
+        match: matchingCommand.exec(txt),
       };
     }
 
@@ -473,13 +487,14 @@ export class Command<C extends Context = Context> implements MiddlewareObj<C> {
    */
   public toObject(
     languageCode: LanguageCode | "default" = "default",
-  ): BotCommand {
+  ): Pick<BotCommandX, "command" | "description" | "hasHandler"> {
     const localizedName = this.getLocalizedName(languageCode);
     return {
       command: localizedName instanceof RegExp
         ? localizedName.source
         : localizedName,
       description: this.getLocalizedDescription(languageCode),
+      ...(this.hasHandler ? { hasHandler: true } : { hasHandler: false }),
     };
   }
 

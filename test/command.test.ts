@@ -1,13 +1,16 @@
-import { assertEquals } from "https://deno.land/std@0.203.0/assert/assert_equals.ts";
-import { assertExists } from "https://deno.land/std@0.203.0/assert/assert_exists.ts";
 import { Command } from "../src/command.ts";
 import { CommandOptions } from "../src/types.ts";
 import { isCommandOptions, matchesPattern } from "../src/utils/checks.ts";
 import {
   Api,
   assert,
+  assertEquals,
+  assertExists,
   assertFalse,
+  assertSpyCalls,
+  beforeEach,
   type Chat,
+  type ChatMember,
   Context,
   describe,
   it,
@@ -36,7 +39,13 @@ function createRegexpMatchArray(
 describe("Command", () => {
   const u = { id: 42, first_name: "bot", is_bot: true } as User;
   const c = { id: 100, type: "private" } as Chat;
-  const m = { text: "a", from: u, chat: c, sender_chat: c } as Message;
+  const m = {
+    text: "a",
+    caption: undefined,
+    from: u,
+    chat: c,
+    sender_chat: c,
+  } as Message;
   const update = {
     message: m,
     edited_message: m,
@@ -72,6 +81,10 @@ describe("Command", () => {
     targetedCommands: "optional",
     ignoreCase: false,
   };
+
+  beforeEach(() => {
+    m.caption = undefined;
+  });
 
   describe("hasCommand", () => {
     describe("default behavior", () => {
@@ -659,7 +672,14 @@ describe("Command", () => {
   });
 
   describe("findMatchingCommand", () => {
-    it("should return null if the message does not contain a text", () => {
+    it("should match a command in a caption", () => {
+      m.text = undefined;
+      m.caption = "/start";
+      const ctx = new Context(update, api, me);
+      assert(Command.findMatchingCommand("start", options, ctx) !== null);
+    });
+
+    it("should return null if the message does not contain a text or caption", () => {
       m.text = undefined;
       const ctx = new Context(update, api, me);
       assert(Command.findMatchingCommand("start", options, ctx) === null);
@@ -831,6 +851,149 @@ describe("Command", () => {
       await composer.middleware()(ctx, () => Promise.resolve());
 
       assertEquals(handler.calls.length, 2);
+    });
+  });
+  
+  describe("addToScope", () => {
+    // NOTE: currently the scopes need to be added in a priority order for the
+    // narrowest function to be called
+    const command = new Command("a", "Test command");
+    const mw = (ctx: Context) =>
+      command.middleware()(ctx, () => Promise.resolve());
+    const makeContext = (message: Message) => {
+      const update = (message.chat.type === "channel")
+        ? { channel_post: message as any, update_id: 1 }
+        : { message: message as any, update_id: 1 };
+      return new Context(update, api, me);
+    };
+
+    const chatMemberSpy = spy();
+    command.addToScope(
+      { type: "chat_member", chat_id: -123, user_id: 456 },
+      chatMemberSpy,
+    );
+
+    const chatAdministratorsSpy = spy();
+    command.addToScope(
+      { type: "chat_administrators", chat_id: -123 },
+      chatAdministratorsSpy,
+    );
+
+    const chatSpy = spy();
+    command.addToScope({ type: "chat", chat_id: -123 }, chatSpy);
+
+    const privateChatSpy = spy();
+    command.addToScope({ type: "chat", chat_id: 456 }, privateChatSpy);
+
+    const allChatAdministratorsSpy = spy();
+    command.addToScope(
+      { type: "all_chat_administrators" },
+      allChatAdministratorsSpy,
+    );
+
+    const allGroupChatsSpy = spy();
+    command.addToScope({ type: "all_group_chats" }, allGroupChatsSpy);
+
+    const allPrivateChatsSpy = spy();
+    command.addToScope({ type: "all_private_chats" }, allPrivateChatsSpy);
+
+    const defaultSpy = spy();
+    command.addToScope({ type: "default" }, defaultSpy);
+
+    let chatMember: ChatMember | null = null;
+    const api = {
+      getChatMember: spy(() => {
+        return Promise.resolve(chatMember);
+      }),
+    } as unknown as Api;
+    beforeEach(() => {
+      chatMember = { status: "member" } as ChatMember;
+    });
+
+    it("should call chatMember", async () => {
+      assertSpyCalls(chatMemberSpy, 0);
+      await mw(makeContext({
+        chat: { id: -123, type: "group" },
+        from: { id: 456 },
+        text: "/a",
+      } as Message));
+      assertSpyCalls(chatMemberSpy, 1);
+    });
+
+    it("should call chatAdministrators", async () => {
+      chatMember = { status: "administrator" } as ChatMember;
+
+      assertSpyCalls(chatAdministratorsSpy, 0);
+      await mw(makeContext({
+        chat: { id: -123, type: "group" },
+        from: { id: 789 },
+        text: "/a",
+      } as Message));
+      assertSpyCalls(chatAdministratorsSpy, 1);
+    });
+
+    it("should call chat", async () => {
+      assertSpyCalls(chatSpy, 0);
+      await mw(makeContext({
+        chat: { id: -123, type: "group" },
+        from: { id: 789 },
+        text: "/a",
+      } as Message));
+      assertSpyCalls(chatSpy, 1);
+    });
+
+    it("should call chat for a private chat", async () => {
+      assertSpyCalls(privateChatSpy, 0);
+      await mw(makeContext({
+        chat: { id: 456, type: "private" },
+        from: { id: 456 },
+        text: "/a",
+      } as Message));
+      assertSpyCalls(privateChatSpy, 1);
+    });
+
+    it("should call allChatAdministrators", async () => {
+      chatMember = { status: "administrator" } as ChatMember;
+
+      assertSpyCalls(allChatAdministratorsSpy, 0);
+      await mw(makeContext({
+        chat: { id: -124, type: "group" },
+        from: { id: 789 },
+        text: "/a",
+      } as Message));
+      assertSpyCalls(allChatAdministratorsSpy, 1);
+    });
+
+    it("should call allGroupChats", async () => {
+      chatMember = { status: "member" } as ChatMember;
+
+      assertSpyCalls(allGroupChatsSpy, 0);
+      await mw(makeContext({
+        chat: { id: -124, type: "group" },
+        from: { id: 789 },
+        text: "/a",
+      } as Message));
+      assertSpyCalls(allGroupChatsSpy, 1);
+    });
+
+    it("should call allPrivateChats", async () => {
+      assertSpyCalls(allPrivateChatsSpy, 0);
+      await mw(makeContext({
+        chat: { id: 789, type: "private" },
+        from: { id: 789 },
+        text: "/a",
+      } as Message));
+      assertSpyCalls(allPrivateChatsSpy, 1);
+    });
+
+    it("should call default", async () => {
+      assertSpyCalls(defaultSpy, 0);
+      await mw(makeContext({
+        chat: { id: -124, type: "channel" },
+        from: { id: 789 },
+        text: "/a",
+      } as Message));
+      assertSpyCalls(defaultSpy, 1);
     });
   });
 });

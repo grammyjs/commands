@@ -27,6 +27,11 @@ type BotCommandGroupsScope =
   | BotCommandScopeAllGroupChats
   | BotCommandScopeAllChatAdministrators;
 
+type ScopeHandlerTuple<C extends Context> = [
+  CommandOptions,
+  Middleware<C>[] | undefined,
+];
+
 /**
  * Represents a matched command, the result of the RegExp match, and the rest of the input.
  */
@@ -58,7 +63,6 @@ export class Command<C extends Context = Context> implements MiddlewareObj<C> {
     LanguageCode | "default",
     { name: string | RegExp; description: string }
   > = new Map();
-  private _composer: Composer<C> = new Composer<C>();
   private _defaultScopeComposer = new Composer<C>();
   private _options: CommandOptions = {
     prefix: "/",
@@ -66,6 +70,13 @@ export class Command<C extends Context = Context> implements MiddlewareObj<C> {
     targetedCommands: "optional",
     ignoreCase: false,
   };
+
+  private _scopeHandlers = new Map<
+    BotCommandScope,
+    ScopeHandlerTuple<C>
+  >();
+  private _cachedComposer: Composer<C> = new Composer<C>();
+  private _cachedComposerInvalidated: boolean = false;
   private _hasHandler: boolean;
 
   /**
@@ -304,67 +315,11 @@ export class Command<C extends Context = Context> implements MiddlewareObj<C> {
     const middlewareArray = middleware ? ensureArray(middleware) : undefined;
     const optionsObject = { ...this._options, ...options };
 
-    if (middlewareArray) {
-      switch (scope.type) {
-        case "default":
-          this._defaultScopeComposer
-            .filter(Command.hasCommand(this.names, optionsObject))
-            .use(...middlewareArray);
-          break;
-        case "all_chat_administrators":
-          this._composer
-            .filter(Command.hasCommand(this.names, optionsObject))
-            .chatType(["group", "supergroup"])
-            .filter(isAdmin)
-            .use(...middlewareArray);
-          break;
-        case "all_private_chats":
-          this._composer
-            .filter(Command.hasCommand(this.names, optionsObject))
-            .chatType("private")
-            .use(...middlewareArray);
-          break;
-        case "all_group_chats":
-          this._composer
-            .filter(Command.hasCommand(this.names, optionsObject))
-            .chatType(["group", "supergroup"])
-            .use(...middlewareArray);
-          break;
-        case "chat":
-          if (scope.chat_id) {
-            this._composer
-              .filter(Command.hasCommand(this.names, optionsObject))
-              .chatType(["group", "supergroup", "private"])
-              .filter((ctx) => ctx.chatId === scope.chat_id)
-              .use(...middlewareArray);
-          }
-          break;
-        case "chat_administrators":
-          if (scope.chat_id) {
-            this._composer
-              .filter(Command.hasCommand(this.names, optionsObject))
-              .chatType(["group", "supergroup"])
-              .filter((ctx) => ctx.chatId === scope.chat_id)
-              .filter(isAdmin)
-              .use(...middlewareArray);
-          }
-          break;
-        case "chat_member":
-          if (scope.chat_id && scope.user_id) {
-            this._composer
-              .filter(Command.hasCommand(this.names, optionsObject))
-              .chatType(["group", "supergroup"])
-              .filter((ctx) => ctx.chatId === scope.chat_id)
-              .filter((ctx) => ctx.from?.id === scope.user_id)
-              .use(...middlewareArray);
-          }
-          break;
-        default:
-          throw new InvalidScopeError(scope);
-      }
-    }
-
     this._scopes.push(scope);
+    if (middlewareArray && middlewareArray.length) {
+      this._scopeHandlers.set(scope, [optionsObject, middlewareArray]);
+      this._cachedComposerInvalidated = true;
+    }
 
     return this;
   }
@@ -499,6 +454,7 @@ export class Command<C extends Context = Context> implements MiddlewareObj<C> {
       name: name,
       description,
     });
+    this._cachedComposerInvalidated = true;
     return this;
   }
 
@@ -541,8 +497,80 @@ export class Command<C extends Context = Context> implements MiddlewareObj<C> {
     };
   }
 
+  private registerScopeHandlers() {
+    const entries = this._scopeHandlers.entries();
+
+    for (const [scope, [optionsObject, middlewareArray]] of entries) {
+      if (middlewareArray) {
+        switch (scope.type) {
+          case "default":
+            this._defaultScopeComposer
+              .filter(Command.hasCommand(this.names, optionsObject))
+              .use(...middlewareArray);
+            break;
+          case "all_chat_administrators":
+            this._cachedComposer
+              .filter(Command.hasCommand(this.names, optionsObject))
+              .chatType(["group", "supergroup"])
+              .filter(isAdmin)
+              .use(...middlewareArray);
+            break;
+          case "all_private_chats":
+            this._cachedComposer
+              .filter(Command.hasCommand(this.names, optionsObject))
+              .chatType("private")
+              .use(...middlewareArray);
+            break;
+          case "all_group_chats":
+            this._cachedComposer
+              .filter(Command.hasCommand(this.names, optionsObject))
+              .chatType(["group", "supergroup"])
+              .use(...middlewareArray);
+            break;
+          case "chat":
+            if (scope.chat_id) {
+              this._cachedComposer
+                .filter(Command.hasCommand(this.names, optionsObject))
+                .chatType(["group", "supergroup", "private"])
+                .filter((ctx) => ctx.chatId === scope.chat_id)
+                .use(...middlewareArray);
+            }
+            break;
+          case "chat_administrators":
+            if (scope.chat_id) {
+              this._cachedComposer
+                .filter(Command.hasCommand(this.names, optionsObject))
+                .chatType(["group", "supergroup"])
+                .filter((ctx) => ctx.chatId === scope.chat_id)
+                .filter(isAdmin)
+                .use(...middlewareArray);
+            }
+            break;
+          case "chat_member":
+            if (scope.chat_id && scope.user_id) {
+              this._cachedComposer
+                .filter(Command.hasCommand(this.names, optionsObject))
+                .chatType(["group", "supergroup"])
+                .filter((ctx) => ctx.chatId === scope.chat_id)
+                .filter((ctx) => ctx.from?.id === scope.user_id)
+                .use(...middlewareArray);
+            }
+            break;
+          default:
+            throw new InvalidScopeError(scope);
+        }
+      }
+    }
+
+    this._cachedComposer.use(this._defaultScopeComposer);
+    this._cachedComposerInvalidated = false;
+  }
+
   middleware() {
-    return new Composer(this._composer, this._defaultScopeComposer)
-      .middleware();
+    if (this._cachedComposerInvalidated) {
+      this.registerScopeHandlers();
+    }
+
+    return this._cachedComposer.middleware();
   }
 }

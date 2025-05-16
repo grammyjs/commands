@@ -20,6 +20,8 @@ import {
   type User,
   type UserFromGetMe,
 } from "./deps.test.ts";
+import { Composer } from "../src/deps.deno.ts";
+import { LanguageCodes } from "../src/language-codes.ts";
 
 function createRegexpMatchArray(
   match: string[],
@@ -635,6 +637,7 @@ describe("Command", () => {
       ]);
     });
   });
+
   describe("isCommandOptions", () => {
     it("true when an object contains valid CommandOptions properties", () => {
       let partialOpts: Partial<CommandOptions> = { prefix: "!" };
@@ -795,6 +798,59 @@ describe("Command", () => {
           rest: "test",
         },
       );
+    });
+  });
+
+  describe("default handler", () => {
+    it("should handle all localized names", async () => {
+      const handler = spy();
+      const command = new Command("start", "test", handler)
+        .localize(LanguageCodes.Portuguese, "iniciar", "test");
+
+      const composer = new Composer();
+      composer.use(command);
+
+      let ctx = new Context(
+        { ...update, message: { ...m, text: "/start" } } as Update,
+        api,
+        me,
+      );
+      await composer.middleware()(ctx, () => Promise.resolve());
+
+      ctx = new Context(
+        { ...update, message: { ...m, text: "/iniciar" } } as Update,
+        api,
+        me,
+      );
+      await composer.middleware()(ctx, () => Promise.resolve());
+
+      assertEquals(handler.calls.length, 2);
+    });
+
+    it("should handle localization after addToScope", async () => {
+      const handler = spy();
+      const command = new Command("start", "test")
+        .addToScope({ type: "default" }, handler)
+        .localize(LanguageCodes.Portuguese, "iniciar", "test");
+
+      const composer = new Composer();
+      composer.use(command);
+
+      let ctx = new Context(
+        { ...update, message: { ...m, text: "/start" } } as Update,
+        api,
+        me,
+      );
+      await composer.middleware()(ctx, () => Promise.resolve());
+
+      ctx = new Context(
+        { ...update, message: { ...m, text: "/iniciar" } } as Update,
+        api,
+        me,
+      );
+      await composer.middleware()(ctx, () => Promise.resolve());
+
+      assertEquals(handler.calls.length, 2);
     });
   });
 

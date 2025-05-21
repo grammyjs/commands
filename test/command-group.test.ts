@@ -1,5 +1,5 @@
 import { CommandGroup } from "../src/command-group.ts";
-import { MyCommandParams } from "../src/mod.ts";
+import { Command, MyCommandParams } from "../src/mod.ts";
 import { dummyCtx } from "./context.test.ts";
 import {
   assert,
@@ -385,6 +385,14 @@ describe("CommandGroup", () => {
       commands.command("test", "handler", (_) => _);
       commands.command("test2", "handler2", (_) => _)
         .localize("es", "prueba2", "resolvedor2");
+      commands.command("private", "private command")
+        .addToScope({ type: "all_private_chats" }, (_) => _);
+
+      const groupCommand = new Command("group", "group command")
+        .addToScope({ type: "all_group_chats" }, (_) => _);
+
+      commands.add(groupCommand);
+
       const params = commands.toArgs();
       const expected = [
         {
@@ -402,6 +410,35 @@ describe("CommandGroup", () => {
           ],
           language_code: "es",
           scope: { type: "default" },
+        },
+        {
+          commands: [
+            { command: "private", description: "private command" },
+          ],
+          language_code: undefined,
+          scope: { type: "all_private_chats" },
+        },
+        {
+          commands: [
+            { command: "private", description: "private command" },
+          ],
+          language_code: "es",
+          scope: { type: "all_private_chats" },
+        },
+        {
+          commands: [
+            { command: "group", description: "group command" },
+          ],
+          language_code: undefined,
+          scope: { type: "all_group_chats" },
+        },
+
+        {
+          commands: [
+            { command: "group", description: "group command" },
+          ],
+          language_code: "es",
+          scope: { type: "all_group_chats" },
         },
       ];
       params.scopes.forEach((command, i) =>

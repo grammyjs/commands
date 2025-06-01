@@ -322,7 +322,7 @@ describe("CommandGroup", () => {
 
         const b = new CommandGroup();
         b.command("b", "group chats").addToScope({ type: "all_group_chats" })
-          .localize("fr", "b_fr", "private localized");
+          .localize("fr", "b_fr", "group localized");
 
         const mergedCommands = MyCommandParams.from([a, b], 10);
         const expected = [{
@@ -338,16 +338,16 @@ describe("CommandGroup", () => {
             { command: "a", description: "private chats" },
           ],
         }, {
-          scope: { type: "all_group_chats", chat_id: 10 },
+          scope: { type: "all_private_chats", chat_id: 10 },
           language_code: "es",
           commands: [
-            { command: "a", description: "group chats" },
+            { command: "a_es", description: "private localized" },
           ],
         }, {
-          scope: { type: "all_private_chats", chat_id: 10 },
+          scope: { type: "all_group_chats", chat_id: 10 },
           language_code: "fr",
           commands: [
-            { command: "b", description: "private chats" },
+            { command: "b_fr", description: "group localized" },
           ],
         }];
         mergedCommands.commandsParams.forEach((command, i) =>

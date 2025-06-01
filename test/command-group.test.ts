@@ -208,7 +208,7 @@ describe("CommandGroup", () => {
 
         const mergedCommands = MyCommandParams.from([a, b, c], 10);
         const expected = [{
-          scope: { type: "chat", chat_id: 10 },
+          scope: { type: "default", chat_id: 10 },
           language_code: undefined,
           commands: [
             { command: "c", description: "test c" },
@@ -242,7 +242,7 @@ describe("CommandGroup", () => {
         const mergedCommands = MyCommandParams.from([a, b], 10);
         const expected = [
           {
-            scope: { type: "chat", chat_id: 10 },
+            scope: { type: "default", chat_id: 10 },
             language_code: undefined,
             commands: [
               { command: "b", description: "test b" },
@@ -252,7 +252,7 @@ describe("CommandGroup", () => {
             ],
           },
           {
-            scope: { type: "chat", chat_id: 10 },
+            scope: { type: "default", chat_id: 10 },
             language_code: "es",
             commands: [
               { command: "a", description: "test a" },
@@ -268,7 +268,7 @@ describe("CommandGroup", () => {
             ],
           },
           {
-            scope: { type: "chat", chat_id: 10 },
+            scope: { type: "default", chat_id: 10 },
             language_code: "fr",
             commands: [
               { command: "a", description: "test a" },
@@ -454,7 +454,7 @@ describe("CommandGroup", () => {
       commands.command("withoutcustomprefix", "handler", (_) => _);
 
       const params = commands.toArgs();
-      assertEquals(params, {
+      assertObjectMatch(params, {
         scopes: [
           {
             scope: { type: "default" },

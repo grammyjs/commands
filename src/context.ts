@@ -198,7 +198,7 @@ export class MyCommandParams {
   ) {
     const serializedCommands = this._serialize(commands, chat_id);
     const commandsParams = serializedCommands
-      .map(({ commandParams }) => commandParams)
+      .map(({ scopes }) => scopes)
       .flat();
 
     const uncompliantCommands = serializedCommands
@@ -233,14 +233,7 @@ export class MyCommandParams {
     commandsArr: CommandGroup<C>[],
     chat_id: BotCommandScopeChat["chat_id"],
   ) {
-    return commandsArr.map((
-      commands,
-    ) =>
-      commands.toSingleScopeArgs({
-        type: "chat",
-        chat_id,
-      })
-    );
+    return commandsArr.map((cmds) => cmds.toArgs(chat_id));
   }
 
   /**

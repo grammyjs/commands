@@ -288,6 +288,72 @@ describe("CommandGroup", () => {
           assertObjectMatch(command, expected[i])
         );
       });
+      it("should merge and retain scopes between different command groups", () => {
+        const a = new CommandGroup();
+        a.command("a", "private chats").addToScope({
+          type: "all_private_chats",
+        });
+        const b = new CommandGroup();
+        b.command("b", "group chats").addToScope({ type: "all_group_chats" });
+
+        const mergedCommands = MyCommandParams.from([a, b], 10);
+        const expected = [{
+          scope: { type: "all_group_chats", chat_id: 10 },
+          language_code: undefined,
+          commands: [
+            { command: "b", description: "group chats" },
+          ],
+        }, {
+          scope: { type: "all_private_chats", chat_id: 10 },
+          language_code: undefined,
+          commands: [
+            { command: "a", description: "private chats" },
+          ],
+        }];
+        mergedCommands.commandsParams.forEach((command, i) =>
+          assertObjectMatch(command, expected[i])
+        );
+      });
+      it("should merge and retain scopes and localization between different command groups", () => {
+        const a = new CommandGroup();
+        a.command("a", "private chats").addToScope({
+          type: "all_private_chats",
+        }).localize("es", "a_es", "private localized");
+
+        const b = new CommandGroup();
+        b.command("b", "group chats").addToScope({ type: "all_group_chats" })
+          .localize("fr", "b_fr", "private localized");
+
+        const mergedCommands = MyCommandParams.from([a, b], 10);
+        const expected = [{
+          scope: { type: "all_group_chats", chat_id: 10 },
+          language_code: undefined,
+          commands: [
+            { command: "b", description: "group chats" },
+          ],
+        }, {
+          scope: { type: "all_private_chats", chat_id: 10 },
+          language_code: undefined,
+          commands: [
+            { command: "a", description: "private chats" },
+          ],
+        }, {
+          scope: { type: "all_group_chats", chat_id: 10 },
+          language_code: "es",
+          commands: [
+            { command: "a", description: "group chats" },
+          ],
+        }, {
+          scope: { type: "all_private_chats", chat_id: 10 },
+          language_code: "fr",
+          commands: [
+            { command: "b", description: "private chats" },
+          ],
+        }];
+        mergedCommands.commandsParams.forEach((command, i) =>
+          assertObjectMatch(command, expected[i])
+        );
+      });
     });
     describe("get all prefixes registered in a Commands instance", () => {
       const a = new CommandGroup();

@@ -1,6 +1,7 @@
+import { CHAR_UNDERSCORE } from "https://deno.land/std@0.211.0/path/_common/constants.ts";
 import { CommandGroup } from "./command-group.ts";
 import { CommandMatch } from "./command.ts";
-import { BotCommandScopeChat, Context, NextFunction } from "./deps.deno.ts";
+import { BotCommandScope, BotCommandScopeChat, Context, NextFunction } from "./deps.deno.ts";
 import { SetMyCommandsParams } from "./mod.ts";
 import { BotCommandEntity } from "./types.ts";
 import { ensureArray, getCommandsRegex } from "./utils/array.ts";
@@ -166,6 +167,8 @@ export function commands<C extends Context>() {
   };
 }
 
+type scopeLangTupleStr = `${BotCommandScope["type"]},${SetMyCommandsParams["language_code"]}`
+
 /**
  * Static class for getting and manipulating {@link SetMyCommandsParams}.
  * The main function is {@link from}
@@ -196,7 +199,8 @@ export class MyCommandParams {
     commands: CommandGroup<C>[],
     chat_id: BotCommandScopeChat["chat_id"],
   ) {
-    const serializedCommands = this._serialize(commands, chat_id);
+    const serializedCommands = commands.map((cmds) => cmds.toArgs(chat_id))
+
     const commandsParams = serializedCommands
       .map(({ scopes }) => scopes)
       .flat();
@@ -206,71 +210,34 @@ export class MyCommandParams {
       .flat();
 
     return {
-      commandsParams: this.mergeByLanguage(commandsParams),
+      commandsParams: this.merge(commandsParams),
       uncompliantCommands,
     };
   }
 
   /**
-     * Serializes one or multiple {@link CommandGroup} instances, each one into their respective
-     * single scoped SetMyCommandsParams version.
-     * @example
-        ```ts
-        const adminCommands = new CommandGroup();
-        // add to scope, localize, etc
-        const userCommands = new CommandGroup();
-        // add to scope, localize, etc
-        const [
-            singleScopedAdminParams,
-            singleScopedUserParams
-        ] = MyCommandsParams.serialize([adminCommands,userCommands])
-        ```
-     * @param commandsArr an array of one or more commands instances
-     * @param chat_id the chat id relative to the message update, coming from the ctx object.
-     * @returns an array of scoped {@link SetMyCommandsParams} mapped from their respective Commands instances
-     */
-  static _serialize<C extends Context>(
-    commandsArr: CommandGroup<C>[],
-    chat_id: BotCommandScopeChat["chat_id"],
-  ) {
-    return commandsArr.map((cmds) => cmds.toArgs(chat_id));
-  }
-
-  /**
-   * Lexicographically sorts commandParams based on their language code.
-   * @returns the sorted array
-   */
-
-  static _sortByLanguage(params: SetMyCommandsParams[]) {
-    return params.sort((a, b) => {
-      if (!a.language_code) return -1;
-      if (!b.language_code) return 1;
-      return a.language_code.localeCompare(b.language_code);
-    });
-  }
-
-  /**
    * Iterates over an array of CommandsParams
    * merging their respective {@link SetMyCommandsParams.commands}
-   * when they are from the same language, separating when they are not.
+   * when they are from the same language and scope
    *
    * @param params a flattened array of commands params coming from one or more Commands instances
    * @returns an array containing all commands grouped by language
    */
 
-  private static mergeByLanguage(params: SetMyCommandsParams[]) {
+  private static merge(params: SetMyCommandsParams[]) {
     if (!params.length) return [];
-    const sorted = this._sortByLanguage(params);
-    return sorted.reduce((result, current, i, arr) => {
-      if (i === 0 || current.language_code !== arr[i - 1].language_code) {
-        result.push(current);
-        return result;
-      } else {
-        result[result.length - 1].commands = result[result.length - 1]
-          .commands
-          .concat(current.commands);
-        return result;
+    const map = new Map<scopeLangTupleStr, SetMyCommandsParams>()
+
+    params.forEach((curr) => {
+      if(!curr.scope) return;
+      const key : scopeLangTupleStr = `${curr.scope.type},${curr.language_code}`
+      const old = map.get(key)
+      if(old){
+        curr.commands.concat(old.commands)
       }
-    }, [] as SetMyCommandsParams[]);
+      map.set(key,curr)
+    })
+    
+    return map.values().toArray()
   }
 }

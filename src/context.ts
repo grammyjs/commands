@@ -233,7 +233,7 @@ export class MyCommandParams {
       const key : scopeLangTupleStr = `${curr.scope.type},${curr.language_code}`
       const old = map.get(key)
       if(old){
-        curr.commands.concat(old.commands)
+        curr.commands = curr.commands.concat(old.commands)
       }
       map.set(key,curr)
     })

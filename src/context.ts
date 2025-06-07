@@ -1,7 +1,12 @@
 import { CHAR_UNDERSCORE } from "https://deno.land/std@0.211.0/path/_common/constants.ts";
 import { CommandGroup } from "./command-group.ts";
 import { CommandMatch } from "./command.ts";
-import { BotCommandScope, BotCommandScopeChat, Context, NextFunction } from "./deps.deno.ts";
+import {
+  BotCommandScope,
+  BotCommandScopeChat,
+  Context,
+  NextFunction,
+} from "./deps.deno.ts";
 import { SetMyCommandsParams } from "./mod.ts";
 import { BotCommandEntity } from "./types.ts";
 import { ensureArray, getCommandsRegex } from "./utils/array.ts";
@@ -167,7 +172,8 @@ export function commands<C extends Context>() {
   };
 }
 
-type scopeLangTupleStr = `${BotCommandScope["type"]},${SetMyCommandsParams["language_code"]}`
+type scopeLangTupleStr =
+  `${BotCommandScope["type"]},${SetMyCommandsParams["language_code"]}`;
 
 /**
  * Static class for getting and manipulating {@link SetMyCommandsParams}.
@@ -199,7 +205,7 @@ export class MyCommandParams {
     commands: CommandGroup<C>[],
     chat_id: BotCommandScopeChat["chat_id"],
   ) {
-    const serializedCommands = commands.map((cmds) => cmds.toArgs(chat_id))
+    const serializedCommands = commands.map((cmds) => cmds.toArgs(chat_id));
 
     const commandsParams = serializedCommands
       .map(({ scopes }) => scopes)
@@ -226,18 +232,18 @@ export class MyCommandParams {
 
   private static merge(params: SetMyCommandsParams[]) {
     if (!params.length) return [];
-    const map = new Map<scopeLangTupleStr, SetMyCommandsParams>()
+    const map = new Map<scopeLangTupleStr, SetMyCommandsParams>();
 
     params.forEach((curr) => {
-      if(!curr.scope) return;
-      const key : scopeLangTupleStr = `${curr.scope.type},${curr.language_code}`
-      const old = map.get(key)
-      if(old){
-        curr.commands = curr.commands.concat(old.commands)
+      if (!curr.scope) return;
+      const key: scopeLangTupleStr = `${curr.scope.type},${curr.language_code}`;
+      const old = map.get(key);
+      if (old) {
+        curr.commands = curr.commands.concat(old.commands);
       }
-      map.set(key,curr)
-    })
-    
-    return map.values().toArray()
+      map.set(key, curr);
+    });
+
+    return map.values().toArray();
   }
 }

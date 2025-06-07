@@ -194,7 +194,9 @@ export class CommandGroup<C extends Context> {
 
         if (compliantScopedCommands.length) {
           scopes.push({
-            scope: { ...JSON.parse(scope), chat_id },
+            scope: chat_id
+              ? { ...JSON.parse(scope), chat_id }
+              : { ...JSON.parse(scope) },
             language_code: language === "default" ? undefined : language,
             commands: compliantScopedCommands.map((command) =>
               command.toObject(language)

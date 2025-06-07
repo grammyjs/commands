@@ -255,31 +255,31 @@ describe("CommandGroup", () => {
             scope: { type: "default", chat_id: 10 },
             language_code: "es",
             commands: [
+              {
+                command: "localb",
+                description: "prueba b localizada",
+              },
               { command: "a", description: "test a" },
               {
                 command: "locala1",
                 description: "prueba a1 localizada",
               },
               { command: "a2", description: "test a2" },
-              {
-                command: "localb",
-                description: "prueba b localizada",
-              },
             ],
           },
           {
             scope: { type: "default", chat_id: 10 },
             language_code: "fr",
             commands: [
+              {
+                command: "localiseb",
+                description: "prueba b localisé",
+              },
               { command: "a", description: "test a" },
               { command: "a1", description: "test a1" },
               {
                 command: "localisea2",
                 description: "test a2 localisé",
-              },
-              {
-                command: "localiseb",
-                description: "prueba b localisé",
               },
             ],
           },

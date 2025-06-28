@@ -243,6 +243,6 @@ export class MyCommandParams {
       map.set(key, curr);
     });
 
-    return map.values().toArray();
+    return [...map.values()];
   }
 }

@@ -155,7 +155,7 @@ describe("Integration", () => {
           }],
           language_code: undefined,
           scope: {
-            type: "chat",
+            type: "default",
             chat_id: 100,
           },
         }],

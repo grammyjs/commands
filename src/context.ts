@@ -1,4 +1,3 @@
-import { CHAR_UNDERSCORE } from "https://deno.land/std@0.211.0/path/_common/constants.ts";
 import { CommandGroup } from "./command-group.ts";
 import { CommandMatch } from "./command.ts";
 import {

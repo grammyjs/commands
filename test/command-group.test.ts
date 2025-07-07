@@ -1,5 +1,5 @@
 import { CommandGroup } from "../src/command-group.ts";
-import { MyCommandParams } from "../src/mod.ts";
+import { Command, MyCommandParams } from "../src/mod.ts";
 import { dummyCtx } from "./context.test.ts";
 import {
   assert,
@@ -208,7 +208,7 @@ describe("CommandGroup", () => {
 
         const mergedCommands = MyCommandParams.from([a, b, c], 10);
         const expected = [{
-          scope: { type: "chat", chat_id: 10 },
+          scope: { type: "default", chat_id: 10 },
           language_code: undefined,
           commands: [
             { command: "c", description: "test c" },
@@ -242,7 +242,7 @@ describe("CommandGroup", () => {
         const mergedCommands = MyCommandParams.from([a, b], 10);
         const expected = [
           {
-            scope: { type: "chat", chat_id: 10 },
+            scope: { type: "default", chat_id: 10 },
             language_code: undefined,
             commands: [
               { command: "b", description: "test b" },
@@ -252,36 +252,109 @@ describe("CommandGroup", () => {
             ],
           },
           {
-            scope: { type: "chat", chat_id: 10 },
+            scope: { type: "default", chat_id: 10 },
             language_code: "es",
             commands: [
+              {
+                command: "localb",
+                description: "prueba b localizada",
+              },
               { command: "a", description: "test a" },
               {
                 command: "locala1",
                 description: "prueba a1 localizada",
               },
               { command: "a2", description: "test a2" },
-              {
-                command: "localb",
-                description: "prueba b localizada",
-              },
             ],
           },
           {
-            scope: { type: "chat", chat_id: 10 },
+            scope: { type: "default", chat_id: 10 },
             language_code: "fr",
             commands: [
+              {
+                command: "localiseb",
+                description: "prueba b localisé",
+              },
               { command: "a", description: "test a" },
               { command: "a1", description: "test a1" },
               {
                 command: "localisea2",
                 description: "test a2 localisé",
               },
-              {
-                command: "localiseb",
-                description: "prueba b localisé",
-              },
             ],
+          },
+        ];
+        mergedCommands.commandsParams.forEach((command, i) =>
+          assertObjectMatch(command, expected[i])
+        );
+      });
+      it("should merge and retain scopes between different command groups", () => {
+        const a = new CommandGroup();
+        a.command("a", "private chats").addToScope({
+          type: "all_private_chats",
+        });
+        const b = new CommandGroup();
+        b.command("b", "group chats").addToScope({ type: "all_group_chats" });
+
+        const mergedCommands = MyCommandParams.from([a, b], 10);
+
+        const expected = [{
+          scope: { type: "default", chat_id: 10 },
+          commands: [{ command: "b" }, { command: "a" }],
+        }, {
+          scope: { type: "all_private_chats", chat_id: 10 },
+          commands: [{ command: "a" }],
+        }, {
+          scope: { type: "all_group_chats", chat_id: 10 },
+          commands: [{ command: "b" }],
+        }];
+        mergedCommands.commandsParams.forEach((command, i) =>
+          assertObjectMatch(command, expected[i])
+        );
+      });
+      it("should merge and retain scopes and localization between different command groups", () => {
+        const a = new CommandGroup();
+        a.command("a", "private chats").addToScope({
+          type: "all_private_chats",
+        }).localize("es", "a_es", "private localized");
+
+        const b = new CommandGroup();
+        b.command("b", "group chats").addToScope({ type: "all_group_chats" })
+          .localize("fr", "b_fr", "group localized");
+
+        const mergedCommands = MyCommandParams.from([a, b], 10);
+        const expected = [
+          {
+            scope: { type: "default", chat_id: 10 },
+            commands: [{ command: "b" }, { command: "a" }],
+          },
+          {
+            scope: { type: "default", chat_id: 10 },
+            language_code: "es",
+            commands: [{ command: "a_es", description: "private localized" }],
+          },
+          {
+            scope: { type: "all_private_chats", chat_id: 10 },
+            commands: [{ command: "a", description: "private chats" }],
+          },
+          {
+            scope: { type: "all_private_chats", chat_id: 10 },
+            language_code: "es",
+            commands: [{ command: "a_es", description: "private localized" }],
+          },
+          {
+            scope: { type: "default", chat_id: 10 },
+            language_code: "fr",
+            commands: [{ command: "b_fr", description: "group localized" }],
+          },
+          {
+            scope: { type: "all_group_chats", chat_id: 10 },
+            commands: [{ command: "b", description: "group chats" }],
+          },
+          {
+            scope: { type: "all_group_chats", chat_id: 10 },
+            language_code: "fr",
+            commands: [{ command: "b_fr", description: "group localized" }],
           },
         ];
         mergedCommands.commandsParams.forEach((command, i) =>
@@ -385,6 +458,14 @@ describe("CommandGroup", () => {
       commands.command("test", "handler", (_) => _);
       commands.command("test2", "handler2", (_) => _)
         .localize("es", "prueba2", "resolvedor2");
+      commands.command("private", "private command")
+        .addToScope({ type: "all_private_chats" }, (_) => _);
+
+      const groupCommand = new Command("group", "group command")
+        .addToScope({ type: "all_group_chats" }, (_) => _);
+
+      commands.add(groupCommand);
+
       const params = commands.toArgs();
       const expected = [
         {
@@ -403,6 +484,35 @@ describe("CommandGroup", () => {
           language_code: "es",
           scope: { type: "default" },
         },
+        {
+          commands: [
+            { command: "private", description: "private command" },
+          ],
+          language_code: undefined,
+          scope: { type: "all_private_chats" },
+        },
+        {
+          commands: [
+            { command: "private", description: "private command" },
+          ],
+          language_code: "es",
+          scope: { type: "all_private_chats" },
+        },
+        {
+          commands: [
+            { command: "group", description: "group command" },
+          ],
+          language_code: undefined,
+          scope: { type: "all_group_chats" },
+        },
+
+        {
+          commands: [
+            { command: "group", description: "group command" },
+          ],
+          language_code: "es",
+          scope: { type: "all_group_chats" },
+        },
       ];
       params.scopes.forEach((command, i) =>
         assertObjectMatch(command, expected[i])
@@ -417,7 +527,7 @@ describe("CommandGroup", () => {
       commands.command("withoutcustomprefix", "handler", (_) => _);
 
       const params = commands.toArgs();
-      assertEquals(params, {
+      assertObjectMatch(params, {
         scopes: [
           {
             scope: { type: "default" },

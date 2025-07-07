@@ -3,6 +3,7 @@ import {
   Api,
   BotCommand,
   BotCommandScope,
+  BotCommandScopeChat,
   CommandContext,
   Composer,
   Context,
@@ -166,7 +167,7 @@ export class CommandGroup<C extends Context> {
    *
    * @returns One item for each combination of command + scope + language
    */
-  public toArgs() {
+  public toArgs(chat_id?: BotCommandScopeChat["chat_id"]) {
     this._populateMetadata();
     const scopes: SetMyCommandsParams[] = [];
     const uncompliantCommands: UncompliantCommand[] = [];
@@ -193,7 +194,9 @@ export class CommandGroup<C extends Context> {
 
         if (compliantScopedCommands.length) {
           scopes.push({
-            scope: JSON.parse(scope),
+            scope: chat_id
+              ? { ...JSON.parse(scope), chat_id }
+              : { ...JSON.parse(scope) },
             language_code: language === "default" ? undefined : language,
             commands: compliantScopedCommands.map((command) =>
               command.toObject(language)

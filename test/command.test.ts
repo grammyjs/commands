@@ -932,6 +932,19 @@ describe("Command", () => {
       assertSpyCalls(chatAdministratorsSpy, 1);
     });
 
+    it("should call chatAdministrators for anonymous admin", async () => {
+      chatMember = { status: "member" } as ChatMember; // unused
+
+      assertSpyCalls(chatAdministratorsSpy, 1);
+      await mw(makeContext({
+        chat: { id: -123, type: "group" },
+        from: { id: 789 },
+        sender_chat: { id: -123, type: "group" },
+        text: "/a",
+      } as Message));
+      assertSpyCalls(chatAdministratorsSpy, 2);
+    });
+
     it("should call chat", async () => {
       assertSpyCalls(chatSpy, 0);
       await mw(makeContext({
@@ -964,6 +977,19 @@ describe("Command", () => {
       assertSpyCalls(allChatAdministratorsSpy, 1);
     });
 
+    it("should call allChatAdministrators for anonymous admin", async () => {
+      chatMember = { status: "administrator" } as ChatMember; // unused
+
+      assertSpyCalls(allChatAdministratorsSpy, 1);
+      await mw(makeContext({
+        chat: { id: -124, type: "group" },
+        from: { id: 789 },
+        sender_chat: { id: -124, type: "group" },
+        text: "/a",
+      } as Message));
+      assertSpyCalls(allChatAdministratorsSpy, 2);
+    });
+
     it("should call allGroupChats", async () => {
       chatMember = { status: "member" } as ChatMember;
 
@@ -994,6 +1020,19 @@ describe("Command", () => {
         text: "/a",
       } as Message));
       assertSpyCalls(defaultSpy, 1);
+    });
+
+    it("should call group on sender_chat", async () => {
+      chatMember = { status: "member" } as ChatMember;
+
+      assertSpyCalls(allGroupChatsSpy, 1);
+      await mw(makeContext({
+        chat: { id: -124, type: "group" },
+        from: { id: 789 },
+        sender_chat: { id: -123, type: "channel" },
+        text: "/a",
+      } as Message));
+      assertSpyCalls(allGroupChatsSpy, 2);
     });
   });
 });

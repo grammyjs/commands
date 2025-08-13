@@ -938,7 +938,6 @@ describe("Command", () => {
       assertSpyCalls(chatAdministratorsSpy, 1);
       await mw(makeContext({
         chat: { id: -123, type: "group" },
-        from: { id: 789 },
         sender_chat: { id: -123, type: "group" },
         text: "/a",
       } as Message));
@@ -983,7 +982,6 @@ describe("Command", () => {
       assertSpyCalls(allChatAdministratorsSpy, 1);
       await mw(makeContext({
         chat: { id: -124, type: "group" },
-        from: { id: 789 },
         sender_chat: { id: -124, type: "group" },
         text: "/a",
       } as Message));

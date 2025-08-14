@@ -7,7 +7,6 @@ import {
   assertEquals,
   assertExists,
   assertFalse,
-  assertRejects,
   assertSpyCalls,
   beforeEach,
   type Chat,
@@ -862,16 +861,14 @@ describe("Command", () => {
         assertEquals(ctx.match, 'payload')
        }
       )
-
+      
       const composer = new Composer();
       composer.use(command);
-
       let ctx = new Context(
         { ...update, message: { ...m, text: "/cmd payload" } } as Update,
         api,
         me,
       );
-
       await composer.middleware()(ctx, () => Promise.resolve());
 
     })

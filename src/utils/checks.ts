@@ -1,8 +1,17 @@
-import { Composer, Context, Middleware } from "../deps.deno.ts";
+import {
+  ChatTypeContext,
+  Composer,
+  Context,
+  Middleware,
+} from "../deps.deno.ts";
 import { CommandOptions } from "../types.ts";
 import { MaybeArray } from "./array.ts";
 
-export function isAdmin(ctx: Context) {
+export function isAdmin(ctx: ChatTypeContext<Context, "group" | "supergroup">) {
+  if (ctx.senderChat?.id === ctx.chat.id) {
+    // anonymous admin
+    return true;
+  }
   return ctx
     .getAuthor()
     .then((author) => ["administrator", "creator"].includes(author.status));

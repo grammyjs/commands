@@ -864,8 +864,16 @@ describe("Command", () => {
       
       const composer = new Composer();
       composer.use(command);
+
       let ctx = new Context(
         { ...update, message: { ...m, text: "/cmd payload" } } as Update,
+        api,
+        me,
+      );
+      await composer.middleware()(ctx, () => Promise.resolve());
+      
+      ctx = new Context(
+        { ...update, message: { ...m, text: `/cmd@${me.username} payload` } } as Update,
         api,
         me,
       );

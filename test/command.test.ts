@@ -854,6 +854,34 @@ describe("Command", () => {
     });
   });
 
+  describe("ctx.match", async () => {
+    it("should imitate behavior of https://grammy.dev/guide/commands#arguments", async () => {
+      const command = new Command("cmd", "test", (ctx) => {
+        assertEquals(ctx.match, "payload");
+      });
+
+      const composer = new Composer();
+      composer.use(command);
+
+      let ctx = new Context(
+        { ...update, message: { ...m, text: "/cmd payload" } } as Update,
+        api,
+        me,
+      );
+      await composer.middleware()(ctx, () => Promise.resolve());
+
+      ctx = new Context(
+        {
+          ...update,
+          message: { ...m, text: `/cmd@${me.username} payload` },
+        } as Update,
+        api,
+        me,
+      );
+      await composer.middleware()(ctx, () => Promise.resolve());
+    });
+  });
+
   describe("addToScope", () => {
     // NOTE: currently the scopes need to be added in a priority order for the
     // narrowest function to be called

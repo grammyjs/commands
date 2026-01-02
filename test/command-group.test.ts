@@ -153,11 +153,6 @@ describe("CommandGroup", () => {
             language_code: undefined,
             commands: [
               { command: "test", description: "handler", hasHandler: true },
-              {
-                command: "markme",
-                description: "nohandler",
-                hasHandler: false,
-              },
             ],
           },
         ]);
@@ -299,9 +294,6 @@ describe("CommandGroup", () => {
         const mergedCommands = MyCommandParams.from([a, b], 10);
 
         const expected = [{
-          scope: { type: "default", chat_id: 10 },
-          commands: [{ command: "b" }, { command: "a" }],
-        }, {
           scope: { type: "all_private_chats", chat_id: 10 },
           commands: [{ command: "a" }],
         }, {
@@ -325,15 +317,6 @@ describe("CommandGroup", () => {
         const mergedCommands = MyCommandParams.from([a, b], 10);
         const expected = [
           {
-            scope: { type: "default", chat_id: 10 },
-            commands: [{ command: "b" }, { command: "a" }],
-          },
-          {
-            scope: { type: "default", chat_id: 10 },
-            language_code: "es",
-            commands: [{ command: "a_es", description: "private localized" }],
-          },
-          {
             scope: { type: "all_private_chats", chat_id: 10 },
             commands: [{ command: "a", description: "private chats" }],
           },
@@ -341,11 +324,6 @@ describe("CommandGroup", () => {
             scope: { type: "all_private_chats", chat_id: 10 },
             language_code: "es",
             commands: [{ command: "a_es", description: "private localized" }],
-          },
-          {
-            scope: { type: "default", chat_id: 10 },
-            language_code: "fr",
-            commands: [{ command: "b_fr", description: "group localized" }],
           },
           {
             scope: { type: "all_group_chats", chat_id: 10 },
@@ -549,6 +527,104 @@ describe("CommandGroup", () => {
           },
         ],
       });
+    });
+  });
+
+  describe("scope assignment behavior", () => {
+    it("should add command without default handler and no explicit scope to default scope with hasHandler: false", () => {
+      const commands = new CommandGroup();
+      commands.command("nohandler", "Command without handler");
+
+      const params = commands.toArgs();
+
+      const expected = [
+        {
+          scope: { type: "default" },
+          commands: [
+            {
+              command: "nohandler",
+              description: "Command without handler",
+              hasHandler: false,
+            },
+          ],
+        },
+      ];
+      assertObjectMatch(params, { scopes: expected });
+    });
+
+    it("should add command with default handler to default scope", () => {
+      const commands = new CommandGroup();
+      commands.command("withhandler", "Command with handler", () => {});
+
+      const params = commands.toArgs();
+
+      const expected = [
+        {
+          scope: { type: "default" },
+          commands: [
+            {
+              command: "withhandler",
+              description: "Command with handler",
+              hasHandler: true,
+            },
+          ],
+        },
+      ];
+      assertObjectMatch(params, { scopes: expected });
+    });
+
+    it("should add command without default handler but with explicit scope to explicit scope only", () => {
+      const commands = new CommandGroup();
+      commands.command("explicitonly", "Command with explicit scope only")
+        .addToScope({ type: "chat", chat_id: 123 });
+
+      const params = commands.toArgs();
+
+      const expected = [
+        {
+          scope: { type: "chat", chat_id: 123 },
+          commands: [
+            {
+              command: "explicitonly",
+              description: "Command with explicit scope only",
+              hasHandler: false,
+            },
+          ],
+        },
+      ];
+      assertObjectMatch(params, { scopes: expected });
+    });
+
+    it("should add command with default handler and explicit scope to both scopes", () => {
+      const commands = new CommandGroup();
+      commands.command("bothscopes", "Command with both scopes", () => {})
+        .addToScope({ type: "chat", chat_id: 456 });
+
+      const params = commands.toArgs();
+
+      const expected = [
+        {
+          scope: { type: "default" },
+          commands: [
+            {
+              command: "bothscopes",
+              description: "Command with both scopes",
+              hasHandler: true,
+            },
+          ],
+        },
+        {
+          scope: { type: "chat", chat_id: 456 },
+          commands: [
+            {
+              command: "bothscopes",
+              description: "Command with both scopes",
+              hasHandler: true,
+            },
+          ],
+        },
+      ];
+      assertObjectMatch(params, { scopes: expected });
     });
   });
 });

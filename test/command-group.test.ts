@@ -549,7 +549,7 @@ describe("CommandGroup", () => {
           ],
         },
       ];
-      assertObjectMatch(params, { scopes: expected });
+      assertObjectMatch(params, { scopes: expected, uncompliantCommands: [] });
     });
 
     it("should add command with default handler to default scope", () => {
@@ -570,7 +570,7 @@ describe("CommandGroup", () => {
           ],
         },
       ];
-      assertObjectMatch(params, { scopes: expected });
+      assertObjectMatch(params, { scopes: expected, uncompliantCommands: [] });
     });
 
     it("should add command without default handler but with explicit scope to explicit scope only", () => {
@@ -592,7 +592,7 @@ describe("CommandGroup", () => {
           ],
         },
       ];
-      assertObjectMatch(params, { scopes: expected });
+      assertObjectMatch(params, { scopes: expected, uncompliantCommands: [] });
     });
 
     it("should add command with default handler and explicit scope to both scopes", () => {
@@ -624,7 +624,7 @@ describe("CommandGroup", () => {
           ],
         },
       ];
-      assertObjectMatch(params, { scopes: expected });
+      assertObjectMatch(params, { scopes: expected, uncompliantCommands: [] });
     });
   });
 });

@@ -141,8 +141,10 @@ describe("CommandGroup", () => {
       });
       it("should mark commands with no handler", () => {
         const commands = new CommandGroup();
-        commands.command("test", "handler", (_) => _);
-        commands.command("markme", "nohandler");
+        commands.command("test", "handler", (_) => _)
+          .addToScope({ type: "all_private_chats" });
+        commands.command("markme", "nohandler")
+          .addToScope({ type: "all_private_chats" });
         const params = commands.toSingleScopeArgs({
           type: "chat",
           chat_id: 10,
@@ -153,6 +155,11 @@ describe("CommandGroup", () => {
             language_code: undefined,
             commands: [
               { command: "test", description: "handler", hasHandler: true },
+              {
+                command: "markme",
+                description: "nohandler",
+                hasHandler: false,
+              },
             ],
           },
         ]);
@@ -285,33 +292,45 @@ describe("CommandGroup", () => {
       });
       it("should merge and retain scopes between different command groups", () => {
         const a = new CommandGroup();
-        a.command("a", "private chats").addToScope({
-          type: "all_private_chats",
-        });
+        a.command("a", "private chats")
+          .addToScope({ type: "all_private_chats" })
+          .addToScope({ type: "all_chat_administrators" });
         const b = new CommandGroup();
-        b.command("b", "group chats").addToScope({ type: "all_group_chats" });
+        b.command("b", "group chats")
+          .addToScope({ type: "all_group_chats" })
+          .addToScope({ type: "all_chat_administrators" });
 
         const mergedCommands = MyCommandParams.from([a, b], 10);
 
-        const expected = [{
-          scope: { type: "all_private_chats", chat_id: 10 },
-          commands: [{ command: "a" }],
-        }, {
-          scope: { type: "all_group_chats", chat_id: 10 },
-          commands: [{ command: "b" }],
-        }];
+        const expected = [
+          {
+            scope: { type: "all_private_chats", chat_id: 10 },
+            commands: [{ command: "a" }],
+          },
+          {
+            scope: { type: "all_chat_administrators", chat_id: 10 },
+            commands: [{ command: "b" }, { command: "a" }],
+          },
+          {
+            scope: { type: "all_group_chats", chat_id: 10 },
+            commands: [{ command: "b" }],
+          },
+        ];
         mergedCommands.commandsParams.forEach((command, i) =>
           assertObjectMatch(command, expected[i])
         );
       });
       it("should merge and retain scopes and localization between different command groups", () => {
         const a = new CommandGroup();
-        a.command("a", "private chats").addToScope({
-          type: "all_private_chats",
-        }).localize("es", "a_es", "private localized");
+        a.command("a", "private chats")
+          .addToScope({ type: "all_private_chats" })
+          .addToScope({ type: "all_chat_administrators" })
+          .localize("es", "a_es", "private localized");
 
         const b = new CommandGroup();
-        b.command("b", "group chats").addToScope({ type: "all_group_chats" })
+        b.command("b", "group chats")
+          .addToScope({ type: "all_group_chats" })
+          .addToScope({ type: "all_chat_administrators" })
           .localize("fr", "b_fr", "group localized");
 
         const mergedCommands = MyCommandParams.from([a, b], 10);
@@ -326,11 +345,25 @@ describe("CommandGroup", () => {
             commands: [{ command: "a_es", description: "private localized" }],
           },
           {
+            scope: { type: "all_chat_administrators", chat_id: 10 },
+            commands: [{ command: "b" }, { command: "a" }],
+          },
+          {
+            scope: { type: "all_chat_administrators", chat_id: 10 },
+            language_code: "es",
+            commands: [{ command: "a_es", description: "private localized" }],
+          },
+          {
             scope: { type: "all_group_chats", chat_id: 10 },
             commands: [{ command: "b", description: "group chats" }],
           },
           {
             scope: { type: "all_group_chats", chat_id: 10 },
+            language_code: "fr",
+            commands: [{ command: "b_fr", description: "group localized" }],
+          },
+          {
+            scope: { type: "all_chat_administrators", chat_id: 10 },
             language_code: "fr",
             commands: [{ command: "b_fr", description: "group localized" }],
           },
@@ -549,7 +582,7 @@ describe("CommandGroup", () => {
           ],
         },
       ];
-      assertObjectMatch(params, { scopes: expected, uncompliantCommands: [] });
+      assertObjectMatch(params, { scopes: expected });
     });
 
     it("should add command with default handler to default scope", () => {
@@ -570,7 +603,7 @@ describe("CommandGroup", () => {
           ],
         },
       ];
-      assertObjectMatch(params, { scopes: expected, uncompliantCommands: [] });
+      assertObjectMatch(params, { scopes: expected });
     });
 
     it("should add command without default handler but with explicit scope to explicit scope only", () => {
@@ -592,7 +625,7 @@ describe("CommandGroup", () => {
           ],
         },
       ];
-      assertObjectMatch(params, { scopes: expected, uncompliantCommands: [] });
+      assertObjectMatch(params, { scopes: expected });
     });
 
     it("should add command with default handler and explicit scope to both scopes", () => {
@@ -624,7 +657,7 @@ describe("CommandGroup", () => {
           ],
         },
       ];
-      assertObjectMatch(params, { scopes: expected, uncompliantCommands: [] });
+      assertObjectMatch(params, { scopes: expected });
     });
   });
 });

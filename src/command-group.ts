@@ -91,8 +91,12 @@ export class CommandGroup<C extends Context> {
     this._scopes.clear();
 
     this._commands.forEach((command) => {
-      for (const scope of command.scopes) {
-        this._addCommandToScope(scope, command);
+      if (command.scopes.length === 0) {
+        this._addCommandToScope({ type: "default" }, command);
+      } else {
+        for (const scope of command.scopes) {
+          this._addCommandToScope(scope, command);
+        }
       }
 
       for (const language of command.languages.keys()) {

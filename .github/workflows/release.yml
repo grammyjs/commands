@@ -20,14 +20,15 @@ jobs:
         with:
           deno-version: 2.x
 
-      - run: npm install
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          registry-url: 'https://registry.npmjs.org'
+
+      - run: npm ci
 
       - name: Publish to npm
-        run: |
-          npm config set //registry.npmjs.org/:_authToken '${NPM_TOKEN}'
-          npm publish --ignore-scripts
-        env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish --ignore-scripts
 
       - name: Create Release
         uses: softprops/action-gh-release@v1

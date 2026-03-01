@@ -31,6 +31,8 @@ const getBot = () =>
       first_name: "",
       can_connect_to_business: true,
       has_main_web_app: false,
+      has_topics_enabled: false,
+      allows_users_to_create_topics: false,
     },
   });
 

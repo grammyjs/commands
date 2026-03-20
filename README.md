@@ -11,6 +11,8 @@ npm i @grammyjs/commands
 
 ## Usage
 
+Please check the [official documentation](https://grammy.dev/plugins/commands).
+
 The main functionality of this plugin is to define your commands, localize them, and give them handlers for each
 [scope](https://core.telegram.org/bots/api#botcommandscope), like so:
 

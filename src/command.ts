@@ -64,6 +64,7 @@ export class Command<C extends Context = Context> implements MiddlewareObj<C> {
     { name: string | RegExp; description: string }
   > = new Map();
   private _defaultScopeComposer = new Composer<C>();
+  private _isEphemeral: boolean = false;
   private _options: CommandOptions = {
     prefix: "/",
     matchOnlyAtStart: true,
@@ -268,6 +269,37 @@ export class Command<C extends Context = Context> implements MiddlewareObj<C> {
    */
   get hasHandler(): boolean {
     return this._hasHandler;
+  }
+
+  /**
+   * Whether this command is ephemeral.
+   *
+   * Ephemeral commands are highlighted with a special icon in the bot menu,
+   * and the user's command message stays invisible to other group members.
+   *
+   * @see https://core.telegram.org/bots/features#ephemeral-messages
+   */
+  get isEphemeral(): boolean {
+    return this._isEphemeral;
+  }
+
+  /**
+   * Marks this command as ephemeral (or not).
+   * This adds `is_ephemeral: true` to the command when it is serialized
+   * for a `setMyCommands` call.
+   *
+   * @example
+   * ```ts
+   * myCommands
+   *  .command("whisper", "Sends a private reply inside a group")
+   *  .ephemeral()
+   * ```
+   *
+   * @param isEphemeral Whether the command should be ephemeral. Defaults to `true`.
+   */
+  public ephemeral(isEphemeral = true): this {
+    this._isEphemeral = isEphemeral;
+    return this;
   }
 
   /**
@@ -486,7 +518,10 @@ export class Command<C extends Context = Context> implements MiddlewareObj<C> {
    */
   public toObject(
     languageCode: LanguageCode | "default" = "default",
-  ): Pick<BotCommandX, "command" | "description" | "hasHandler"> {
+  ): Pick<
+    BotCommandX,
+    "command" | "description" | "hasHandler" | "is_ephemeral"
+  > {
     const localizedName = this.getLocalizedName(languageCode);
     return {
       command: localizedName instanceof RegExp
@@ -494,6 +529,7 @@ export class Command<C extends Context = Context> implements MiddlewareObj<C> {
         : localizedName,
       description: this.getLocalizedDescription(languageCode),
       ...(this.hasHandler ? { hasHandler: true } : { hasHandler: false }),
+      ...(this.isEphemeral ? { is_ephemeral: true } : {}),
     };
   }
 

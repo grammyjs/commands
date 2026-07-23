@@ -1,4 +1,5 @@
 import { Command } from "../src/command.ts";
+import { CommandGroup } from "../src/mod.ts";
 import { CommandOptions } from "../src/types.ts";
 import { isCommandOptions, matchesPattern } from "../src/utils/checks.ts";
 import {
@@ -1059,6 +1060,57 @@ describe("Command", () => {
         text: "/a",
       } as Message));
       assertSpyCalls(allGroupChatsSpy, 2);
+    });
+  });
+
+  describe("ephemeral", () => {
+    it("should not mark commands as ephemeral by default", () => {
+      const command = new Command("whisper", "whispers", () => {});
+
+      assertFalse(command.isEphemeral);
+      assertFalse("is_ephemeral" in command.toObject());
+    });
+
+    it("should mark a command as ephemeral", () => {
+      const command = new Command("whisper", "whispers", () => {})
+        .ephemeral();
+
+      assert(command.isEphemeral);
+      assertEquals(command.toObject(), {
+        command: "whisper",
+        description: "whispers",
+        hasHandler: true,
+        is_ephemeral: true,
+      });
+    });
+
+    it("should allow unmarking a command as ephemeral", () => {
+      const command = new Command("whisper", "whispers", () => {})
+        .ephemeral()
+        .ephemeral(false);
+
+      assertFalse(command.isEphemeral);
+      assertFalse("is_ephemeral" in command.toObject());
+    });
+
+    it("should serialize is_ephemeral through toArgs", () => {
+      const myCommands = new CommandGroup();
+      myCommands.command("whisper", "whispers", () => {}).ephemeral();
+
+      const { scopes } = myCommands.toArgs();
+      const commands = scopes.flatMap(({ commands }) => commands);
+
+      assertEquals(commands.length, 1);
+      assertEquals(commands[0].is_ephemeral, true);
+    });
+
+    it("should serialize is_ephemeral through toElementals", () => {
+      const myCommands = new CommandGroup();
+      myCommands.command("whisper", "whispers", () => {}).ephemeral();
+
+      const elementals = myCommands.toElementals();
+
+      assertEquals(elementals[0].is_ephemeral, true);
     });
   });
 });

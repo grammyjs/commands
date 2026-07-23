@@ -74,3 +74,36 @@ bot.on("message", async (ctx) => {
 
 bot.start();
 ```
+
+### Ephemeral commands
+
+Commands can be marked as [ephemeral](https://core.telegram.org/bots/features#ephemeral-messages).
+When a user sends an ephemeral command in a group, their message stays invisible to other group members, and Telegram
+clients highlight the command with a special icon in the bot menu.
+
+```ts
+import { Bot } from "grammy";
+import { CommandGroup } from "@grammyjs/commands";
+
+const bot = new Bot("<telegram token>");
+
+const myCommands = new CommandGroup();
+
+myCommands
+  .command("whisper", "Replies with a message only you can see")
+  .ephemeral()
+  .addToScope(
+    { type: "all_group_chats" },
+    (ctx) =>
+      ctx.reply("This is only visible to you", {
+        receiver_user_id: ctx.from.id,
+      }),
+  );
+
+// Calls `setMyCommands` with `is_ephemeral: true` for the command
+await myCommands.setCommands(bot);
+
+bot.use(myCommands);
+
+bot.start();
+```

@@ -24,7 +24,10 @@ export {
   type Stub,
   stub,
 } from "https://deno.land/std@0.203.0/testing/mock.ts";
-export { Api, Context } from "https://lib.deno.dev/x/grammy@1/mod.ts";
+export {
+  Api,
+  Context,
+} from "https://libdenodev.knightniwrem.deno.net/x/grammy@1/mod.ts";
 export type {
   Chat,
   ChatMember,
@@ -32,4 +35,4 @@ export type {
   Update,
   User,
   UserFromGetMe,
-} from "https://lib.deno.dev/x/grammy@1/types.ts";
+} from "https://libdenodev.knightniwrem.deno.net/x/grammy@1/types.ts";

@@ -529,7 +529,7 @@ export class Command<C extends Context = Context> implements MiddlewareObj<C> {
         : localizedName,
       description: this.getLocalizedDescription(languageCode),
       ...(this.hasHandler ? { hasHandler: true } : { hasHandler: false }),
-      ...(this.isEphemeral ? { is_ephemeral: true } : {}),
+      ...(this.isEphemeral ? { is_ephemeral: true } : { is_ephemeral: false }),
     };
   }
 

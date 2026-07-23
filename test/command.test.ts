@@ -1068,7 +1068,7 @@ describe("Command", () => {
       const command = new Command("whisper", "whispers", () => {});
 
       assertFalse(command.isEphemeral);
-      assertFalse("is_ephemeral" in command.toObject());
+      assertEquals(command.toObject().is_ephemeral, false);
     });
 
     it("should mark a command as ephemeral", () => {
@@ -1090,7 +1090,7 @@ describe("Command", () => {
         .ephemeral(false);
 
       assertFalse(command.isEphemeral);
-      assertFalse("is_ephemeral" in command.toObject());
+      assertEquals(command.toObject().is_ephemeral, false);
     });
 
     it("should serialize is_ephemeral through toArgs", () => {

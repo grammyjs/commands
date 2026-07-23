@@ -79,6 +79,7 @@ describe("Integration", () => {
             command: "command",
             description: "_",
             hasHandler: true,
+            is_ephemeral: false,
           }],
           language_code: undefined,
           scope: {
@@ -156,6 +157,7 @@ describe("Integration", () => {
             command: "command",
             description: "_",
             hasHandler: true,
+            is_ephemeral: false,
           }],
           language_code: undefined,
           scope: {

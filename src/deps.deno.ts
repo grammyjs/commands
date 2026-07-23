@@ -10,7 +10,7 @@ export {
   type Middleware,
   type MiddlewareObj,
   type NextFunction,
-} from "https://lib.deno.dev/x/grammy@1/mod.ts";
+} from "https://libdenodev.knightniwrem.deno.net/x/grammy@1/mod.ts";
 export type {
   BotCommand,
   BotCommandScope,
@@ -21,6 +21,6 @@ export type {
   Chat,
   LanguageCode,
   MessageEntity,
-} from "https://lib.deno.dev/x/grammy@1/types.ts";
+} from "https://libdenodev.knightniwrem.deno.net/x/grammy@1/types.ts";
 // TODO: bring this back once the types are available on the "web" runtimes
-// export { LanguageCodes } from "https://lib.deno.dev/x/grammy@1/types.ts";
+// export { LanguageCodes } from "https://libdenodev.knightniwrem.deno.net/x/grammy@1/types.ts";

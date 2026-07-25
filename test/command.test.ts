@@ -1064,6 +1064,9 @@ describe("Command", () => {
   });
 
   describe("ephemeral", () => {
+    const makeContext = (message: Message) =>
+      new Context({ message, update_id: 1 } as Update, api, me);
+
     it("should not mark commands as ephemeral by default", () => {
       const command = new Command("whisper", "whispers", () => {});
 
@@ -1084,13 +1087,34 @@ describe("Command", () => {
       });
     });
 
-    it("should allow unmarking a command as ephemeral", () => {
-      const command = new Command("whisper", "whispers", () => {})
-        .ephemeral()
-        .ephemeral(false);
+    it("should ignore non-ephemeral invocations by default", async () => {
+      const handlerSpy = spy();
+      const command = new Command("whisper", "whispers", handlerSpy)
+        .ephemeral();
+      const mw = (ctx: Context) =>
+        command.middleware()(ctx, () => Promise.resolve());
 
-      assertFalse(command.isEphemeral);
-      assertEquals(command.toObject().is_ephemeral, false);
+      await mw(makeContext({ ...m, text: "/whisper" } as Message));
+      assertSpyCalls(handlerSpy, 0);
+
+      await mw(makeContext({
+        ...m,
+        text: "/whisper",
+        message_id: 0,
+        ephemeral_message_id: 1,
+      } as Message));
+      assertSpyCalls(handlerSpy, 1);
+    });
+
+    it("should handle non-ephemeral invocations with strict: false", async () => {
+      const handlerSpy = spy();
+      const command = new Command("whisper", "whispers", handlerSpy)
+        .ephemeral({ strict: false });
+      const mw = (ctx: Context) =>
+        command.middleware()(ctx, () => Promise.resolve());
+
+      await mw(makeContext({ ...m, text: "/whisper" } as Message));
+      assertSpyCalls(handlerSpy, 1);
     });
 
     it("should serialize is_ephemeral through toArgs", () => {

@@ -65,6 +65,7 @@ export class Command<C extends Context = Context> implements MiddlewareObj<C> {
   > = new Map();
   private _defaultScopeComposer = new Composer<C>();
   private _isEphemeral: boolean = false;
+  private _ephemeralStrict: boolean = true;
   private _options: CommandOptions = {
     prefix: "/",
     matchOnlyAtStart: true,
@@ -284,9 +285,16 @@ export class Command<C extends Context = Context> implements MiddlewareObj<C> {
   }
 
   /**
-   * Marks this command as ephemeral (or not).
+   * Marks this command as ephemeral.
    * This adds `is_ephemeral: true` to the command when it is serialized
    * for a `setMyCommands` call.
+   *
+   * By default, the handlers of an ephemeral command only run when the
+   * incoming command message was itself sent ephemerally, that is, when the
+   * user invoked the command from the bot's command menu. Pass
+   * `{ strict: false }` to also run the handlers when the command is sent
+   * as a regular, non-ephemeral message, for example when the user types
+   * the command out manually.
    *
    * @example
    * ```ts
@@ -295,10 +303,13 @@ export class Command<C extends Context = Context> implements MiddlewareObj<C> {
    *  .ephemeral()
    * ```
    *
-   * @param isEphemeral Whether the command should be ephemeral. Defaults to `true`.
+   * @param options Options for the ephemeral command
+   * @param options.strict Whether to only handle invocations of this command
+   * that were sent ephemerally. Defaults to `true`.
    */
-  public ephemeral(isEphemeral = true): this {
-    this._isEphemeral = isEphemeral;
+  public ephemeral(options: { strict?: boolean } = {}): this {
+    this._isEphemeral = true;
+    this._ephemeralStrict = options.strict ?? true;
     return this;
   }
 
@@ -607,6 +618,15 @@ export class Command<C extends Context = Context> implements MiddlewareObj<C> {
       this.registerScopeHandlers();
     }
 
-    return this._cachedComposer.middleware();
+    const middleware = this._cachedComposer.middleware();
+    return (ctx: C, next: NextFunction) => {
+      if (
+        this._isEphemeral && this._ephemeralStrict &&
+        ctx.msg?.ephemeral_message_id === undefined
+      ) {
+        return next();
+      }
+      return middleware(ctx, next);
+    };
   }
 }

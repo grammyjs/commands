@@ -619,7 +619,7 @@ export class Command<C extends Context = Context> implements MiddlewareObj<C> {
       this.registerScopeHandlers();
     }
 
-    const middleware = this._cachedComposer.middleware();
+    const mw = this._cachedComposer.middleware();
     return (ctx: C, next: NextFunction) => {
       if (
         this._isEphemeral && this._ephemeralStrict &&
@@ -627,7 +627,7 @@ export class Command<C extends Context = Context> implements MiddlewareObj<C> {
       ) {
         return next();
       }
-      return middleware(ctx, next);
+      return mw(ctx, next);
     };
   }
 }

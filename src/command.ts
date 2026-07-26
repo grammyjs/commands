@@ -290,11 +290,12 @@ export class Command<C extends Context = Context> implements MiddlewareObj<C> {
    * for a `setMyCommands` call.
    *
    * By default, the handlers of an ephemeral command only run when the
-   * incoming command message was itself sent ephemerally, that is, when the
-   * user invoked the command from the bot's command menu. Pass
-   * `{ strict: false }` to also run the handlers when the command is sent
-   * as a regular, non-ephemeral message, for example when the user types
-   * the command out manually.
+   * incoming command message was itself sent ephemerally. Pass
+   * `{ strict: false }` to also run the handlers when the command is
+   * sent as a regular, non-ephemeral message.
+   *
+   * Note: Some clients may send a command regularly if it is typed out
+   * rather than selected from the command menu.
    *
    * @example
    * ```ts

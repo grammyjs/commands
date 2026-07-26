@@ -24,7 +24,7 @@
     "url": "https://github.com/grammyjs/commands/issues"
   },
   "peerDependencies": {
-    "grammy": "^1.17.1"
+    "grammy": "^1.45.1"
   },
   "devDependencies": {
     "deno2node": "^1.14.0",

@@ -64,6 +64,8 @@ export class Command<C extends Context = Context> implements MiddlewareObj<C> {
     { name: string | RegExp; description: string }
   > = new Map();
   private _defaultScopeComposer = new Composer<C>();
+  private _isEphemeral: boolean = false;
+  private _ephemeralStrict: boolean = true;
   private _options: CommandOptions = {
     prefix: "/",
     matchOnlyAtStart: true,
@@ -268,6 +270,48 @@ export class Command<C extends Context = Context> implements MiddlewareObj<C> {
    */
   get hasHandler(): boolean {
     return this._hasHandler;
+  }
+
+  /**
+   * Whether this command is ephemeral.
+   *
+   * Ephemeral commands are highlighted with a special icon in the bot menu,
+   * and the user's command message stays invisible to other group members.
+   *
+   * @see https://core.telegram.org/bots/features#ephemeral-messages
+   */
+  get isEphemeral(): boolean {
+    return this._isEphemeral;
+  }
+
+  /**
+   * Marks this command as ephemeral.
+   * This adds `is_ephemeral: true` to the command when it is serialized
+   * for a `setMyCommands` call.
+   *
+   * By default, the handlers of an ephemeral command only run when the
+   * incoming command message was itself sent ephemerally. Pass
+   * `{ strict: false }` to also run the handlers when the command is
+   * sent as a regular, non-ephemeral message.
+   *
+   * Note: Some clients may send a command regularly if it is typed out
+   * rather than selected from the command menu.
+   *
+   * @example
+   * ```ts
+   * myCommands
+   *  .command("whisper", "Sends a private reply inside a group")
+   *  .ephemeral()
+   * ```
+   *
+   * @param options Options for the ephemeral command
+   * @param options.strict Whether to only handle invocations of this command
+   * that were sent ephemerally. Defaults to `true`.
+   */
+  public ephemeral(options: { strict?: boolean } = {}): this {
+    this._isEphemeral = true;
+    this._ephemeralStrict = options.strict ?? true;
+    return this;
   }
 
   /**
@@ -486,7 +530,10 @@ export class Command<C extends Context = Context> implements MiddlewareObj<C> {
    */
   public toObject(
     languageCode: LanguageCode | "default" = "default",
-  ): Pick<BotCommandX, "command" | "description" | "hasHandler"> {
+  ): Pick<
+    BotCommandX,
+    "command" | "description" | "hasHandler" | "is_ephemeral"
+  > {
     const localizedName = this.getLocalizedName(languageCode);
     return {
       command: localizedName instanceof RegExp
@@ -494,6 +541,7 @@ export class Command<C extends Context = Context> implements MiddlewareObj<C> {
         : localizedName,
       description: this.getLocalizedDescription(languageCode),
       ...(this.hasHandler ? { hasHandler: true } : { hasHandler: false }),
+      ...(this.isEphemeral ? { is_ephemeral: true } : { is_ephemeral: false }),
     };
   }
 
@@ -571,6 +619,15 @@ export class Command<C extends Context = Context> implements MiddlewareObj<C> {
       this.registerScopeHandlers();
     }
 
-    return this._cachedComposer.middleware();
+    const mw = this._cachedComposer.middleware();
+    return (ctx: C, next: NextFunction) => {
+      if (
+        this._isEphemeral && this._ephemeralStrict &&
+        ctx.msg?.ephemeral_message_id === undefined
+      ) {
+        return next();
+      }
+      return mw(ctx, next);
+    };
   }
 }

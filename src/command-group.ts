@@ -320,6 +320,9 @@ export class CommandGroup<C extends Context> {
               ...(command.hasHandler
                 ? { hasHandler: true }
                 : { hasHandler: false }),
+              ...(command.isEphemeral
+                ? { is_ephemeral: true }
+                : { is_ephemeral: false }),
             });
           }
           if (filterLanguage) {

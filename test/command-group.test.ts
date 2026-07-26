@@ -154,11 +154,17 @@ describe("CommandGroup", () => {
             scope: { type: "chat", chat_id: 10 },
             language_code: undefined,
             commands: [
-              { command: "test", description: "handler", hasHandler: true },
+              {
+                command: "test",
+                description: "handler",
+                hasHandler: true,
+                is_ephemeral: false,
+              },
               {
                 command: "markme",
                 description: "nohandler",
                 hasHandler: false,
+                is_ephemeral: false,
               },
             ],
           },
@@ -185,6 +191,7 @@ describe("CommandGroup", () => {
                   command: "withoutcustomprefix",
                   description: "handler",
                   hasHandler: true,
+                  is_ephemeral: false,
                 },
               ],
             },
